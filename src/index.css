@@ -1,0 +1,153 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  /* Sequential single-hue accent — a calm slate-indigo ramp, light → dark */
+  --color-brand-50: #eff2f8;
+  --color-brand-100: #dde4f0;
+  --color-brand-200: #c1cde3;
+  --color-brand-300: #98abce;
+  --color-brand-400: #6d85b4;
+  --color-brand-500: #4d6699;
+  --color-brand-600: #3c527d;
+  --color-brand-700: #324363;
+
+  /* Kept as token names for existing gradients — now steps of the same hue */
+  --color-quest-400: #6d85b4;
+  --color-quest-500: #4d6699;
+  --color-quest-600: #3c527d;
+
+  --color-xp: #4d6699;
+}
+
+:root {
+  --bg: #f7f8fa;
+  --bg-elev: #ffffff;
+  --border: #e6e8ec;
+  --text: #1a1d23;
+  --text-muted: #5b6472;
+
+  /* Functional feedback — muted so it reads as signal, not decoration */
+  --ok: #3f9b6f;
+  --ok-strong: #2f7d57;
+  --bad: #c45c5c;
+  --bad-strong: #b34444;
+}
+
+.dark {
+  --bg: #0b0d12;
+  --bg-elev: #14171f;
+  --border: #232936;
+  --text: #e8eaed;
+  --text-muted: #98a1b3;
+
+  --ok: #4fb585;
+  --ok-strong: #6fcfa0;
+  --bad: #e08a8a;
+  --bad-strong: #f0a3a3;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Thin, themed scrollbars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-thumb {
+  background-color: var(--border);
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+@keyframes cq-pop {
+  0% { transform: scale(0.8); opacity: 0; }
+  60% { transform: scale(1.08); }
+  100% { transform: scale(1); opacity: 1; }
+}
+@keyframes cq-float-up {
+  0% { transform: translateY(8px); opacity: 0; }
+  20% { opacity: 1; }
+  100% { transform: translateY(-28px); opacity: 0; }
+}
+@keyframes cq-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.cq-pop { animation: cq-pop 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.cq-float-up { animation: cq-float-up 1.1s ease-out forwards; }
+
+/* Markdown prose */
+.prose-cq {
+  color: var(--text);
+  line-height: 1.7;
+  font-size: 1rem;
+}
+.prose-cq h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 2rem 0 0.75rem;
+  scroll-margin-top: 5rem;
+  letter-spacing: -0.01em;
+}
+.prose-cq h3 {
+  font-size: 1.18rem;
+  font-weight: 650;
+  margin: 1.5rem 0 0.5rem;
+  scroll-margin-top: 5rem;
+}
+.prose-cq p { margin: 0.85rem 0; }
+.prose-cq ul { margin: 0.85rem 0; padding-left: 1.4rem; list-style: disc; }
+.prose-cq ol { margin: 0.85rem 0; padding-left: 1.4rem; list-style: decimal; }
+.prose-cq li { margin: 0.35rem 0; }
+.prose-cq a { color: var(--color-brand-600); text-decoration: underline; text-underline-offset: 2px; }
+.prose-cq strong { font-weight: 680; color: var(--text); }
+.prose-cq blockquote {
+  border-left: 3px solid var(--color-brand-400);
+  padding: 0.2rem 0 0.2rem 1rem;
+  margin: 1rem 0;
+  color: var(--text-muted);
+}
+.prose-cq :not(pre) > code {
+  font-family: var(--font-mono);
+  font-size: 0.86em;
+  background: color-mix(in srgb, var(--color-brand-500) 14%, transparent);
+  color: var(--color-brand-700);
+  padding: 0.12em 0.38em;
+  border-radius: 0.35rem;
+}
+.dark .prose-cq :not(pre) > code { color: var(--color-brand-300); }
+.cq-shiki pre {
+  margin: 0;
+  padding: 1rem 1.1rem;
+  background: transparent !important;
+  font-family: var(--font-mono);
+}
+.cq-shiki code { font-family: var(--font-mono); }
+
+.prose-cq table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.92rem; }
+.prose-cq th, .prose-cq td { border: 1px solid var(--border); padding: 0.5rem 0.75rem; text-align: left; }
+.prose-cq th { background: color-mix(in srgb, var(--text) 4%, transparent); font-weight: 650; }
