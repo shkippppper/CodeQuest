@@ -113,6 +113,51 @@ print(label) // Ready — no unwrapping needed
 
 Reading an IUO while it's `nil` crashes, exactly like force unwrapping. They're mostly seen in legacy UIKit `@IBOutlet`s. Prefer regular optionals unless you have a specific reason.
 
+## Under the hood: senior nuances
+
+Optionals look beginner-friendly, but interviewers probe the corners. Four worth knowing cold:
+
+### `??` short-circuits — its right side is an `@autoclosure`
+
+The right-hand operand of `??` is declared `@autoclosure`, so it is only evaluated when the left side is `nil`. An expensive default costs nothing on the happy path.
+
+```swift
+func expensiveDefault() -> Int { print("computed"); return 0 }
+let x: Int? = 42
+let y = x ?? expensiveDefault()  // "computed" is NOT printed — x wasn't nil
+```
+
+### Double optionals
+
+Wrapping an optional in another optional (`Int??`) is real, and it bites when a transform over an optional itself returns an optional. `map` adds a layer; `flatMap` collapses one.
+
+```swift
+let raw: String? = "42"
+let mapped = raw.map { Int($0) }      // Int??  — two layers
+let flat   = raw.flatMap { Int($0) }  // Int?   — flattened
+```
+
+Dictionary lookups nest the same way when the *value* type is already optional: the subscript of `[String: Int?]` is `Int??`.
+
+### Memory: optionals are (usually) free
+
+For reference types, `Optional` costs **nothing** extra: a class reference has a spare all-zero bit pattern that Swift reuses for `.none`, so `MemoryLayout<UIView?>.size == MemoryLayout<UIView>.size`. A type with no spare representation (like `Int`) gets a one-byte discriminator, so `MemoryLayout<Int?>.size` is 9 while `MemoryLayout<Int>.size` is 8. This "spare-bit / null-pointer optimization" makes optional references as cheap as raw C pointers — without the crashes.
+
+### Pattern matching the enum directly
+
+Because an optional *is* an enum, you can match its cases. `case let x?` is sugar for `case .some(let x)`:
+
+```swift
+switch someValue {
+case let x?: print("got a value: \(x)")
+case nil:    print("empty")
+}
+
+for case let name? in ["a", nil, "b"] {  // skips nil, unwraps the rest
+    print(name)                          // a, then b
+}
+```
+
 ## Common pitfalls
 
 - **Double optionals.** Mapping over an optional that returns an optional gives you `String??`. Use `flatMap` to flatten it.

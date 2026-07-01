@@ -96,6 +96,66 @@ print(s?.count ?? -1)`,
       "`T?` is sugar for the `Optional<T>` enum (`.some`/`.none`), and both `if let` and `guard let` unwrap it. A **non-optional** type can never hold `nil` — that is the entire point of optionals, so option 3 is false.",
   },
   {
+    id: "coalescing-autoclosure",
+    type: "predict",
+    prompt: "What does this print?",
+    code: `func fallback() -> Int { print("ran"); return -1 }
+let x: Int? = 7
+print(x ?? fallback())`,
+    options: ["7", "ran, then 7", "ran, then -1", "-1"],
+    answer: 0,
+    difficulty: "senior",
+    explanation:
+      "The right-hand side of `??` is an `@autoclosure`, evaluated **only** when the left side is `nil`. `x` is `7` (non-nil), so `fallback()` never runs — `\"ran\"` is not printed — and the result is `7`.",
+  },
+  {
+    id: "double-optional-flatmap",
+    type: "predict",
+    prompt: "What are the inferred types of `a` and `b`?",
+    code: `let raw: String? = "42"
+let a = raw.map { Int($0) }
+let b = raw.flatMap { Int($0) }`,
+    options: [
+      "a: Int??, b: Int?",
+      "a: Int?, b: Int?",
+      "a: Int??, b: Int??",
+      "a: Int?, b: Int",
+    ],
+    answer: 0,
+    difficulty: "senior",
+    explanation:
+      "`Int($0)` returns `Int?`. `map` wraps that result in another optional → `Int??`. `flatMap` collapses one layer → `Int?`. Double optionals appear whenever a transform over an optional itself returns an optional.",
+  },
+  {
+    id: "optional-memory-layout",
+    type: "mcq",
+    prompt: "Which statement about the in-memory **size** of optionals is correct?",
+    options: [
+      "`Optional<SomeClass>` is the same size as the class reference; `Optional<Int>` is one byte larger than `Int`",
+      "Every optional adds 8 bytes of overhead",
+      "Optionals are a compile-time fiction with no runtime size",
+      "`Optional<Int>` and `Int` are always identical in size",
+    ],
+    answer: 0,
+    difficulty: "senior",
+    explanation:
+      "For reference types Swift reuses the all-zero (null) bit pattern for `.none`, so `Optional<SomeClass>` is exactly pointer-sized — the spare-bit / null-pointer optimization. `Int` has no spare pattern, so Swift adds a discriminator byte: `MemoryLayout<Int?>.size` is 9 vs `MemoryLayout<Int>.size` of 8.",
+  },
+  {
+    id: "optional-pattern-match",
+    type: "predict",
+    prompt: "What does this print?",
+    code: `let items: [Int?] = [1, nil, 3]
+for case let n? in items {
+    print(n)
+}`,
+    options: ["1 and 3, on separate lines", "1, nil, 3", "1 3 nil", "A compile error"],
+    answer: 0,
+    difficulty: "senior",
+    explanation:
+      "`case let n?` is sugar for `case .some(let n)` — it matches only the non-`nil` elements and unwraps them. The `nil` is skipped, so the loop prints `1` then `3`. `for case` is a clean way to iterate just the present values.",
+  },
+  {
     id: "explain-optionals-flashcard",
     type: "flashcard",
     prompt:
