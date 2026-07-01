@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Moon, Sun, Settings, Menu, Star } from "lucide-react";
+import { Moon, Sun, Settings, Menu, Star, Search } from "lucide-react";
 import { useProgress } from "../game/store";
 import { useTheme } from "../theme/ThemeContext";
 
@@ -29,6 +29,17 @@ export function TopBar({ onMenu }: { onMenu?: () => void }) {
       </Link>
 
       <div className="flex-1" />
+
+      <button
+        onClick={() => window.dispatchEvent(new Event("cq:open-palette"))}
+        className="hidden cursor-pointer items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-medium transition hover:border-brand-400 sm:flex"
+        style={{ borderColor: "var(--border)", color: "var(--text-muted)" }}
+        title="Search (Cmd/Ctrl + K)"
+      >
+        <Search size={14} />
+        <span className="hidden md:inline">Search</span>
+        <kbd className="rounded px-1 text-[0.65rem]" style={{ background: "color-mix(in srgb, var(--text) 8%, transparent)" }}>⌘K</kbd>
+      </button>
 
       {/* level + xp meter */}
       <Link to="/" className="flex items-center gap-2.5" title={`${level.rank} · ${state.xp} XP`}>

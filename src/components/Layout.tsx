@@ -4,6 +4,7 @@ import { X } from "lucide-react";
 import { Sidebar } from "./Sidebar";
 import { TopBar } from "./TopBar";
 import { RewardLayer } from "./RewardLayer";
+import { CommandPalette } from "./CommandPalette";
 
 const SIDEBAR_W = "17rem";
 
@@ -48,6 +49,7 @@ export function Layout() {
       </div>
 
       <RewardLayer />
+      <CommandPalette />
     </div>
   );
 }
