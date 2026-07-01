@@ -267,6 +267,20 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
       for (const k of required) {
         if (!(k in p)) return false;
       }
+      const isObj = (v: unknown) => typeof v === "object" && v !== null && !Array.isArray(v);
+      if (
+        typeof p.xp !== "number" ||
+        typeof p.totalCorrect !== "number" ||
+        typeof p.totalAnswered !== "number" ||
+        typeof p.redemptions !== "number" ||
+        !Array.isArray(p.bookmarks) ||
+        !Array.isArray(p.badges) ||
+        !isObj(p.completedTopics) ||
+        !isObj(p.answered) ||
+        !isObj(p.wrongLog)
+      ) {
+        return false;
+      }
       const next = { ...emptyState(), ...(parsed as Partial<ProgressState>), version: VERSION };
       commit(next);
       return true;
