@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { NavLink } from "react-router-dom";
-import { Search, Bookmark, LayoutGrid, RotateCcw, Swords, X, Circle, CircleDashed, CircleDot, CheckCircle2 } from "lucide-react";
+import { Search, Bookmark, LayoutGrid, RotateCcw, Swords, X, Circle, CircleDashed, CircleDot, CheckCircle2, ChevronDown } from "lucide-react";
 import { groupedByCategory } from "../content/registry";
 import { CATEGORIES, DIFFICULTY_META, type Difficulty } from "../content/types";
 import { useProgress } from "../game/store";
@@ -20,6 +20,17 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   const { state, reviewCount } = useProgress();
   const [query, setQuery] = useState("");
   const [diffs, setDiffs] = useState<Set<Difficulty>>(new Set());
+  const [collapsed, setCollapsed] = useState<Set<string>>(() => {
+    try {
+      const raw = localStorage.getItem("cq_sidebar_collapsed");
+      return new Set<string>(raw ? JSON.parse(raw) : []);
+    } catch {
+      return new Set<string>();
+    }
+  });
+
+  // While searching or filtering, force every group open so matches are visible.
+  const filtering = query.trim() !== "" || diffs.size > 0;
 
   const groups = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -40,6 +51,20 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
       const next = new Set(prev);
       if (next.has(d)) next.delete(d);
       else next.add(d);
+      return next;
+    });
+  }
+
+  function toggleCategory(id: string) {
+    setCollapsed((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      try {
+        localStorage.setItem("cq_sidebar_collapsed", JSON.stringify([...next]));
+      } catch {
+        /* ignore quota / private mode */
+      }
       return next;
     });
   }
@@ -113,14 +138,27 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
         )}
         {groups.map((g) => {
           const cat = CATEGORIES[g.id];
+          const isCollapsed = !filtering && collapsed.has(g.id);
           return (
             <div key={g.id} className="mb-4">
-              <div className="mb-1.5 flex items-center gap-2 px-2">
-                <span className="h-2 w-2 rounded-full" style={{ background: cat.accent }} />
+              <button
+                onClick={() => toggleCategory(g.id)}
+                className="mb-1.5 flex w-full cursor-pointer items-center gap-2 px-2 py-0.5 hover:opacity-80"
+              >
+                <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: cat.accent }} />
                 <span className="text-[0.7rem] font-bold uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>
                   {cat.label}
                 </span>
-              </div>
+                <span className="text-[0.65rem] font-semibold" style={{ color: "var(--text-muted)", opacity: 0.65 }}>
+                  {g.topics.length}
+                </span>
+                <ChevronDown
+                  size={14}
+                  className="ml-auto transition-transform"
+                  style={{ color: "var(--text-muted)", transform: isCollapsed ? "rotate(-90deg)" : "none" }}
+                />
+              </button>
+              {!isCollapsed && (
               <div className="flex flex-col gap-0.5">
                 {g.topics.map((t) => {
                   const mastery = topicMastery(state, t.meta.id);
@@ -155,6 +193,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
                   );
                 })}
               </div>
+              )}
             </div>
           );
         })}
