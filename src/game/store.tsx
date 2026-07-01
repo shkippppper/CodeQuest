@@ -67,6 +67,8 @@ export function qKey(topicId: string, qId: string): string {
 
 interface RecordOpts {
   isReview?: boolean;
+  /** 0..1 correctness fraction for partial-credit (multi-select) questions. Defaults to correct?1:0. Transient — never persisted. */
+  score?: number;
 }
 
 export interface ProgressApi {
@@ -78,6 +80,8 @@ export interface ProgressApi {
   toggleBookmark: (topicId: string) => void;
   isBookmarked: (topicId: string) => boolean;
   resetAll: () => void;
+  exportState: () => ProgressState;
+  importState: (parsed: unknown) => boolean;
   topicProgress: (topicId: string, totalQuestions: number) => { answered: number; correct: number };
   reviewCount: number;
 }
@@ -146,12 +150,14 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
         totalCorrect: s.totalCorrect + (correct && (firstAttempt || prev?.correct === false) ? 1 : 0),
       };
 
-      if (correct) {
-        if (opts?.isReview && wasWronglyLogged) {
+      const score = opts?.score ?? (correct ? 1 : 0);
+      if (score > 0) {
+        if (correct && opts?.isReview && wasWronglyLogged) {
           s = { ...s, redemptions: s.redemptions + 1 };
           s = applyXp(s, XP.reviewRedemption, "Redemption");
         } else {
-          s = applyXp(s, firstAttempt ? XP.correctFirstTry : XP.correctRetry, "Correct");
+          const base = firstAttempt ? XP.correctFirstTry : XP.correctRetry;
+          s = applyXp(s, Math.round(base * score), "Correct");
         }
       }
 
@@ -240,6 +246,48 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
     commit(emptyState());
   }, [commit]);
 
+  const exportState = useCallback(() => ref.current, []);
+
+  const importState = useCallback(
+    (parsed: unknown): boolean => {
+      if (!parsed || typeof parsed !== "object") return false;
+      const p = parsed as Record<string, unknown>;
+      if (typeof p.version !== "number") return false;
+      const required = [
+        "xp",
+        "completedTopics",
+        "answered",
+        "wrongLog",
+        "bookmarks",
+        "badges",
+        "totalCorrect",
+        "totalAnswered",
+        "redemptions",
+      ];
+      for (const k of required) {
+        if (!(k in p)) return false;
+      }
+      const isObj = (v: unknown) => typeof v === "object" && v !== null && !Array.isArray(v);
+      if (
+        typeof p.xp !== "number" ||
+        typeof p.totalCorrect !== "number" ||
+        typeof p.totalAnswered !== "number" ||
+        typeof p.redemptions !== "number" ||
+        !Array.isArray(p.bookmarks) ||
+        !Array.isArray(p.badges) ||
+        !isObj(p.completedTopics) ||
+        !isObj(p.answered) ||
+        !isObj(p.wrongLog)
+      ) {
+        return false;
+      }
+      const next = { ...emptyState(), ...(parsed as Partial<ProgressState>), version: VERSION };
+      commit(next);
+      return true;
+    },
+    [commit],
+  );
+
   const api = useMemo<ProgressApi>(() => {
     const state = ref.current;
     return {
@@ -251,6 +299,8 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
       toggleBookmark,
       isBookmarked: (id: string) => state.bookmarks.includes(id),
       resetAll,
+      exportState,
+      importState,
       topicProgress: (topicId: string, totalQuestions: number) => {
         let answered = 0;
         let correct = 0;
@@ -265,7 +315,7 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
       reviewCount: Object.keys(state.wrongLog).length,
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [recordAnswer, recordFlashcard, completeTopic, toggleBookmark, resetAll, ref.current]);
+  }, [recordAnswer, recordFlashcard, completeTopic, toggleBookmark, resetAll, exportState, importState, ref.current]);
 
   return <Ctx.Provider value={api}>{children}</Ctx.Provider>;
 }

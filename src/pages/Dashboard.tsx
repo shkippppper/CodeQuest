@@ -1,11 +1,13 @@
+import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "motion/react";
 import * as Icons from "lucide-react";
-import { ArrowRight, Star, Target, CheckCircle2, Zap, RotateCcw, Trophy, Lock } from "lucide-react";
+import { ArrowRight, Star, Target, CheckCircle2, Zap, RotateCcw, Trophy, Lock, Layers } from "lucide-react";
 import { TOPICS, TOTAL_TOPICS, TOTAL_QUESTIONS, groupedByCategory } from "../content/registry";
 import { CATEGORIES } from "../content/types";
 import { useProgress } from "../game/store";
 import { BADGES } from "../game/badges";
+import { topicMastery, masteryColor, masteryLabel, MASTERY_TIERS, type MasteryTier } from "../lib/mastery";
 
 const TIER_COLOR: Record<string, string> = { bronze: "#98abce", silver: "#6d85b4", gold: "#3c527d" };
 
@@ -28,6 +30,12 @@ export function Dashboard() {
   const earned = new Set(state.badges);
   const nextTopic = TOPICS.find((t) => !state.completedTopics[t.meta.id]) ?? TOPICS[0];
   const groups = groupedByCategory();
+
+  const masteryCounts = useMemo(() => {
+    const counts: Record<MasteryTier, number> = { "not-started": 0, learning: 0, proficient: 0, mastered: 0 };
+    for (const t of TOPICS) counts[topicMastery(state, t.meta.id).tier]++;
+    return counts;
+  }, [state]);
 
   return (
     <div className="mx-auto max-w-5xl px-5 py-7 sm:px-8">
@@ -92,6 +100,42 @@ export function Dashboard() {
         <Stat icon={<Zap size={18} color="var(--color-brand-500)" />} label="Questions" value={`${state.totalAnswered}/${TOTAL_QUESTIONS}`} />
         <Stat icon={<Target size={18} color="var(--color-brand-500)" />} label="Accuracy" value={`${accuracy}%`} />
         <Stat icon={<Trophy size={18} color="var(--color-brand-500)" />} label="Badges" value={`${earned.size}/${BADGES.length}`} />
+      </motion.section>
+
+      {/* mastery breakdown */}
+      <motion.section
+        {...fadeUp(0.12)}
+        className="mt-5 rounded-2xl border p-5"
+        style={{ borderColor: "var(--border)", background: "var(--bg-elev)" }}
+      >
+        <div className="mb-3 flex items-center gap-2">
+          <Layers size={18} color="var(--color-brand-500)" />
+          <h2 className="text-sm font-bold uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>
+            Mastery
+          </h2>
+        </div>
+        <div className="flex h-3 overflow-hidden rounded-full" style={{ background: "var(--border)" }}>
+          {MASTERY_TIERS.map((tier) => {
+            const n = masteryCounts[tier];
+            if (n === 0 || TOTAL_TOPICS === 0) return null;
+            return (
+              <div
+                key={tier}
+                style={{ width: `${(n / TOTAL_TOPICS) * 100}%`, background: masteryColor(tier) }}
+                title={`${masteryLabel(tier)}: ${n}`}
+              />
+            );
+          })}
+        </div>
+        <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+          {MASTERY_TIERS.map((tier) => (
+            <div key={tier} className="flex items-center gap-2 text-sm">
+              <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: masteryColor(tier), border: "1px solid var(--border)" }} />
+              <span style={{ color: "var(--text-muted)" }}>{masteryLabel(tier)}</span>
+              <span className="ml-auto font-bold">{masteryCounts[tier]}</span>
+            </div>
+          ))}
+        </div>
       </motion.section>
 
       {/* category progress */}

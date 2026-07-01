@@ -1,12 +1,20 @@
 import { useMemo, useState } from "react";
 import { NavLink } from "react-router-dom";
-import { Search, CheckCircle2, Circle, Bookmark, LayoutGrid, RotateCcw, Star, Swords, X } from "lucide-react";
+import { Search, Bookmark, LayoutGrid, RotateCcw, Swords, X, Circle, CircleDashed, CircleDot, CheckCircle2 } from "lucide-react";
 import { groupedByCategory } from "../content/registry";
 import { CATEGORIES, DIFFICULTY_META, type Difficulty } from "../content/types";
 import { useProgress } from "../game/store";
 import { cn } from "../lib/cn";
+import { topicMastery, type MasteryTier } from "../lib/mastery";
 
 const ALL_DIFF: Difficulty[] = ["junior", "mid", "senior"];
+
+const TIER_ICON: Record<MasteryTier, typeof Circle> = {
+  "not-started": Circle,
+  learning: CircleDashed,
+  proficient: CircleDot,
+  mastered: CheckCircle2,
+};
 
 export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   const { state, reviewCount } = useProgress();
@@ -115,8 +123,8 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
               </div>
               <div className="flex flex-col gap-0.5">
                 {g.topics.map((t) => {
-                  const completed = !!state.completedTopics[t.meta.id];
-                  const perfect = (state.completedTopics[t.meta.id]?.bestScore ?? 0) >= 1;
+                  const mastery = topicMastery(state, t.meta.id);
+                  const TierIcon = TIER_ICON[mastery.tier];
                   return (
                     <NavLink
                       key={t.meta.id}
@@ -134,13 +142,9 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
                           : { color: "var(--text)" }
                       }
                     >
-                      {perfect ? (
-                        <Star size={15} className="shrink-0" fill="var(--color-brand-500)" color="var(--color-brand-500)" />
-                      ) : completed ? (
-                        <CheckCircle2 size={15} className="shrink-0" color="var(--ok)" />
-                      ) : (
-                        <Circle size={15} className="shrink-0" style={{ color: "var(--border)" }} />
-                      )}
+                      <span className="flex shrink-0" title={`${mastery.label}${mastery.answered > 0 ? ` · ${Math.round(mastery.accuracy * 100)}%` : ""}`}>
+                        <TierIcon size={15} color={mastery.color} />
+                      </span>
                       <span className="flex-1 truncate">{t.meta.title}</span>
                       <span
                         className="h-1.5 w-1.5 shrink-0 rounded-full"

@@ -35,11 +35,11 @@ export function ReviewPage() {
 
   const empty = items.length === 0;
 
-  function handleGraded(correct: boolean) {
+  function handleGraded(correct: boolean, score?: number) {
     setGraded(true);
     if (correct) setFixed((f) => f + 1);
     if (current.question.type === "flashcard") recordFlashcard(current.topic.meta.id, current.question.id, correct, { isReview: true });
-    else recordAnswer(current.topic.meta.id, current.question.id, correct, { isReview: true });
+    else recordAnswer(current.topic.meta.id, current.question.id, correct, { isReview: true, score });
   }
 
   function next() {

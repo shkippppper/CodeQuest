@@ -51,7 +51,14 @@ export interface FlashcardQuestion extends BaseQuestion {
   keyPoints?: string[];
 }
 
-export type Question = MCQQuestion | PredictQuestion | FillQuestion | FlashcardQuestion;
+export interface MultiQuestion extends BaseQuestion {
+  type: "multi";
+  options: string[];
+  /** indices of every correct option (at least one) */
+  answers: number[];
+}
+
+export type Question = MCQQuestion | PredictQuestion | FillQuestion | FlashcardQuestion | MultiQuestion;
 
 export interface Topic {
   meta: TopicMeta;

@@ -185,11 +185,11 @@ function Runner({
   const current = items[index];
   const isLast = index === items.length - 1;
 
-  function handleGraded(correct: boolean) {
+  function handleGraded(correct: boolean, score?: number) {
     setGraded(true);
     if (correct) setCorrectCount((c) => c + 1);
     if (current.question.type === "flashcard") recordFlashcard(current.topic.meta.id, current.question.id, correct);
-    else recordAnswer(current.topic.meta.id, current.question.id, correct);
+    else recordAnswer(current.topic.meta.id, current.question.id, correct, { score });
   }
 
   function next() {
