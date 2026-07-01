@@ -28,14 +28,14 @@ export function Quiz({ topicId, questions, isReview, onFinished }: Props) {
     return questions.length ? correct / questions.length : 0;
   }, [results, questions.length]);
 
-  function handleGraded(correct: boolean) {
+  function handleGraded(correct: boolean, score?: number) {
     setResults((prev) => {
       const next = [...prev];
       next[index] = correct;
       return next;
     });
     if (q.type === "flashcard") recordFlashcard(topicId, q.id, correct, { isReview });
-    else recordAnswer(topicId, q.id, correct, { isReview });
+    else recordAnswer(topicId, q.id, correct, { isReview, score });
   }
 
   function next() {

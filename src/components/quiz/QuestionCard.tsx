@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Check, X, Eye, Lightbulb, HelpCircle, Brain, Terminal } from "lucide-react";
+import { Check, X, Eye, Lightbulb, HelpCircle, Brain, Terminal, ListChecks } from "lucide-react";
 import type { Question } from "../../content/types";
 import { CodeBlock } from "../CodeBlock";
 import { InlineMarkdown, Markdown } from "../Markdown";
@@ -7,8 +7,8 @@ import { cn } from "../../lib/cn";
 
 interface Props {
   question: Question;
-  /** called exactly once, when the user grades/answers the question */
-  onGraded: (correct: boolean) => void;
+  /** called exactly once, when the user grades/answers the question. `score` is the 0..1 fraction for partial-credit types; omit for pass/fail. */
+  onGraded: (correct: boolean, score?: number) => void;
 }
 
 const TYPE_LABEL: Record<Question["type"], { label: string; icon: typeof HelpCircle }> = {
@@ -16,6 +16,7 @@ const TYPE_LABEL: Record<Question["type"], { label: string; icon: typeof HelpCir
   predict: { label: "Predict the output", icon: Terminal },
   fill: { label: "Fill in the blank", icon: Lightbulb },
   flashcard: { label: "Flashcard", icon: Brain },
+  multi: { label: "Select all that apply", icon: ListChecks },
 };
 
 function normalize(s: string): string {
@@ -29,14 +30,32 @@ export function QuestionCard({ question, onGraded }: Props) {
   const [fillValue, setFillValue] = useState("");
   const [revealed, setRevealed] = useState(false);
   const [showHint, setShowHint] = useState(false);
+  const [multiSel, setMultiSel] = useState<Set<number>>(new Set());
+  const [multiResult, setMultiResult] = useState<{ correctPicked: number; total: number } | null>(null);
 
   const meta = TYPE_LABEL[question.type];
   const TypeIcon = meta.icon;
 
-  function grade(isCorrect: boolean) {
+  function grade(isCorrect: boolean, score?: number) {
     setCorrect(isCorrect);
     setGraded(true);
-    onGraded(isCorrect);
+    onGraded(isCorrect, score);
+  }
+
+  function gradeMulti() {
+    if (question.type !== "multi") return;
+    const answerSet = new Set(question.answers);
+    let correctPicked = 0;
+    let wrongPicked = 0;
+    multiSel.forEach((i) => {
+      if (answerSet.has(i)) correctPicked++;
+      else wrongPicked++;
+    });
+    const raw = Math.max(0, correctPicked - wrongPicked);
+    const total = answerSet.size;
+    const score = total ? Math.min(raw, total) / total : 0;
+    setMultiResult({ correctPicked, total });
+    grade(score === 1, score);
   }
 
   return (
@@ -105,6 +124,72 @@ export function QuestionCard({ question, onGraded }: Props) {
             >
               Submit answer
             </button>
+          )}
+        </div>
+      )}
+
+      {/* ---- MULTI (select all that apply) ---- */}
+      {question.type === "multi" && (
+        <div className="mt-4 flex flex-col gap-2">
+          {question.options.map((opt, i) => {
+            const isAnswer = question.answers.includes(i);
+            const isPicked = multiSel.has(i);
+            let style: React.CSSProperties = { borderColor: "var(--border)", background: "var(--bg)" };
+            if (graded) {
+              if (isAnswer && isPicked) style = { borderColor: "var(--ok)", background: "color-mix(in srgb, var(--ok) 12%, transparent)" };
+              else if (isAnswer && !isPicked) style = { borderColor: "var(--color-brand-500)", background: "color-mix(in srgb, var(--color-brand-500) 10%, transparent)" };
+              else if (!isAnswer && isPicked) style = { borderColor: "var(--bad)", background: "color-mix(in srgb, var(--bad) 12%, transparent)" };
+            } else if (isPicked) {
+              style = { borderColor: "var(--color-brand-500)", background: "color-mix(in srgb, var(--color-brand-500) 10%, transparent)" };
+            }
+            return (
+              <button
+                key={i}
+                disabled={graded}
+                onClick={() =>
+                  setMultiSel((prev) => {
+                    const next = new Set(prev);
+                    if (next.has(i)) next.delete(i);
+                    else next.add(i);
+                    return next;
+                  })
+                }
+                className={cn(
+                  "flex items-center gap-3 rounded-xl border px-4 py-3 text-left text-sm transition",
+                  !graded && "cursor-pointer hover:border-brand-400",
+                )}
+                style={style}
+              >
+                <span
+                  className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md border"
+                  style={{ borderColor: isPicked ? "var(--color-brand-500)" : "var(--border)", background: isPicked ? "var(--color-brand-500)" : "transparent" }}
+                >
+                  {isPicked && <Check size={13} color="#fff" />}
+                </span>
+                <span className="flex-1">
+                  <InlineMarkdown>{opt}</InlineMarkdown>
+                </span>
+                {graded && isAnswer && !isPicked && (
+                  <span className="text-xs font-semibold" style={{ color: "var(--color-brand-600)" }}>
+                    missed
+                  </span>
+                )}
+              </button>
+            );
+          })}
+          {!graded && (
+            <button
+              disabled={multiSel.size === 0}
+              onClick={gradeMulti}
+              className="mt-2 w-fit cursor-pointer rounded-lg bg-brand-500 px-5 py-2 text-sm font-semibold text-white transition hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              Submit answer
+            </button>
+          )}
+          {graded && multiResult && (
+            <p className="mt-1 text-sm" style={{ color: "var(--text-muted)" }}>
+              You selected {multiResult.correctPicked} of {multiResult.total} correct option{multiResult.total === 1 ? "" : "s"}.
+            </p>
           )}
         </div>
       )}
