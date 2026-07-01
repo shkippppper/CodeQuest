@@ -80,6 +80,8 @@ export interface ProgressApi {
   toggleBookmark: (topicId: string) => void;
   isBookmarked: (topicId: string) => boolean;
   resetAll: () => void;
+  exportState: () => ProgressState;
+  importState: (parsed: unknown) => boolean;
   topicProgress: (topicId: string, totalQuestions: number) => { answered: number; correct: number };
   reviewCount: number;
 }
@@ -244,6 +246,34 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
     commit(emptyState());
   }, [commit]);
 
+  const exportState = useCallback(() => ref.current, []);
+
+  const importState = useCallback(
+    (parsed: unknown): boolean => {
+      if (!parsed || typeof parsed !== "object") return false;
+      const p = parsed as Record<string, unknown>;
+      if (typeof p.version !== "number") return false;
+      const required = [
+        "xp",
+        "completedTopics",
+        "answered",
+        "wrongLog",
+        "bookmarks",
+        "badges",
+        "totalCorrect",
+        "totalAnswered",
+        "redemptions",
+      ];
+      for (const k of required) {
+        if (!(k in p)) return false;
+      }
+      const next = { ...emptyState(), ...(parsed as Partial<ProgressState>), version: VERSION };
+      commit(next);
+      return true;
+    },
+    [commit],
+  );
+
   const api = useMemo<ProgressApi>(() => {
     const state = ref.current;
     return {
@@ -255,6 +285,8 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
       toggleBookmark,
       isBookmarked: (id: string) => state.bookmarks.includes(id),
       resetAll,
+      exportState,
+      importState,
       topicProgress: (topicId: string, totalQuestions: number) => {
         let answered = 0;
         let correct = 0;
@@ -269,7 +301,7 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
       reviewCount: Object.keys(state.wrongLog).length,
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [recordAnswer, recordFlashcard, completeTopic, toggleBookmark, resetAll, ref.current]);
+  }, [recordAnswer, recordFlashcard, completeTopic, toggleBookmark, resetAll, exportState, importState, ref.current]);
 
   return <Ctx.Provider value={api}>{children}</Ctx.Provider>;
 }
