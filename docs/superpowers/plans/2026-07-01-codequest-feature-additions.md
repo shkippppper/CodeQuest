@@ -103,7 +103,7 @@ Rationale: for the four existing types no `score` is passed, so `score` becomes 
 
 - [ ] **Step 4: Verify build**
 
-Run: `npx tsc -b` — Expected: exits 0 (no output). Then `npm run build` — Expected: succeeds. No runtime change is observable yet.
+⚠️ Ordering note: extending the `Question` union here makes the exhaustive `Record<Question["type"], …>` for `TYPE_LABEL` in `QuestionCard.tsx` incomplete, so `npx tsc -b` will FAIL until Task 2 Step 2 adds the `multi` entry. That is expected — do not add the `multi` label early. The tree becomes green again at the end of Task 2. Commit this task's changes anyway (a brief one-commit red window is normal on a multi-commit branch); the authoritative green checkpoints are at the end of Task 2 and Task 3.
 
 - [ ] **Step 5: Commit**
 
