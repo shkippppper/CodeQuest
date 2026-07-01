@@ -82,6 +82,20 @@ print(s?.count ?? -1)`,
       "`s` holds a value, so `s?.count` is `Optional(5)`. `?? -1` unwraps it to `5`. The default `-1` would only appear if `s` were `nil`.",
   },
   {
+    id: "optional-truths-multi",
+    type: "multi",
+    prompt: "Select **all** statements about Swift optionals that are correct.",
+    options: [
+      "`T?` is shorthand for `Optional<T>`",
+      "`Optional` is an enum with `.some` and `.none` cases",
+      "A non-optional `Int` can hold `nil`",
+      "`if let` and `guard let` both unwrap optionals",
+    ],
+    answers: [0, 1, 3],
+    explanation:
+      "`T?` is sugar for the `Optional<T>` enum (`.some`/`.none`), and both `if let` and `guard let` unwrap it. A **non-optional** type can never hold `nil` — that is the entire point of optionals, so option 3 is false.",
+  },
+  {
     id: "explain-optionals-flashcard",
     type: "flashcard",
     prompt:

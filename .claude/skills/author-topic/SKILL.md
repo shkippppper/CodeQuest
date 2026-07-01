@@ -1,6 +1,6 @@
 ---
 name: author-topic
-description: Author a new CodeQuest learning topic (lesson + quiz). Use when adding Swift interview-prep content — creating or editing a topic folder under src/content/topics, writing explanation.md lessons, or writing quiz.ts questions (mcq/predict/fill/flashcard).
+description: Author a new CodeQuest learning topic (lesson + quiz). Use when adding Swift interview-prep content — creating or editing a topic folder under src/content/topics, writing explanation.md lessons, or writing quiz.ts questions (mcq/predict/fill/flashcard/multi).
 ---
 
 # Authoring a CodeQuest topic
@@ -67,7 +67,7 @@ export default quiz;
 
 Every question needs a unique `id` (within the file), a `prompt` (Markdown), and an `explanation` (Markdown, shown after answering). Optional: `code` (a Swift snippet rendered with the question) and `difficulty` (overrides the topic's difficulty for Challenge-mode bucketing — usually omit).
 
-### The four question types
+### The five question types
 
 **`mcq`** — concept check. `answer` is the 0-based index into `options`.
 ```ts
@@ -106,6 +106,18 @@ Every question needs a unique `id` (within the file), a `prompt` (Markdown), and
 }
 ```
 
+**`multi`** — "select all that apply". Like `mcq` but `answers` is an array of every correct 0-based index (one or more). Grading is partial-credit: score = (correct picks − wrong picks, floored at 0) ÷ number of correct answers; it only counts as a full pass at 100%.
+```ts
+{
+  id: "value-type-traits",
+  type: "multi",
+  prompt: "Select all statements that are true of Swift structs.",
+  options: ["They are value types", "Assignment copies them", "They support inheritance", "They can conform to protocols"],
+  answers: [0, 1, 3],
+  explanation: "Structs are copied value types that can conform to protocols, but they do **not** support inheritance (only classes do).",
+}
+```
+
 **`flashcard`** — open recall, self-graded. Provide a `modelAnswer` (Markdown "back" of the card) and `keyPoints` the learner should have hit.
 ```ts
 {
@@ -137,5 +149,5 @@ Checklist before calling it done:
 - [ ] Folder name == `meta.id`.
 - [ ] `order` doesn't clash with a sibling in the same category.
 - [ ] Lesson opens with the problem, uses `##`/`###` headings, ends with an interview lens.
-- [ ] Quiz has a mix of types (aim for all four), each with a clear `explanation`.
+- [ ] Quiz has a mix of types (aim for all five), each with a clear `explanation`.
 - [ ] `npm run build` passes.
