@@ -67,6 +67,8 @@ export function qKey(topicId: string, qId: string): string {
 
 interface RecordOpts {
   isReview?: boolean;
+  /** 0..1 correctness fraction for partial-credit (multi-select) questions. Defaults to correct?1:0. Transient — never persisted. */
+  score?: number;
 }
 
 export interface ProgressApi {
@@ -146,12 +148,14 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
         totalCorrect: s.totalCorrect + (correct && (firstAttempt || prev?.correct === false) ? 1 : 0),
       };
 
-      if (correct) {
-        if (opts?.isReview && wasWronglyLogged) {
+      const score = opts?.score ?? (correct ? 1 : 0);
+      if (score > 0) {
+        if (correct && opts?.isReview && wasWronglyLogged) {
           s = { ...s, redemptions: s.redemptions + 1 };
           s = applyXp(s, XP.reviewRedemption, "Redemption");
         } else {
-          s = applyXp(s, firstAttempt ? XP.correctFirstTry : XP.correctRetry, "Correct");
+          const base = firstAttempt ? XP.correctFirstTry : XP.correctRetry;
+          s = applyXp(s, Math.round(base * score), "Correct");
         }
       }
 
