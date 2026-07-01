@@ -1,12 +1,50 @@
-import { useState } from "react";
-import { Moon, Sun, Trash2, AlertTriangle, Database, Star, Trophy, Target } from "lucide-react";
+import { useRef, useState } from "react";
+import { Moon, Sun, Trash2, AlertTriangle, Database, Star, Trophy, Target, Download, Upload } from "lucide-react";
 import { useTheme } from "../theme/ThemeContext";
 import { useProgress } from "../game/store";
 
 export function SettingsPage() {
   const { theme, toggle } = useTheme();
-  const { state, level, resetAll } = useProgress();
+  const { state, level, resetAll, exportState, importState } = useProgress();
   const [confirming, setConfirming] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [importMsg, setImportMsg] = useState<{ ok: boolean; text: string } | null>(null);
+
+  function handleExport() {
+    const data = JSON.stringify(exportState(), null, 2);
+    const blob = new Blob([data], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `codequest-progress-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function handleImportFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = ""; // allow re-selecting the same file later
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      let parsed: unknown;
+      try {
+        parsed = JSON.parse(String(reader.result));
+      } catch {
+        setImportMsg({ ok: false, text: "That file isn’t valid JSON." });
+        return;
+      }
+      if (!window.confirm("Import will replace ALL current progress in this browser. Continue?")) return;
+      const ok = importState(parsed);
+      setImportMsg(
+        ok
+          ? { ok: true, text: "Progress imported successfully." }
+          : { ok: false, text: "That file isn’t a valid CodeQuest backup." },
+      );
+    };
+    reader.onerror = () => setImportMsg({ ok: false, text: "Could not read that file." });
+    reader.readAsText(file);
+  }
 
   const accuracy = state.totalAnswered > 0 ? Math.round((state.totalCorrect / state.totalAnswered) * 100) : 0;
 
@@ -43,6 +81,37 @@ export function SettingsPage() {
         <p className="mt-3 flex items-center gap-1.5 text-xs" style={{ color: "var(--text-muted)" }}>
           <Database size={13} /> All progress is stored only in this browser. Nothing is uploaded.
         </p>
+      </Section>
+
+      {/* backup */}
+      <Section title="Backup">
+        <div className="flex flex-col gap-3">
+          <p className="text-sm" style={{ color: "var(--text-muted)" }}>
+            Progress lives only in this browser. Export a backup to move it to another device, then import it there.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={handleExport}
+              className="flex cursor-pointer items-center gap-2 rounded-lg border px-4 py-2 text-sm font-semibold transition hover:border-brand-400"
+              style={{ borderColor: "var(--border)" }}
+            >
+              <Download size={16} /> Export progress
+            </button>
+            <button
+              onClick={() => fileRef.current?.click()}
+              className="flex cursor-pointer items-center gap-2 rounded-lg border px-4 py-2 text-sm font-semibold transition hover:border-brand-400"
+              style={{ borderColor: "var(--border)" }}
+            >
+              <Upload size={16} /> Import progress
+            </button>
+            <input ref={fileRef} type="file" accept="application/json" className="hidden" onChange={handleImportFile} />
+          </div>
+          {importMsg && (
+            <p className="text-sm font-medium" style={{ color: importMsg.ok ? "var(--ok-strong)" : "var(--bad-strong)" }}>
+              {importMsg.text}
+            </p>
+          )}
+        </div>
       </Section>
 
       {/* danger zone */}
