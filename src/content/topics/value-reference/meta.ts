@@ -5,7 +5,7 @@ const meta: TopicMeta = {
   title: "Structs vs Classes",
   category: "language",
   difficulty: "junior",
-  order: 4,
+  order: 7,
   summary: "Value vs reference semantics — copying, identity, mutation, and when to pick a struct over a class.",
   est: 13,
   tags: ["struct", "class", "value type", "reference type", "mutating"],
