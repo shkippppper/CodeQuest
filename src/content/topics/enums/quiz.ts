@@ -133,6 +133,21 @@ if case .qr(let value) = code {
       "Declare the conformance and Swift **synthesizes** `==` as long as all associated value types are `Equatable` (`Int` and `String` are). You only hand-write it when synthesis isn't possible or you need custom equality. The same synthesis applies to `Hashable`.",
   },
   {
+    id: "enum-no-stored-props-trick",
+    type: "mcq",
+    prompt: "🧠 Trick question — which is TRUE about what an `enum` can hold?",
+    options: [
+      "It can have methods and computed properties, but NOT stored instance properties",
+      "It can have stored instance properties, just like a struct",
+      "It cannot define any methods",
+      "It can inherit stored properties from a superclass",
+    ],
+    answer: 0,
+    difficulty: "senior",
+    explanation:
+      "Enums can have methods, `static` members, and *computed* instance properties — but **no stored instance properties**. An enum instance's only storage is *which case it is* plus that case's associated values. People frequently try to add a stored `var` to an enum and are surprised it won't compile.",
+  },
+  {
     id: "enum-state-machine-flashcard",
     type: "flashcard",
     prompt:

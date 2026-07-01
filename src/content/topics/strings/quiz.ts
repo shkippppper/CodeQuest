@@ -124,6 +124,18 @@ print(e, e.count)`,
       "Because grapheme clusters vary in size, there's no random access — advancing to the k-th character means walking boundaries, which is **O(n)**. That's the deliberate cost of Unicode-correct indexing, and why tight loops sometimes drop to the `utf8`/`unicodeScalars` views.",
   },
   {
+    id: "strings-zwj-emoji-trick",
+    type: "predict",
+    prompt: "🧠 Trick question — the string is a family emoji (four people joined by zero-width joiners). What prints?",
+    code: `let family = "👨‍👩‍👧‍👦"
+print(family.count)`,
+    options: ["1", "4", "7", "11"],
+    answer: 0,
+    difficulty: "senior",
+    explanation:
+      "The family emoji is a single **grapheme cluster** — four person emoji bound together by zero-width joiners (ZWJ). Swift counts what a human perceives, so `count` is `1`, even though it's 7 Unicode scalars and 25 UTF-8 bytes. This is precisely why a Swift `String` isn't an array of fixed-size characters.",
+  },
+  {
     id: "strings-flashcard",
     type: "flashcard",
     prompt:

@@ -142,6 +142,30 @@ class B: A {
       "ARC deallocates (and runs `deinit`) only when the last strong reference goes away. A `deinit` that never fires is the classic symptom of a **retain cycle** — often a closure capturing `self` strongly, or two objects holding each other. Break it with `weak`/`unowned`.",
   },
   {
+    id: "init-observer-not-fire-trick",
+    type: "predict",
+    prompt: "🧠 Trick question — what does creating `C()` print?",
+    code: `class C {
+    var x: Int = 0 {
+        didSet { print("didSet") }
+    }
+    init() {
+        x = 5
+    }
+}
+_ = C()`,
+    options: [
+      "Nothing — observers don't fire during initialization",
+      "didSet",
+      "didSet, twice",
+      "Compile error",
+    ],
+    answer: 0,
+    difficulty: "senior",
+    explanation:
+      "`willSet`/`didSet` do **not** run for assignments made while the property is still being initialized — including `x = 5` inside `init`. Observers only fire on changes *after* the instance is fully initialized, so nothing prints.",
+  },
+  {
     id: "initialization-flashcard",
     type: "flashcard",
     prompt:

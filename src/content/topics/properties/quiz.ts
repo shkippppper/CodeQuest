@@ -137,6 +137,31 @@ m.items[0] = 9`,
       "`lazy` computes **once** and caches, so if the inputs later change, the cached value goes stale. A **computed** property recomputes on each access and stays correct. Use `lazy` only when the value is a one-time setup that won't need to change; otherwise compute (and cache manually if the cost demands it).",
   },
   {
+    id: "properties-inout-computed-trick",
+    type: "predict",
+    prompt: "🧠 Trick question — what prints when `bump(&b.value)` runs?",
+    code: `struct Box {
+    var backing = 0
+    var value: Int {
+        get { print("get"); return backing }
+        set { print("set"); backing = newValue }
+    }
+}
+func bump(_ n: inout Int) { n += 1 }
+var b = Box()
+bump(&b.value)`,
+    options: [
+      "get, then set (copy-in / copy-out)",
+      "Only get",
+      "Only set",
+      "Neither — computed properties can't be inout",
+    ],
+    answer: 0,
+    difficulty: "senior",
+    explanation:
+      "Passing a **computed** property as `inout` uses copy-in/copy-out: Swift calls the getter to read the value in, mutates the local copy, then calls the setter to write it back. So you see `get` then `set`. It surprises people who assume `inout` needs direct storage.",
+  },
+  {
     id: "properties-flashcard",
     type: "flashcard",
     prompt:

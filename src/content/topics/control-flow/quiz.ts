@@ -154,6 +154,31 @@ default:
       "`fallthrough` forces control into the **next** case's body unconditionally (without re-checking its pattern). So after printing `a`, it falls into `case 2` and prints `b`, then stops. It does not continue into `default`.",
   },
   {
+    id: "control-flow-fallthrough-binding-trick",
+    type: "predict",
+    prompt: "🧠 Trick question — does this compile?",
+    code: `enum E { case a(Int); case b(Int) }
+func f(_ v: E) {
+    switch v {
+    case .a(let x):
+        print(x)
+        fallthrough
+    case .b(let y):
+        print(y)
+    }
+}`,
+    options: [
+      "No — fallthrough can't enter a case that binds a new variable",
+      "Yes — it prints both x and y",
+      "No — enums can't use fallthrough",
+      "Yes — but only .a runs",
+    ],
+    answer: 0,
+    difficulty: "senior",
+    explanation:
+      "`fallthrough` jumps into the next case's body *without* running its pattern, so the binding `let y` would never be assigned. Swift therefore forbids falling through into a case that declares value bindings — a rule almost nobody remembers until the compiler complains.",
+  },
+  {
     id: "control-flow-flashcard",
     type: "flashcard",
     prompt:

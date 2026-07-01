@@ -142,6 +142,21 @@ do {
       "`rethrows` means the function throws **only** when a closure passed to it throws. This lets higher-order functions like `map`/`filter` be called without `try` when given a non-throwing closure, but propagate errors when given a throwing one — the best of both.",
   },
   {
+    id: "error-try-optional-flatten-trick",
+    type: "mcq",
+    prompt: "🧠 Trick question — for `func f() throws -> Int?`, what is the type of `let x = try? f()` in Swift 5+?",
+    options: [
+      "`Int?` — `try?` no longer adds an extra optional layer",
+      "`Int??` — a double optional",
+      "`Int` — non-optional",
+      "`Result<Int?, Error>`",
+    ],
+    answer: 0,
+    difficulty: "senior",
+    explanation:
+      "Before Swift 5, `try?` on a function returning `Int?` produced `Int??`. Swift 5 changed it to **flatten**, so you get a single `Int?` — `nil` for either a thrown error or a returned `nil`. A subtle, version-dependent gotcha that still catches people who learned pre-Swift-5.",
+  },
+  {
     id: "error-handling-flashcard",
     type: "flashcard",
     prompt:

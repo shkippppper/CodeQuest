@@ -137,6 +137,21 @@ printByRef()`,
       "`inout` is **copy-in / copy-out**: the value is copied in, the function mutates its local copy, and the result is written back to the caller's variable on return. It is *not* guaranteed to be a live reference during the call — which matters if the same variable is aliased.",
   },
   {
+    id: "closures-loop-capture-trick",
+    type: "predict",
+    prompt: "🧠 Trick question — what does this print?",
+    code: `var closures: [() -> Int] = []
+for i in 1...3 {
+    closures.append { i }
+}
+print(closures.map { $0() })`,
+    options: ["[1, 2, 3]", "[3, 3, 3]", "[4, 4, 4]", "[0, 0, 0]"],
+    answer: 0,
+    difficulty: "senior",
+    explanation:
+      "Swift's `for-in` introduces a **fresh** constant `i` on each iteration, so every closure captures its own distinct value → `[1, 2, 3]`. Languages with a single shared, mutable loop variable (like pre-`let` JavaScript with `var`) would instead print `[3, 3, 3]`.",
+  },
+  {
     id: "functions-closures-flashcard",
     type: "flashcard",
     prompt:

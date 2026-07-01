@@ -126,6 +126,18 @@ copy.append(4)        // (C) mutate`,
       "`reduce(into:)` hands the accumulator as `inout`, so you mutate a single collection in place (uniquely referenced under COW) rather than returning a fresh copy per element. That turns an accidental O(n²) into O(n) for building dictionaries/arrays.",
   },
   {
+    id: "collections-nan-trick",
+    type: "predict",
+    prompt: "🧠 Trick question — what does this print?",
+    code: `let s: Set<Double> = [.nan]
+print(s.contains(.nan))`,
+    options: ["false", "true", "0", "A runtime crash"],
+    answer: 0,
+    difficulty: "senior",
+    explanation:
+      "`NaN` is never equal to anything, including itself (`NaN == NaN` is `false`). A `Set` locates elements via `Hashable`/`==`, so it can *store* a `NaN` but can never *find* it again — `contains(.nan)` returns `false`. NaN violates the equality assumptions every hashed collection relies on.",
+  },
+  {
     id: "collections-flashcard",
     type: "flashcard",
     prompt:

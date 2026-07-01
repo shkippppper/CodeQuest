@@ -138,6 +138,23 @@ print(a.tag, a.box.n)`,
       "A non-overridden struct method uses **static dispatch** — the target is known at compile time and can be inlined — and value types carry no ARC retain/release traffic. A non-`final` class method may dispatch **dynamically** through a vtable, plus ARC on the reference. Marking a class `final` lets the compiler devirtualize.",
   },
   {
+    id: "value-mutating-self-trick",
+    type: "predict",
+    prompt: "🧠 Trick question — what does this print?",
+    code: `struct Point {
+    var x = 0
+    mutating func reset() { self = Point() }
+}
+var p = Point(x: 5)
+p.reset()
+print(p.x)`,
+    options: ["0", "5", "Compile error", "nil"],
+    answer: 0,
+    difficulty: "senior",
+    explanation:
+      "A `mutating` method on a value type can reassign `self` **wholesale** to a brand-new value. `reset()` replaces the entire struct with `Point()` (whose `x` is `0`), so it prints `0`. This is impossible on a class — you can't reassign `self` on a reference type.",
+  },
+  {
     id: "value-reference-flashcard",
     type: "flashcard",
     prompt:

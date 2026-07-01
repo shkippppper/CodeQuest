@@ -156,6 +156,19 @@ for case let n? in items {
       "`case let n?` is sugar for `case .some(let n)` — it matches only the non-`nil` elements and unwraps them. The `nil` is skipped, so the loop prints `1` then `3`. `for case` is a clean way to iterate just the present values.",
   },
   {
+    id: "optional-nested-nil-trick",
+    type: "predict",
+    prompt: "🧠 Trick question — what does this print?",
+    code: `let a: Int? = nil
+let b: Int?? = a
+print(b == nil)`,
+    options: ["false", "true", "nil", "Compile error"],
+    answer: 0,
+    difficulty: "senior",
+    explanation:
+      "Assigning `a` (an `Int?` holding `.none`) to an `Int??` **wraps** it: `b` becomes `.some(.none)` — an outer optional that *contains* an inner nil. So the outer `b` is not nil, and `b == nil` is `false`. The inner nil is hidden one layer down. Nested optionals routinely trip people up.",
+  },
+  {
     id: "explain-optionals-flashcard",
     type: "flashcard",
     prompt:

@@ -146,6 +146,17 @@ print(a, b)`,
       "`Int` is a value type (a struct), so `var b = a` copies the value. Mutating `b` leaves `a` at `1` → `1 11`. Every basic Swift type (`Int`, `Double`, `Bool`, `String`, arrays, tuples…) has this value semantics.",
   },
   {
+    id: "basics-float-equality-trick",
+    type: "predict",
+    prompt: "🧠 Trick question — what does this print?",
+    code: `print(0.1 + 0.2 == 0.3)`,
+    options: ["false", "true", "nil", "Compile error"],
+    answer: 0,
+    difficulty: "senior",
+    explanation:
+      "`Double` is binary floating point, and none of 0.1, 0.2, or 0.3 is exactly representable. `0.1 + 0.2` evaluates to `0.30000000000000004`, which is not equal to the stored `0.3`, so it prints `false`. Never compare floats with `==` — compare against a small tolerance (epsilon).",
+  },
+  {
     id: "basics-types-flashcard",
     type: "flashcard",
     prompt:

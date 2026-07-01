@@ -122,6 +122,21 @@ extension Account {
       "You can give a property's **setter** a stricter level than its getter. `public private(set)` means everyone can read `count`, but only code in the defining module (here, effectively the type) can mutate it — a clean way to expose read-only state.",
   },
   {
+    id: "access-public-memberwise-init-trick",
+    type: "mcq",
+    prompt: "🧠 Trick question — you ship `public struct Config { public var timeout = 30 }` in a framework. Why can't another module write `Config(timeout: 5)`?",
+    options: [
+      "The synthesized memberwise init is `internal`, not `public` — you must write a `public init` yourself",
+      "Structs can't be `public`",
+      "`timeout` must be `open`",
+      "You can — it works fine",
+    ],
+    answer: 0,
+    difficulty: "senior",
+    explanation:
+      "Swift synthesizes the memberwise initializer as **`internal`**, even for a `public` struct. So consumers of your framework can't construct it across the module boundary — a classic library-author trap. You must declare an explicit `public init(...)` to expose construction.",
+  },
+  {
     id: "access-control-flashcard",
     type: "flashcard",
     prompt:
