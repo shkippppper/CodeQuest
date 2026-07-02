@@ -10,7 +10,7 @@ Everything runs in the browser. There is no backend and no account: all progress
 - **Four question types** — multiple choice, "predict the output", fill-in-the-blank, and self-graded flashcards.
 - **Challenge mode** — pulls a random set of questions (10/20/30) from *all* topics, filtered by difficulty (Junior / Mid / Senior) or Mixed.
 - **Review system** — every question you miss is logged automatically so you can drill it later; clearable from Settings.
-- **Gamification** — XP, levels with ranks, and a 12-badge achievement set.
+- **Gamification** — XP, levels with ranks, and a 22-badge achievement set.
 - **Real Swift syntax highlighting** via Shiki (Oniguruma WASM engine), with copy + "Run in SwiftFiddle" on every snippet.
 - **Light / dark themes**, calm sequential single-hue palette, and motion-based animations.
 

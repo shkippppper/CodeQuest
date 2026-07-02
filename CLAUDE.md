@@ -66,7 +66,7 @@ Each question: `{ id, type, prompt, explanation, code?, difficulty? }`. A questi
 
 - **store.tsx** — the single source of truth. Ref-based store (avoids React StrictMode double-invoke) + `useSyncExternalStore`-style subscription. Persists under `localStorage` key `cq_progress_v1` (VERSION 1). `load()` does `{...emptyState(), ...parsed}` so removed fields in old saves are harmlessly ignored. Exposes `useProgress()` → `{ state, level, reviewCount, recordAnswer, recordFlashcard, completeTopic, resetAll, ... }`. Also tracks bookmarks and an auto-logged **review** list (every missed question).
 - **levels.ts** — XP awards: correctFirstTry 15, correctRetry 6, flashcardSelfPass 10, topicComplete 50, perfectTopicBonus 40, reviewRedemption 12. Level curve + rank names.
-- **badges.ts** — 12 badges, tiered bronze/silver/gold. `newlyEarned(prev, state)` diffs to fire reward popups. (No streak badges — streak was removed; replacements are `curious_mind` and `completionist`.)
+- **badges.ts** — 22 badges, tiered bronze/silver/gold. `newlyEarned(prev, state)` diffs to fire reward popups. (No streak badges — streak was removed; replacements are `curious_mind` and `completionist`.)
 - **rewardBus.ts** — tiny pub/sub; `RewardLayer.tsx` renders XP/level/badge toasts and confetti.
 
 > **The streak feature was intentionally removed** (daily streak, streak bonus XP, streak badges, TopBar pill, Settings stat). Do not reintroduce it unless asked.

@@ -26,6 +26,21 @@ function categoryComplete(s: ProgressState, cat: CategoryId): boolean {
   return ids.every((id) => s.completedTopics[id]);
 }
 
+/** Number of distinct topics the user has answered at least one question in. */
+function distinctTopicsAnswered(s: ProgressState): number {
+  const set = new Set<string>();
+  for (const key of Object.keys(s.answered)) {
+    const idx = key.indexOf("::");
+    if (idx > 0) set.add(key.slice(0, idx));
+  }
+  return set.size;
+}
+
+/** Overall accuracy over first-attempt answers (0..1); 0 when nothing answered. */
+function accuracy(s: ProgressState): number {
+  return s.totalAnswered > 0 ? s.totalCorrect / s.totalAnswered : 0;
+}
+
 export const BADGES: BadgeDef[] = [
   {
     id: "first_blood",
@@ -122,6 +137,86 @@ export const BADGES: BadgeDef[] = [
     icon: "Trophy",
     tier: "gold",
     earned: (s) => s.xp >= 1500,
+  },
+  {
+    id: "curator",
+    name: "Curator",
+    description: "Bookmark 3 topics for later.",
+    icon: "Bookmark",
+    tier: "bronze",
+    earned: (s) => s.bookmarks.length >= 3,
+  },
+  {
+    id: "well_rounded",
+    name: "Well-Rounded",
+    description: "Answer questions across 5 different topics.",
+    icon: "Compass",
+    tier: "silver",
+    earned: (s) => distinctTopicsAnswered(s) >= 5,
+  },
+  {
+    id: "getting_serious",
+    name: "Getting Serious",
+    description: "Answer 50 questions.",
+    icon: "Notebook",
+    tier: "silver",
+    earned: (s) => s.totalAnswered >= 50,
+  },
+  {
+    id: "centurion",
+    name: "Centurion",
+    description: "Answer 100 questions.",
+    icon: "Medal",
+    tier: "gold",
+    earned: (s) => s.totalAnswered >= 100,
+  },
+  {
+    id: "deadeye",
+    name: "Deadeye",
+    description: "Answer 100 questions correctly.",
+    icon: "Award",
+    tier: "gold",
+    earned: (s) => s.totalCorrect >= 100,
+  },
+  {
+    id: "precision",
+    name: "Precision",
+    description: "Hold 90%+ accuracy over at least 30 answers.",
+    icon: "Focus",
+    tier: "silver",
+    earned: (s) => s.totalAnswered >= 30 && accuracy(s) >= 0.9,
+  },
+  {
+    id: "never_give_up",
+    name: "Never Give Up",
+    description: "Redeem 10 previously-missed questions in Review.",
+    icon: "Repeat",
+    tier: "silver",
+    earned: (s) => s.redemptions >= 10,
+  },
+  {
+    id: "halfway",
+    name: "Halfway There",
+    description: "Complete half of all topics.",
+    icon: "PieChart",
+    tier: "silver",
+    earned: (s) => completedCount(s) >= Math.ceil(TOPICS.length / 2),
+  },
+  {
+    id: "perfect_ten",
+    name: "Perfect Ten",
+    description: "Ace ten topics with a perfect score.",
+    icon: "Sparkles",
+    tier: "gold",
+    earned: (s) => perfectCount(s) >= 10,
+  },
+  {
+    id: "xp_3000",
+    name: "Grandmaster",
+    description: "Earn 3,000 total XP.",
+    icon: "Star",
+    tier: "gold",
+    earned: (s) => s.xp >= 3000,
   },
 ];
 
