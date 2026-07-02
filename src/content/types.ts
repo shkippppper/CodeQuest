@@ -1,5 +1,5 @@
 export type Difficulty = "junior" | "mid" | "senior";
-export type CategoryId = "language" | "concurrency" | "ui" | "architecture";
+export type CategoryId = "language" | "types" | "concurrency" | "ui" | "architecture";
 
 export interface TopicMeta {
   id: string;
@@ -85,10 +85,18 @@ export const CATEGORIES: Record<CategoryId, CategoryInfo> = {
     icon: "Braces",
     accent: "#6d85b4",
   },
+  types: {
+    id: "types",
+    label: "Type System & POP",
+    order: 2,
+    blurb: "Protocols, generics, associated types, and Swift's protocol-oriented design.",
+    icon: "Shapes",
+    accent: "#98abce",
+  },
   concurrency: {
     id: "concurrency",
     label: "Concurrency",
-    order: 2,
+    order: 4,
     blurb: "GCD, async/await, actors, Sendable and structured concurrency.",
     icon: "Workflow",
     accent: "#4d6699",
@@ -96,7 +104,7 @@ export const CATEGORIES: Record<CategoryId, CategoryInfo> = {
   ui: {
     id: "ui",
     label: "SwiftUI & UIKit",
-    order: 3,
+    order: 5,
     blurb: "Building interfaces: state, layout, lifecycle and the view system.",
     icon: "LayoutDashboard",
     accent: "#3c527d",
@@ -104,7 +112,7 @@ export const CATEGORIES: Record<CategoryId, CategoryInfo> = {
   architecture: {
     id: "architecture",
     label: "iOS Architecture",
-    order: 4,
+    order: 9,
     blurb: "App architecture, patterns, networking, persistence and testing.",
     icon: "Building2",
     accent: "#324363",
