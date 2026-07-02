@@ -5,7 +5,7 @@ const meta: TopicMeta = {
   title: "async / await",
   category: "concurrency",
   difficulty: "mid",
-  order: 1,
+  order: 3,
   summary: "Swift's structured concurrency: suspending functions, tasks, and running work in parallel.",
   est: 15,
   tags: ["concurrency", "async", "await", "Task", "async let"],
