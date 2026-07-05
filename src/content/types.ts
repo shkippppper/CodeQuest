@@ -1,5 +1,5 @@
 export type Difficulty = "junior" | "mid" | "senior";
-export type CategoryId = "language" | "types" | "concurrency" | "ui" | "architecture";
+export type CategoryId = "language" | "types" | "memory" | "concurrency" | "ui" | "architecture";
 
 export interface TopicMeta {
   id: string;
@@ -92,6 +92,14 @@ export const CATEGORIES: Record<CategoryId, CategoryInfo> = {
     blurb: "Protocols, generics, associated types, and Swift's protocol-oriented design.",
     icon: "Shapes",
     accent: "#98abce",
+  },
+  memory: {
+    id: "memory",
+    label: "Memory Management",
+    order: 3,
+    blurb: "ARC, ownership, retain cycles, and value semantics from stack to heap.",
+    icon: "MemoryStick",
+    accent: "#5d76a8",
   },
   concurrency: {
     id: "concurrency",
