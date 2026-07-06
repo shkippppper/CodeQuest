@@ -1,5 +1,5 @@
 export type Difficulty = "junior" | "mid" | "senior";
-export type CategoryId = "language" | "types" | "memory" | "concurrency" | "ui" | "architecture";
+export type CategoryId = "language" | "types" | "memory" | "concurrency" | "ui" | "architecture" | "cs-fundamentals";
 
 export interface TopicMeta {
   id: string;
@@ -124,6 +124,14 @@ export const CATEGORIES: Record<CategoryId, CategoryInfo> = {
     blurb: "App architecture, patterns, networking, persistence and testing.",
     icon: "Building2",
     accent: "#324363",
+  },
+  "cs-fundamentals": {
+    id: "cs-fundamentals",
+    label: "CS Fundamentals",
+    order: 16,
+    blurb: "Data structures and algorithms for the coding rounds.",
+    icon: "Binary",
+    accent: "#8497c0",
   },
 };
 
