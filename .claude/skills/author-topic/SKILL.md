@@ -14,7 +14,7 @@ src/content/topics/<slug>/
 └── quiz.ts          # the question array
 ```
 
-Use the existing topics `optionals` (junior) and `async-await` (mid) as the quality bar. Read one before writing a new one.
+**All lessons follow `docs/STYLE_GUIDE.md` (step-by-step code narration).** Read it plus the gold-standard exemplar `arc/explanation.md` before writing a new lesson.
 
 ## Step 1 — `meta.ts`
 
@@ -44,14 +44,14 @@ Rules:
 
 Plain Markdown, imported with `?raw`. **Do not use MDX/JSX** — Swift's `<>` generics and `{}` closures break JSX parsing. Write normal Markdown only.
 
-Conventions that match the existing lessons:
+**The writing style is defined in `docs/STYLE_GUIDE.md` — follow it exactly** (code before prose, examples that grow line by line, one idea per paragraph, no jargon before a plain-words definition, predict-then-reveal moments, bold only first-use terms, full depth kept). The exemplar to copy is `src/content/topics/arc/explanation.md`.
+
+Mechanical conventions:
 - Open with the *problem* the feature solves, not the definition.
-- Use `## H2` for major sections and `### H3` for sub-sections — these auto-generate the right-hand table of contents and scroll-spy, so write descriptive headings.
+- Use `## H2` for major sections and `### H3` for sub-sections — these auto-generate the right-hand table of contents and scroll-spy, so write plain-statement headings.
 - Fence Swift with ` ```swift `. Snippets get Shiki highlighting, copy, and a "Run in SwiftFiddle" button.
 - To show expected console output under a snippet, use a fenced block tagged ` ```output ` or ` ```console ` — it renders as a muted output panel instead of an editor.
-- Close with an **interview lens** section: what an interviewer probes for and the senior-level framing.
-
-Keep it tight and example-driven. Aim for the depth of `optionals/explanation.md`.
+- Close with an `## Interview lens` section written as plain direct advice.
 
 ## Step 3 — `quiz.ts`
 
@@ -148,6 +148,7 @@ npm run dev     # eyeball the topic page, take the quiz, check the ToC
 Checklist before calling it done:
 - [ ] Folder name == `meta.id`.
 - [ ] `order` doesn't clash with a sibling in the same category.
+- [ ] Lesson passes the self-check list at the bottom of `docs/STYLE_GUIDE.md`.
 - [ ] Lesson opens with the problem, uses `##`/`###` headings, ends with an interview lens.
 - [ ] Quiz has a mix of types (aim for all five), each with a clear `explanation`.
 - [ ] `npm run build` passes.

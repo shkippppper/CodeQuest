@@ -45,10 +45,10 @@ src/
 
 Content is **auto-discovered — no registration step**. `registry.ts` uses `import.meta.glob` to scan `topics/*/{meta.ts,explanation.md,quiz.ts}`, builds the `TOPICS[]` array, sorts by category order then `meta.order`, and derives everything (sidebar, dashboard, Challenge pool, prev/next nav).
 
-**To add a topic**: create `src/content/topics/<slug>/` with three files. It appears everywhere automatically. There is a Claude Code skill that walks through this end to end — `.claude/skills/author-topic/SKILL.md`. Existing topics `optionals` and `async-await` are the quality bar to copy.
+**To add a topic**: create `src/content/topics/<slug>/` with three files. It appears everywhere automatically. There is a Claude Code skill that walks through this end to end — `.claude/skills/author-topic/SKILL.md`. **All lesson prose follows `docs/STYLE_GUIDE.md`** (step-by-step code narration — code first, examples grow line by line, no jargon before plain-words meaning); the exemplar to copy is `arc/explanation.md`.
 
 - `meta.ts` — `export default` a `TopicMeta`: `{ id, title, category, difficulty, order, summary, est, tags? }`. `id` must equal the folder slug.
-- `explanation.md` — the lesson. **Plain Markdown, NOT MDX** (imported `?raw`). This is deliberate: Swift's `<>` generics and `{}` closures break MDX's JSX parser. Use fenced ` ```swift ` blocks. Convention: every lesson ends with an **"Interview lens"** section.
+- `explanation.md` — the lesson. **Plain Markdown, NOT MDX** (imported `?raw`). This is deliberate: Swift's `<>` generics and `{}` closures break MDX's JSX parser. Use fenced ` ```swift ` blocks. Writing style: `docs/STYLE_GUIDE.md`. Convention: every lesson ends with an **"Interview lens"** section.
 - `quiz.ts` — `export default` a `Question[]`.
 
 ### Question types (`src/content/types.ts`)

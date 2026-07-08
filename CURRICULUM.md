@@ -15,6 +15,7 @@ Each topic line is:
 - **Sections** → the `##` headings the lesson's `explanation.md` should contain, in order. These are the "paragraphs" to generate.
 
 ### Conventions every generated lesson follows
+- **Writing style: `docs/STYLE_GUIDE.md`** — step-by-step code narration (code before prose, examples grow line by line, one idea per paragraph, no jargon before a plain-words definition). Exemplar: `src/content/topics/arc/explanation.md`.
 - Open with the **problem** the feature solves, not the dry definition.
 - Every lesson ends with an **"Interview lens"** section (what an interviewer probes for + the senior framing) — so it is implied for all topics below and not repeated each time.
 - Each quiz mixes the four question types (`mcq`, `predict`, `fill`, `flashcard`).
@@ -28,29 +29,29 @@ The app currently ships four category ids in `src/content/types.ts` (`language`,
 ## 1. Swift Language Fundamentals
 `language` · icon `Braces` — the core language every other topic builds on.
 
-- **Variables, Constants & Type Inference** — `basics-types` · junior · ⬜
+- **Variables, Constants & Type Inference** — `basics-types` · junior · ✅
   Sections: `let` vs `var` · Type inference vs annotation · Value initialization & default values · Type safety · Numeric types & conversions · Tuples
 - **Optionals** — `optionals` · junior · ✅
   Sections: What is an optional · Why optionals exist · Force unwrapping · Optional binding (`if let` / `guard let`) · Nil-coalescing `??` · Optional chaining · Implicitly unwrapped optionals · Common pitfalls
-- **Collections: Array, Set, Dictionary** — `collections` · junior · ⬜
+- **Collections: Array, Set, Dictionary** — `collections` · junior · ✅
   Sections: Arrays · Sets & uniqueness · Dictionaries · Mutability & value semantics · Common operations (map/filter/reduce) · Choosing the right collection
-- **Control Flow & Pattern Matching** — `control-flow` · junior · ⬜
+- **Control Flow & Pattern Matching** — `control-flow` · junior · ✅
   Sections: `if` / `guard` / `switch` · Exhaustive switches · `where` clauses · Pattern matching with tuples & enums · Loops & control transfer · `case let` binding
-- **Functions & Closures** — `functions-closures` · junior · ⬜
+- **Functions & Closures** — `functions-closures` · junior · ✅
   Sections: Function syntax & parameters · Argument labels & defaults · Variadic & inout parameters · Closures & closure syntax · Trailing closures · Escaping vs non-escaping · Capturing values · Higher-order functions
-- **Enums & Associated Values** — `enums` · junior · ⬜
+- **Enums & Associated Values** — `enums` · junior · ✅
   Sections: Basic enums & raw values · Associated values · Pattern matching enums · Recursive (`indirect`) enums · `CaseIterable` · Enums as state machines
-- **Structs vs Classes (Value vs Reference)** — `value-reference` · junior · ⬜
+- **Structs vs Classes (Value vs Reference)** — `value-reference` · junior · ✅
   Sections: Value vs reference semantics · Copying behavior · Identity vs equality · Mutability & `mutating` · When to choose which · Inheritance trade-offs
-- **Properties** — `properties` · junior · ⬜
+- **Properties** — `properties` · junior · ✅
   Sections: Stored properties · Computed properties · Property observers (`willSet`/`didSet`) · Lazy properties · Type (`static`/`class`) properties · `let` vs `var` properties
-- **Initialization** — `initialization` · mid · ⬜
+- **Initialization** — `initialization` · mid · ✅
   Sections: Designated & convenience initializers · Memberwise initializers · Failable initializers · Required initializers · Two-phase initialization · `deinit`
-- **Error Handling** — `error-handling` · mid · ⬜
+- **Error Handling** — `error-handling` · mid · ✅
   Sections: The `Error` protocol · `throws` / `try` / `catch` · `try?` and `try!` · `defer` · Typed throws · Result type · Errors vs optionals vs crashes
-- **Strings & Characters** — `strings` · junior · ⬜
+- **Strings & Characters** — `strings` · junior · ✅
   Sections: String as a value type · Characters & grapheme clusters · Unicode & scalars · String indices · Substrings & memory · Interpolation & formatting
-- **Access Control** — `access-control` · mid · ⬜
+- **Access Control** — `access-control` · mid · ✅
   Sections: Access levels (`open`→`private`) · `fileprivate` vs `private` · Module boundaries · `internal` default · Access control & testability (`@testable`)
 
 ---
@@ -58,25 +59,25 @@ The app currently ships four category ids in `src/content/types.ts` (`language`,
 ## 2. Type System & Protocol-Oriented Programming
 `types` · icon `Shapes` — Swift's expressive, generic, protocol-first type system.
 
-- **Protocols & Protocol-Oriented Programming** — `protocols` · mid · ⬜
+- **Protocols & Protocol-Oriented Programming** — `protocols` · mid · ✅
   Sections: Defining protocols · Protocol conformance · Default implementations via extensions · Protocol composition · POP vs OOP · Protocols as types vs constraints
-- **Generics** — `generics` · mid · ⬜
+- **Generics** — `generics` · mid · ✅
   Sections: Why generics · Generic functions · Generic types · Type constraints (`where`) · Conditional conformance · Generic specialization & performance
-- **Associated Types & Type Erasure** — `associated-types` · senior · ⬜
+- **Associated Types & Type Erasure** — `associated-types` · senior · ✅
   Sections: `associatedtype` · Self & associated-type requirements · The "protocol with Self" limitation · Type erasure (`AnyView`/`AnySequence`) · Building your own type eraser
-- **Opaque Types & Existentials (`some` vs `any`)** — `opaque-existential` · senior · ⬜
+- **Opaque Types & Existentials (`some` vs `any`)** — `opaque-existential` · senior · ✅
   Sections: Existential containers · `any` keyword & boxing cost · Opaque types `some` · Reverse generics · When to use which · Performance implications
-- **Extensions** — `extensions` · junior · ⬜
+- **Extensions** — `extensions` · junior · ✅
   Sections: Extending types · Adding computed properties & methods · Protocol conformance via extension · Constrained extensions · Organizing code with extensions
-- **Property Wrappers** — `property-wrappers` · mid · ⬜
+- **Property Wrappers** — `property-wrappers` · mid · ✅
   Sections: The problem they solve · `wrappedValue` · `projectedValue` (`$`) · Building a custom wrapper · Wrappers in SwiftUI (`@State`, `@Published`) · Composition & limits
-- **Result Builders** — `result-builders` · senior · ⬜
+- **Result Builders** — `result-builders` · senior · ✅
   Sections: What result builders do · `buildBlock` & friends · How SwiftUI's `ViewBuilder` works · Building a custom DSL · Control flow in builders
-- **Key Paths** — `key-paths` · mid · ⬜
+- **Key Paths** — `key-paths` · mid · ✅
   Sections: KeyPath types · Reading & writing via key paths · Key paths as functions · Dynamic member lookup · Use in generic APIs
-- **Codable** — `codable` · mid · ⬜
+- **Codable** — `codable` · mid · ✅
   Sections: `Encodable` / `Decodable` · Automatic synthesis · `CodingKeys` · Custom encoding/decoding · Nested & heterogeneous JSON · Dates & strategies · Error handling
-- **Core Protocol Conformances** — `protocol-conformances` · mid · ⬜
+- **Core Protocol Conformances** — `protocol-conformances` · mid · ✅
   Sections: `Equatable` · `Hashable` · `Comparable` · `Identifiable` · `CustomStringConvertible` · Synthesized conformance & custom implementations
 
 ---
@@ -84,19 +85,19 @@ The app currently ships four category ids in `src/content/types.ts` (`language`,
 ## 3. Memory Management
 `memory` · icon `MemoryStick` — ARC, ownership, and lifetime.
 
-- **Automatic Reference Counting (ARC)** — `arc` · mid · ⬜
+- **Automatic Reference Counting (ARC)** — `arc` · mid · ✅
   Sections: How ARC works · Reference counts · When objects deallocate · ARC vs garbage collection · Visualizing the object graph
-- **Strong, Weak & Unowned** — `reference-types` · mid · ⬜
+- **Strong, Weak & Unowned** — `reference-types` · mid · ✅
   Sections: Strong references · `weak` & optionality · `unowned` & its danger · Choosing weak vs unowned · Lifetime guarantees
-- **Retain Cycles** — `retain-cycles` · mid · ⬜
+- **Retain Cycles** — `retain-cycles` · mid · ✅
   Sections: What a retain cycle is · Cycles between objects · Cycles in closures · Delegate cycles · Breaking cycles · Detecting leaks
-- **Capture Lists in Closures** — `capture-lists` · mid · ⬜
+- **Capture Lists in Closures** — `capture-lists` · mid · ✅
   Sections: How closures capture · `[weak self]` / `[unowned self]` · Capturing values vs references · The `guard let self` dance · Common mistakes
-- **Value Semantics & Copy-on-Write** — `copy-on-write` · senior · ⬜
+- **Value Semantics & Copy-on-Write** — `copy-on-write` · senior · ✅
   Sections: Value semantics recap · How COW works internally · `isKnownUniquelyReferenced` · Implementing COW for a custom type · Performance trade-offs
-- **Memory Layout: Stack vs Heap** — `memory-layout` · senior · ⬜
+- **Memory Layout: Stack vs Heap** — `memory-layout` · senior · ✅
   Sections: Stack vs heap allocation · Where values & references live · `MemoryLayout` · Inline storage & existential boxing · Alignment & size
-- **Autorelease Pools** — `autorelease` · senior · ⬜
+- **Autorelease Pools** — `autorelease` · senior · ✅
   Sections: What autorelease pools are · `@autoreleasepool` · When they matter (loops, bridging) · Interaction with ARC
 
 ---
@@ -104,25 +105,25 @@ The app currently ships four category ids in `src/content/types.ts` (`language`,
 ## 4. Concurrency & Parallelism
 `concurrency` · icon `Workflow` — from GCD to structured concurrency.
 
-- **Grand Central Dispatch (GCD)** — `gcd` · mid · ⬜
+- **Grand Central Dispatch (GCD)** — `gcd` · mid · ✅
   Sections: Queues (serial vs concurrent) · Sync vs async dispatch · Main vs global queues · QoS & priority · Dispatch groups · Barriers · Deadlocks
-- **Operations & OperationQueue** — `operations` · mid · ⬜
+- **Operations & OperationQueue** — `operations` · mid · ✅
   Sections: `Operation` vs GCD · `OperationQueue` · Dependencies · Cancellation · Custom async operations · When to prefer operations
 - **async / await** — `async-await` · mid · ✅
   Sections: The problem with callbacks · `async` functions & `await` · Where you can call async code · Sequential vs parallel · Structured concurrency · Cancellation · MainActor & UI
-- **Structured Concurrency (Task & TaskGroup)** — `structured-concurrency` · senior · ⬜
+- **Structured Concurrency (Task & TaskGroup)** — `structured-concurrency` · senior · ✅
   Sections: Task trees · `async let` · `TaskGroup` / `withTaskGroup` · Task priority & inheritance · Cancellation propagation · Unstructured `Task {}`
-- **Actors & Data Isolation** — `actors` · senior · ⬜
+- **Actors & Data Isolation** — `actors` · senior · ✅
   Sections: The data-race problem · Actor isolation · `await` on actor methods · Actor reentrancy · `nonisolated` members · Global actors
-- **Sendable & Data Races** — `sendable` · senior · ⬜
+- **Sendable & Data Races** — `sendable` · senior · ✅
   Sections: What `Sendable` means · Sendable value vs reference types · `@Sendable` closures · Compiler-enforced data-race safety · `@unchecked Sendable`
-- **MainActor & UI Threading** — `main-actor` · mid · ⬜
+- **MainActor & UI Threading** — `main-actor` · mid · ✅
   Sections: Why UI is main-thread only · `@MainActor` on functions/types · `MainActor.run` · Inheriting isolation · Common threading bugs
-- **AsyncSequence & AsyncStream** — `async-sequence` · senior · ⬜
+- **AsyncSequence & AsyncStream** — `async-sequence` · senior · ✅
   Sections: `AsyncSequence` protocol · `for try await` loops · `AsyncStream` & continuations · Backpressure · Bridging delegates/notifications to streams
-- **Continuations** — `continuations` · senior · ⬜
+- **Continuations** — `continuations` · senior · ✅
   Sections: Bridging callbacks to async · `withCheckedContinuation` · `withCheckedThrowingContinuation` · Resume-exactly-once rule · Pitfalls
-- **Concurrency Pitfalls** — `concurrency-pitfalls` · senior · ⬜
+- **Concurrency Pitfalls** — `concurrency-pitfalls` · senior · ✅
   Sections: Race conditions · Deadlocks & priority inversion · Thread explosion · Shared mutable state · Debugging with Thread Sanitizer
 
 ---
@@ -130,27 +131,27 @@ The app currently ships four category ids in `src/content/types.ts` (`language`,
 ## 5. SwiftUI
 `swiftui` · icon `LayoutDashboard` — Apple's declarative UI framework.
 
-- **Views & Declarative UI** — `swiftui-views` · junior · ⬜
+- **Views & Declarative UI** — `swiftui-views` · junior · ✅
   Sections: The `View` protocol · `body` & view composition · Value-type views · Modifiers · `@ViewBuilder` basics · Previews
-- **State Management (@State & @Binding)** — `swiftui-state` · mid · ⬜
+- **State Management (@State & @Binding)** — `swiftui-state` · mid · ✅
   Sections: Source of truth · `@State` · `@Binding` · `$` projected bindings · State & view identity · Local vs shared state
-- **Data Flow (ObservableObject & Environment)** — `swiftui-data-flow` · mid · ⬜
+- **Data Flow (ObservableObject & Environment)** — `swiftui-data-flow` · mid · ✅
   Sections: `ObservableObject` & `@Published` · `@StateObject` vs `@ObservedObject` · `@EnvironmentObject` · `@Environment` values · Choosing the right wrapper
-- **The Observation Framework (@Observable)** — `observation` · mid · ⬜
+- **The Observation Framework (@Observable)** — `observation` · mid · ✅
   Sections: Why Observation replaced ObservableObject · `@Observable` macro · Fine-grained tracking · `@Bindable` · Migration notes
-- **Layout System** — `swiftui-layout` · mid · ⬜
+- **Layout System** — `swiftui-layout` · mid · ✅
   Sections: Stacks (H/V/Z) · The layout negotiation (proposed size) · Alignment & guides · `GeometryReader` · `Spacer` & frames · The `Layout` protocol
-- **Lists & Performance** — `swiftui-lists` · mid · ⬜
+- **Lists & Performance** — `swiftui-lists` · mid · ✅
   Sections: `List` & `ForEach` · Identity & `id:` · Lazy stacks & grids · Diffing & reload behavior · Performance pitfalls
-- **Navigation** — `swiftui-navigation` · mid · ⬜
+- **Navigation** — `swiftui-navigation` · mid · ✅
   Sections: `NavigationStack` · Value-based navigation · Programmatic navigation & paths · Sheets, popovers, alerts · Deep linking
-- **View Lifecycle & Identity** — `swiftui-lifecycle` · senior · ⬜
+- **View Lifecycle & Identity** — `swiftui-lifecycle` · senior · ✅
   Sections: Structural vs explicit identity · `onAppear` / `onDisappear` · `task` modifier · How SwiftUI decides to redraw · `@State` lifetime
-- **Animations & Transitions** — `swiftui-animations` · mid · ⬜
+- **Animations & Transitions** — `swiftui-animations` · mid · ✅
   Sections: Implicit vs explicit animations · `withAnimation` · Transitions · `matchedGeometryEffect` · Animatable & custom animations · Phase/keyframe animators
-- **Custom Modifiers & ViewBuilders** — `swiftui-modifiers` · senior · ⬜
+- **Custom Modifiers & ViewBuilders** — `swiftui-modifiers` · senior · ✅
   Sections: `ViewModifier` protocol · Reusable modifiers · `@ViewBuilder` functions · Conditional content · PreferenceKeys
-- **SwiftUI ↔ UIKit Interop** — `swiftui-uikit-interop` · senior · ⬜
+- **SwiftUI ↔ UIKit Interop** — `swiftui-uikit-interop` · senior · ✅
   Sections: `UIViewRepresentable` · `UIViewControllerRepresentable` · Coordinators · Hosting SwiftUI in UIKit (`UIHostingController`) · Data flow across the boundary
 
 ---
@@ -158,23 +159,23 @@ The app currently ships four category ids in `src/content/types.ts` (`language`,
 ## 6. UIKit
 `uikit` · icon `AppWindow` — the imperative UI framework still core to most apps.
 
-- **View Controller Lifecycle** — `vc-lifecycle` · junior · ⬜
+- **View Controller Lifecycle** — `vc-lifecycle` · junior · ✅
   Sections: `viewDidLoad` → `viewDidAppear` order · `loadView` · Appearance callbacks · Memory warnings · Container VCs
-- **Auto Layout & Constraints** — `auto-layout` · mid · ⬜
+- **Auto Layout & Constraints** — `auto-layout` · mid · ✅
   Sections: Constraints & the layout engine · Intrinsic content size · Content hugging & compression resistance · Priorities · Stack views · Debugging conflicts
-- **Frame vs Bounds** — `frame-bounds` · junior · ⬜
+- **Frame vs Bounds** — `frame-bounds` · junior · ✅
   Sections: Coordinate systems · `frame` · `bounds` · `center` & transforms · When each changes
-- **UITableView & UICollectionView** — `table-collection` · mid · ⬜
+- **UITableView & UICollectionView** — `table-collection` · mid · ✅
   Sections: Data source & delegate · Cell reuse · Heights & sizing · Sections & supplementary views · Selection & editing · Performance
-- **Diffable Data Sources & Compositional Layout** — `diffable-compositional` · senior · ⬜
+- **Diffable Data Sources & Compositional Layout** — `diffable-compositional` · senior · ✅
   Sections: The reload-vs-diff problem · `NSDiffableDataSourceSnapshot` · Section/item identifiers · Compositional layout (groups/sections) · Animating updates
-- **Responder Chain & Events** — `responder-chain` · mid · ⬜
+- **Responder Chain & Events** — `responder-chain` · mid · ✅
   Sections: `UIResponder` · First responder · Hit testing · Touch event delivery · Custom event handling
-- **Navigation & Coordinators (UIKit)** — `uikit-navigation` · mid · ⬜
+- **Navigation & Coordinators (UIKit)** — `uikit-navigation` · mid · ✅
   Sections: `UINavigationController` · Modal presentation · Segues vs programmatic · The Coordinator pattern · Passing data back
-- **Views & Layers (Core Animation)** — `views-layers` · mid · ⬜
+- **Views & Layers (Core Animation)** — `views-layers` · mid · ✅
   Sections: View/layer relationship · `CALayer` properties · Implicit animations · `CABasicAnimation` / keyframes · Layer-backed performance
-- **Gesture Recognizers** — `gestures` · junior · ⬜
+- **Gesture Recognizers** — `gestures` · junior · ✅
   Sections: Built-in recognizers · Targets & actions · Simultaneous recognition · Delegate methods · Custom gestures
 
 ---
@@ -226,27 +227,27 @@ The app currently ships four category ids in `src/content/types.ts` (`language`,
 ## 9. App Architecture
 `architecture` · icon `Building2` — structuring real apps.
 
-- **MVC & Its Problems** — `mvc` · junior · ⬜
+- **MVC & Its Problems** — `mvc` · junior · ✅
   Sections: The intended MVC · Cocoa MVC · "Massive View Controller" · Responsibilities & coupling · Why teams move beyond it
-- **MVVM** — `mvvm` · mid · ⬜
+- **MVVM** — `mvvm` · mid · ✅
   Sections: Model / View / ViewModel roles · Binding the view · Testable view models · MVVM in SwiftUI vs UIKit · Pitfalls (fat view models)
-- **MVP** — `mvp` · mid · ⬜
+- **MVP** — `mvp` · mid · ✅
   Sections: Presenter vs ViewModel · Passive view · Contracts/protocols · Testability · MVP vs MVVM
-- **VIPER** — `viper` · senior · ⬜
+- **VIPER** — `viper` · senior · ✅
   Sections: View/Interactor/Presenter/Entity/Router · Boundaries & protocols · Routing · Trade-offs & boilerplate · When it's justified
-- **Clean Architecture** — `clean-architecture` · senior · ⬜
+- **Clean Architecture** — `clean-architecture` · senior · ✅
   Sections: Layers & the dependency rule · Entities & use cases · Interface adapters · Frameworks at the edge · Mapping to iOS · Pros & cons
-- **The Composable Architecture (TCA)** — `tca` · senior · ⬜
+- **The Composable Architecture (TCA)** — `tca` · senior · ✅
   Sections: State / Action / Reducer / Store · Effects & dependencies · Composition & scoping · Testing · Trade-offs
-- **Unidirectional Data Flow / Redux** — `unidirectional` · senior · ⬜
+- **Unidirectional Data Flow / Redux** — `unidirectional` · senior · ✅
   Sections: Single source of truth · Actions & reducers · Side effects & middleware · Predictability & debugging · Comparison to MVVM
-- **Coordinator Pattern** — `coordinator` · mid · ⬜
+- **Coordinator Pattern** — `coordinator` · mid · ✅
   Sections: Why move navigation out of VCs · Coordinator hierarchy · Child coordinators · Passing data & callbacks · Coordinators in SwiftUI
-- **Dependency Injection** — `dependency-injection` · mid · ⬜
+- **Dependency Injection** — `dependency-injection` · mid · ✅
   Sections: Why DI · Constructor vs property vs method injection · DI containers · Service locator anti-pattern · DI for testability · Compile-time DI
-- **Modularization** — `modularization` · senior · ⬜
+- **Modularization** — `modularization` · senior · ✅
   Sections: Why modularize · Feature modules · SPM packages · Public/internal boundaries · Build-time impact · Dependency graphs
-- **Routing & Navigation Architecture** — `routing-architecture` · senior · ⬜
+- **Routing & Navigation Architecture** — `routing-architecture` · senior · ✅
   Sections: Centralized vs decentralized routing · Deep links & URL routing · Type-safe routes · Navigation state restoration
 
 ---
@@ -413,11 +414,11 @@ The app currently ships four category ids in `src/content/types.ts` (`language`,
 ## 16. Computer Science Fundamentals
 `cs-fundamentals` · icon `Binary` — data structures & algorithms (coding rounds).
 
-- **Big-O & Complexity Analysis** — `big-o` · junior · ⬜
+- **Big-O & Complexity Analysis** — `big-o` · junior · ✅
   Sections: Time vs space complexity · Common classes · Amortized analysis · Best/avg/worst case · Analyzing Swift code
-- **Arrays & Strings** — `ds-arrays` · junior · ⬜
+- **Arrays & Strings** — `ds-arrays` · junior · ✅
   Sections: Array internals & complexity · Two pointers · Sliding window · In-place tricks · String specifics in Swift
-- **Linked Lists** — `ds-linked-lists` · mid · ⬜
+- **Linked Lists** — `ds-linked-lists` · mid · ✅
   Sections: Singly vs doubly · Building one in Swift (value vs reference) · Reversal · Cycle detection · Common problems
 - **Stacks & Queues** — `ds-stacks-queues` · junior · ⬜
   Sections: Stack operations & uses · Queue & deque · Implementations in Swift · Monotonic stack · Examples
