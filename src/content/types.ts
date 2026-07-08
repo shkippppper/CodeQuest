@@ -1,5 +1,20 @@
 export type Difficulty = "junior" | "mid" | "senior";
-export type CategoryId = "language" | "types" | "memory" | "concurrency" | "ui" | "architecture" | "cs-fundamentals";
+export type CategoryId =
+  | "language"
+  | "types"
+  | "memory"
+  | "concurrency"
+  | "ui"
+  | "reactive"
+  | "foundation"
+  | "architecture"
+  | "solid"
+  | "patterns"
+  | "testing"
+  | "performance"
+  | "system-design"
+  | "tooling"
+  | "cs-fundamentals";
 
 export interface TopicMeta {
   id: string;
@@ -117,6 +132,22 @@ export const CATEGORIES: Record<CategoryId, CategoryInfo> = {
     icon: "LayoutDashboard",
     accent: "#3c527d",
   },
+  reactive: {
+    id: "reactive",
+    label: "Combine & Reactive",
+    order: 7,
+    blurb: "Publishers, operators, subjects and bridging streams to async/await.",
+    icon: "GitBranch",
+    accent: "#7b90bb",
+  },
+  foundation: {
+    id: "foundation",
+    label: "Networking & Persistence",
+    order: 8,
+    blurb: "URLSession, Codable pipelines, Core Data, SwiftData and caching.",
+    icon: "Database",
+    accent: "#46608f",
+  },
   architecture: {
     id: "architecture",
     label: "iOS Architecture",
@@ -124,6 +155,54 @@ export const CATEGORIES: Record<CategoryId, CategoryInfo> = {
     blurb: "App architecture, patterns, networking, persistence and testing.",
     icon: "Building2",
     accent: "#324363",
+  },
+  solid: {
+    id: "solid",
+    label: "SOLID & Clean Code",
+    order: 10,
+    blurb: "The five SOLID principles plus the habits of maintainable code.",
+    icon: "Ruler",
+    accent: "#a5b5d3",
+  },
+  patterns: {
+    id: "patterns",
+    label: "Design Patterns",
+    order: 11,
+    blurb: "GoF and Cocoa patterns, written the way Swift actually uses them.",
+    icon: "Puzzle",
+    accent: "#64789f",
+  },
+  testing: {
+    id: "testing",
+    label: "Testing & Quality",
+    order: 12,
+    blurb: "XCTest, Swift Testing, test doubles and strategies that scale.",
+    icon: "FlaskConical",
+    accent: "#8fa2c6",
+  },
+  performance: {
+    id: "performance",
+    label: "Performance",
+    order: 13,
+    blurb: "Instruments, launch time, rendering hitches and memory efficiency.",
+    icon: "Gauge",
+    accent: "#55658b",
+  },
+  "system-design": {
+    id: "system-design",
+    label: "Mobile System Design",
+    order: 14,
+    blurb: "The senior round: feeds, sync engines, chat and networking layers.",
+    icon: "Network",
+    accent: "#2b3a55",
+  },
+  tooling: {
+    id: "tooling",
+    label: "Tooling & Ecosystem",
+    order: 15,
+    blurb: "SPM, the Xcode build system, signing, CI/CD and debugging tools.",
+    icon: "Wrench",
+    accent: "#718bb9",
   },
   "cs-fundamentals": {
     id: "cs-fundamentals",
