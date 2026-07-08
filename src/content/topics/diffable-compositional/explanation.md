@@ -1,54 +1,198 @@
-## The problem: batch updates and layout that don't scale
+## The crash that made Apple redesign the API
 
-Classic `reloadData()` throws away everything and rebuilds — no animation, and it hides bugs. The alternative, manual `performBatchUpdates` with `insertRows`/`deleteRows`, is notoriously crash-prone: if your before/after counts don't exactly match the deltas you describe, the app throws "invalid number of rows." Meanwhile, `UICollectionViewFlowLayout` struggles with anything beyond a uniform grid. iOS 13 introduced two APIs that fix both: **diffable data sources** (describe *state*, not *changes*) and **compositional layout** (compose complex layouts from small pieces).
+Delete one item from your model, then tell the collection view exactly what you did:
 
-## The reload-vs-diff problem
+```swift
+items.remove(at: 3)
+collectionView.deleteItems(at: [IndexPath(item: 3, section: 0)])
+```
 
-- **`reloadData()`** — simple but nukes the whole view: no animation, loses scroll/selection nuance, and masks inconsistencies.
-- **Manual batch updates** — animate, but you must hand-compute inserts/deletes/moves and keep them **perfectly consistent** with your model counts, or you crash. This is error-prone and a common source of production bugs.
+This is the old contract. You change your data, then you describe the precise insert/delete/move deltas to the view.
 
-Diffable data sources let you skip the delta math entirely.
+Get the description slightly wrong — one forgotten insert, one stale count — and the app dies at runtime:
 
-## `NSDiffableDataSourceSnapshot`
+```
+Invalid number of items in section 0. The number of items after the update (9)
+must be equal to the number of items before the update (10), plus or minus
+the number of items inserted or deleted.
+```
 
-The new model: you never describe *changes*. You build a **snapshot** — a value describing the **current desired state** (which sections, which items, in order) — and **apply** it. The framework **diffs** the new snapshot against the old and performs the correct inserts/deletes/moves for you.
+`performBatchUpdates` animates nicely, but *you* do the delta math and the framework only checks your work. This exactness requirement made manual batch updates a famous source of production crashes.
+
+## The blunt alternative: reload everything
+
+There has always been an escape hatch:
+
+```swift
+collectionView.reloadData()
+```
+
+No crash — but it throws away the entire view and rebuilds it. No animation, selection and scroll subtleties get lost.
+
+Worse, because `reloadData` never verifies anything, it quietly *masks* the same model inconsistencies that would have crashed batch updates. The bug is still there; you just stopped hearing about it.
+
+So before iOS 13 the choice was: safe but ugly, or animated but crash-prone. On the layout side there was a matching pain — `UICollectionViewFlowLayout` handles uniform grids fine but fights you on anything fancier.
+
+iOS 13 shipped two APIs that replace both halves: **diffable data sources** for updates, and **compositional layout** for layout. This lesson walks through each.
+
+## Describe the state, not the changes
+
+Here is the entire new update model:
 
 ```swift
 var snapshot = NSDiffableDataSourceSnapshot<Section, Item>()
 snapshot.appendSections([.main])
 snapshot.appendItems(currentItems, toSection: .main)
-dataSource.apply(snapshot, animatingDifferences: true)   // framework computes the diff
+dataSource.apply(snapshot, animatingDifferences: true)
 ```
 
-You register a **cell provider** closure once (like `cellForRowAt`), and thereafter you just apply snapshots. No more `insertRows`/`deleteRows`, no more count-mismatch crashes.
+Read it as a sentence: "here is what the list should look like *now*." A **snapshot** is a plain value describing the desired end state — which sections exist, which items, in what order.
 
-## Section & item identifiers
+You never say "delete row 3". You hand over the new truth, and `apply` *diffs* it — compares the new snapshot against the previous one and computes the inserts, deletes, and moves itself.
 
-The critical requirement: sections and items are identified by **`Hashable` identifiers**, not by index. The snapshot stores **identifiers**, and the diff is computed by comparing identifier sets and order.
+The delta math you used to hand-write is now the framework's job. A count-mismatch crash is impossible, because you never state counts or index paths at all.
 
-Two rules that trip people up:
-- **Identifiers must be unique and stable.** Duplicate identifiers in a snapshot **crash**.
-- **Diffing is by identity, not content.** If an item's *identity* stays the same but its *content* changes, the diff sees "no change" and won't refresh that cell — use `reconfigureItems(_:)` (or `reloadItems`) to update the visible cell. Prefer identifiers that are stable ids (a model's `id`), not the whole struct, so edits don't count as delete+insert.
+### Set up the data source once
 
-## Compositional layout
-
-**`UICollectionViewCompositionalLayout`** builds a layout by composing a hierarchy: **items** go into **groups** (horizontal/vertical), groups into **sections**, sections into the layout.
+Before applying snapshots, you create the data source with a **cell provider** — a closure that plays the role `cellForItemAt` used to:
 
 ```swift
-let item = NSCollectionLayoutItem(layoutSize: ...)
-let group = NSCollectionLayoutGroup.horizontal(layoutSize: ..., subitems: [item])
+dataSource = UICollectionViewDiffableDataSource<Section, Item>(
+    collectionView: collectionView
+) { collectionView, indexPath, item in
+    // dequeue a cell and configure it for `item`
+}
+```
+
+You write this once. From then on, every update in the app is "build snapshot, apply" — there is no other update path, no `insertItems`, no `deleteItems`.
+
+## Identifiers are the whole game
+
+Look again at the generic parameters: `NSDiffableDataSourceSnapshot<Section, Item>`. Both types must conform to `Hashable`, because the snapshot doesn't store your rows — it stores **identifiers** for them.
+
+The diff is computed by comparing identifier sets and their order. That leads to two rules people learn the hard way.
+
+### Rule one: identifiers must be unique and stable
+
+```swift
+snapshot.appendItems([itemA, itemA])   // crash — duplicate identifier
+```
+
+The same identifier appearing twice in one snapshot is a crash, full stop.
+
+Stability matters too. If an item's identifier changes between snapshots, the diff reads it as "old item deleted, new item inserted" — not as the same row.
+
+### Rule two: the diff sees identity, not content
+
+Time to predict. Your `Item` is identified by its `id`. You change one item's `title`, keep its `id` the same, build a fresh snapshot, and apply it. What happens on screen?
+
+Answer: *nothing changes.* The diff compares identifiers, and every identifier is the same as before — so it reports "no changes" and never touches the visible cell.
+
+The fix is to tell the snapshot explicitly which items need re-rendering:
+
+```swift
+snapshot.reconfigureItems([changedItem])   // iOS 15+: update the existing cell in place
+snapshot.reloadItems([changedItem])        // older: replace the cell entirely
+```
+
+`reconfigureItems` re-runs your cell provider for the cell that's already on screen — cheaper than `reloadItems`, which swaps in a fresh cell.
+
+### Which identifier should you use?
+
+Use the model's stable `id`, not the whole struct:
+
+```swift
+snapshot.appendItems(items.map(\.id), toSection: .main)
+```
+
+If the whole struct is the identifier, then editing *any* field changes the hash — and the diff sees a delete plus an insert. Your edited row flickers out and back instead of updating in place.
+
+## Build layouts from small pieces
+
+Now the layout half. With **compositional layout** you don't subclass `UICollectionViewLayout` — you compose a hierarchy of small descriptions. Start with one:
+
+```swift
+let itemSize = NSCollectionLayoutSize(
+    widthDimension: .fractionalWidth(0.5),
+    heightDimension: .absolute(100))
+let item = NSCollectionLayoutItem(layoutSize: itemSize)
+```
+
+An *item* describes one cell's size. This one is half its container's width and 100 points tall.
+
+Items go into a group:
+
+```swift
+let groupSize = NSCollectionLayoutSize(
+    widthDimension: .fractionalWidth(1.0),
+    heightDimension: .absolute(100))
+let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize,
+                                               subitems: [item])
+```
+
+A *group* is a row or column of items. This group is full-width and lays items out horizontally — so two half-width items fill each row.
+
+Groups go into a section, and the section into the layout:
+
+```swift
 let section = NSCollectionLayoutSection(group: group)
 let layout = UICollectionViewCompositionalLayout(section: section)
 ```
 
-This expresses grids, orthogonally-scrolling carousels, mixed layouts per section, and supplementary items far more easily than subclassing `UICollectionViewLayout`. You can even return a **different section layout per section index** for magazine-style screens.
+That's a two-column grid in about eight lines. The whole mental model is one chain: item → group → section → layout, each level a small value you configure.
 
-## Animating updates
+Sections can also carry supplementary items — headers, footers, badges — attached declaratively, with no layout subclassing for a sticky header.
 
-`apply(_:animatingDifferences:)` animates the computed diff automatically — inserts fade/slide in, deletes out, moves reposition — with no manual animation code. Apply snapshots on the **main thread**; you can build them on a background thread and apply on main. For a change that only affects content (not membership), use `reconfigureItems` so cells update without a full re-diff.
+### A different layout for every section
 
-## The interview lens
+The layout initializer also accepts a closure that returns a section layout per section index:
 
-Frame it as **describe state, not changes**: instead of `reloadData` (no animation) or crash-prone manual `performBatchUpdates`, you build an **`NSDiffableDataSourceSnapshot`** of the desired state and **`apply`** it — the framework **diffs and animates** the inserts/deletes/moves for you. Sections/items are keyed by **`Hashable` identifiers** (unique + stable; **duplicates crash**), and the diff is **identity-based**, so a content-only change needs **`reconfigureItems`** (the "my cell didn't update" gotcha) — and you should use stable **ids** as identifiers so edits aren't seen as delete+insert.
+```swift
+let layout = UICollectionViewCompositionalLayout { sectionIndex, environment in
+    sectionIndex == 0 ? makeCarouselSection() : makeGridSection()
+}
+```
 
-Pair it with **compositional layout**: compose **item → group → section → layout**, enabling per-section layouts, carousels, and grids without subclassing `UICollectionViewLayout`. Bonus: apply snapshots on the **main thread**; both APIs (iOS 13+) are the modern default over flow layout + manual batch updates.
+This is how magazine-style screens are built: a carousel up top, a grid below, each section described independently.
+
+The carousel itself needs exactly one extra line:
+
+```swift
+carouselSection.orthogonalScrollingBehavior = .continuous
+```
+
+The section now scrolls *horizontally* inside the vertically scrolling collection view. Before this API, that effect required nesting a collection view inside a cell.
+
+## Animation and threading
+
+Set `animatingDifferences: true` and the computed diff animates for free — inserts slide in, deletes fade out, moves reposition. You write zero animation code.
+
+Two threading rules keep it safe:
+
+```swift
+DispatchQueue.global().async {
+    let snapshot = buildSnapshot()          // fine — a snapshot is a cheap value
+    DispatchQueue.main.async {
+        dataSource.apply(snapshot, animatingDifferences: true)   // apply on main
+    }
+}
+```
+
+Build snapshots wherever you like; apply them on the *main thread*.
+
+And remember the identity rule from earlier: when only an item's *content* changed, use `reconfigureItems` instead of rebuilding membership — the visible cell updates without a full re-diff.
+
+## Common pitfalls
+
+- **Duplicate identifiers in one snapshot.** Instant crash. Identifiers must be unique.
+- **A cell that doesn't update after you edit the model.** The diff is identity-based; the identity didn't change. Call `reconfigureItems` (or `reloadItems`).
+- **Rows flicker out and back on every edit.** You used the whole struct as the identifier, so edits hash differently and read as delete + insert. Use a stable `id`.
+- **Applying a snapshot off the main thread.** Build anywhere; apply on main.
+
+## Interview lens
+
+If asked why diffable data sources exist, lead with the phrase "describe state, not changes." You build a snapshot of the desired end state and apply it, and the framework computes and animates the diff — versus `reloadData`, which has no animation, and manual `performBatchUpdates`, which crashes whenever your hand-computed deltas don't match your counts.
+
+Expect the identifier follow-up. Say that identifiers must be `Hashable`, unique, and stable — duplicates crash — and that diffing compares identity, not content. That sets up the classic gotcha: "my cell didn't update" means the identity didn't change, and the fix is `reconfigureItems`. Add that you use a model's stable `id` rather than the whole struct, so edits don't turn into delete + insert.
+
+For compositional layout, recite the hierarchy — item, group, section, layout — and give one concrete win: per-section layouts and orthogonally scrolling carousels without subclassing `UICollectionViewLayout`. Close by noting both APIs arrived in iOS 13 and are the modern default over flow layout plus manual batch updates.

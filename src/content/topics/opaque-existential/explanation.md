@@ -1,63 +1,143 @@
-## The problem: "returns a Drawable" hides too much or too little
+## The problem: "a Shape" can mean two different things
 
-Two different needs look similar. Sometimes you want to **hide a complex concrete type** from callers while keeping it *one specific type* (SwiftUI's `body: some View`). Other times you genuinely need to hold **different concrete types together** (a `[any Shape]`). Swift distinguishes these with **`some`** (opaque types) and **`any`** (existentials) — same-looking syntax, opposite semantics and performance.
+Start with a protocol and two conformers:
 
-## Existential containers
+```swift
+protocol Shape { func area() -> Double }
 
-An **existential** is a box that can hold *any* value conforming to a protocol, hiding the concrete type behind a uniform interface. Written **`any P`**:
+struct Circle: Shape { func area() -> Double { 3.14 } }
+struct Square: Shape { func area() -> Double { 1.0 } }
+```
+
+Now two needs that *look* identical but aren't:
+
+```swift
+func makeShape() -> ??? { Circle() }     // hide the concrete type from callers
+let shapes: [???] = [Circle(), Square()] // hold different types together
+```
+
+The first wants to hide *one* concrete type. The second genuinely needs to mix *many*. Swift spells them differently — `some Shape` and `any Shape` — and they have opposite behavior and opposite costs.
+
+## any: a box that holds any conformer
+
+Fill the second blank first:
 
 ```swift
 let shape: any Shape = Circle()
-let shapes: [any Shape] = [Circle(), Square()]   // heterogeneous — different types together
 ```
 
-At runtime the box stores the value (inline if small, else heap-allocated) plus a **witness table** for dynamic dispatch. Its power is **heterogeneity**: one array can hold many different conforming types.
-
-## `any` keyword & boxing cost
-
-`any P` makes the existential explicit. The cost:
-
-- **Boxing** — values are wrapped in a fixed-size container (small values inline, larger ones heap-allocated), with type metadata.
-- **Dynamic dispatch** — method calls go through the witness table (an indirection), and the compiler can't specialize/inline them.
-
-So `any` trades performance for flexibility. It's the right tool when you truly need to store/pass mixed concrete types, but wasteful when there's really only one type at a call site.
-
-## Opaque types (`some`)
-
-**`some P`** means "**one specific concrete type** that conforms to `P`, which I'm not naming." The *caller* can't see which type, but the compiler **knows it's a single, fixed type** — so full static typing and specialization apply, with **no box and no dynamic dispatch**.
+`any Shape` is an **existential** — a box that can hold a value of *any* type conforming to `Shape`, hiding which one. The concrete type can even change:
 
 ```swift
-func makeShape() -> some Shape {   // returns ONE concrete Shape type, hidden
+var shape: any Shape = Circle()
+shape = Square()                 // fine — the box now holds a Square
+```
+
+And that's what makes mixed collections possible:
+
+```swift
+let shapes: [any Shape] = [Circle(), Square()]   // different types, one array
+```
+
+This is the existential's superpower: heterogeneity — genuinely different concrete types living behind one uniform interface.
+
+## What the box costs
+
+The flexibility isn't free. Inside the box, the runtime stores the value plus a **witness table** — a lookup table that maps each protocol requirement to the concrete type's actual implementation.
+
+```swift
+for shape in shapes {
+    shape.area()   // which area()? Looked up in the witness table, at run time
+}
+```
+
+That lookup is **dynamic dispatch**: the method to call is decided while the program runs, not while it compiles. The compiler can't inline or specialize a call it can't see.
+
+There's a storage cost too, called **boxing**. The existential container is a fixed size — a small value fits inline inside it, but a larger one gets moved out to separately allocated memory, and the box holds a pointer. The memory-layout lesson later shows the exact numbers.
+
+So `any` trades speed for flexibility. That's a fine trade when you need the mix — and pure waste when there's really only one type at the call site.
+
+## some: one hidden type
+
+Now the first blank:
+
+```swift
+func makeShape() -> some Shape {
     Circle()
 }
 ```
 
-Key rule: a function returning `some P` must return the **same** concrete type on every path (you can't return a `Circle` on one branch and a `Square` on another — that's what `any` is for). This is why SwiftUI's `body: some View` works: it's always one concrete (if enormous) view type.
+`some Shape` is an **opaque type**: one specific concrete type that conforms to `Shape`, which the function chooses and refuses to name. The *caller* can't see it's a `Circle` — but the *compiler* knows exactly what it is.
 
-## Reverse generics
+Because the compiler knows the real type, there's no box and no witness-table lookup. Calls dispatch statically, inline, specialize — as fast as using `Circle` directly.
 
-`some P` is often called a **reverse (implicit) generic**. A normal generic lets the **caller** pick the type: `func f<T: P>() -> T` — caller decides `T`. An opaque return `-> some P` lets the **callee (implementation)** pick and hide the type; the caller just knows "it's some `P`." The identity is fixed and known to the compiler, but abstract to the caller — the inverse direction of a normal generic parameter.
+Predict: does this compile?
 
-## When to use which
+```swift
+func makeShape(flag: Bool) -> some Shape {
+    if flag { return Circle() }
+    return Square()
+}
+```
 
-| Use `some P` (opaque) | Use `any P` (existential) |
-|---|---|
-| One concrete type, hidden from caller | Many different concrete types together |
-| Return types, SwiftUI `body` | Heterogeneous collections `[any P]` |
-| Performance matters (static dispatch) | Flexibility matters (dynamic dispatch) |
-| Same type on every code path | Different types per element/branch |
+Answer: no. `some Shape` promises *one* concrete type on every path, and this function tries to return two. Returning genuinely different types is `any`'s job, not `some`'s.
 
-Rule of thumb: **reach for `some` first** (cheaper, more type info); use **`any` only when you need genuine heterogeneity**. For parameters, `func f(_ x: some P)` is shorthand for a generic `<T: P>`; `func f(_ x: any P)` accepts a boxed existential.
+That single-type rule is exactly why SwiftUI's `body: some View` works: however enormous the view expression gets, it's always one concrete type per `body`.
 
-## Performance implications
+## some is a generic running in reverse
 
-- **`some P`**: no boxing, static/devirtualized dispatch, specializable/inlinable — as fast as using the concrete type.
-- **`any P`**: boxing (possible heap allocation), witness-table dynamic dispatch, no specialization across the boundary.
+Put a normal generic next to an opaque return:
 
-In hot paths and return types, prefer `some` (or a generic). Since Swift 5.7 the compiler nudges you to write `any` explicitly precisely because existentials have this hidden cost — the keyword makes the trade-off visible.
+```swift
+func pick<T: Shape>() -> T        // the CALLER chooses T
+func make() -> some Shape         // the IMPLEMENTATION chooses, and hides it
+```
 
-## The interview lens
+With `<T: Shape>`, whoever calls the function decides the concrete type. With `some Shape`, the function body decides — and keeps the answer secret from the caller. Same machinery, opposite direction. That's why `some` is often called a **reverse generic**.
 
-Draw the contrast crisply: **`any P` is an existential box** that can hold **different** concrete types (heterogeneous, e.g. `[any Shape]`) at the cost of **boxing + dynamic dispatch**; **`some P` is an opaque type** — **one specific hidden concrete type** — giving **static dispatch, no box**, but it must be the **same type on every path** (why `body: some View` works and can't switch types per branch).
+The type identity is still fixed and fully known to the compiler; it's only *abstract to the caller*.
 
-Call `some` a **reverse generic**: a normal generic lets the **caller** choose the type; `some` lets the **implementation** choose and hide it while the compiler keeps full type identity. Guidance: **prefer `some` (or a generic constraint) for performance; use `any` only when you genuinely need a mix of types.** Bonus: Swift 5.7 requires the explicit `any` keyword to surface the existential's cost.
+One more place `some` appears — parameters:
+
+```swift
+func render(_ shape: some Shape) { ... }   // sugar for: func render<T: Shape>(_ shape: T)
+func render(_ shape: any Shape) { ... }    // takes the box
+```
+
+A `some` parameter is just shorthand for a generic parameter. An `any` parameter accepts the boxed existential.
+
+## Choosing between them
+
+| | `some P` (opaque) | `any P` (existential) |
+|---|---|---|
+| Concrete types involved | Exactly one, hidden from caller | Many, mixed freely |
+| Typical home | Return types, SwiftUI `body` | Heterogeneous collections `[any P]` |
+| Dispatch | Static — inlinable, specializable | Dynamic — via witness table |
+| Storage | The value itself, no box | Boxed; large values allocated separately |
+| Branch rule | Same type on every path | Different types per element or branch |
+
+The rule of thumb: reach for `some` first. It's cheaper and keeps more type information. Use `any` only when you need genuine heterogeneity — different concrete types in the same variable, array, or branch.
+
+## The performance picture
+
+Summing up what each choice costs:
+
+- `some P` — no boxing, static dispatch, full specialization. Identical performance to naming the concrete type.
+- `any P` — boxing with possible separate allocation, witness-table dispatch, and no specialization across the boundary.
+
+In hot paths, prefer `some` or an explicit generic. And here's why the keyword exists at all: before Swift 5.7 you wrote a bare `Shape` and got an existential silently. Since 5.7 the compiler pushes you to write `any Shape` explicitly, precisely so the hidden cost has a visible label.
+
+## Common pitfalls
+
+- **Using `any` when there's one type.** `var shape: any Shape = Circle()` that only ever holds circles pays boxing for nothing — use the concrete type or `some`.
+- **Expecting `some` to switch types per branch.** One concrete type per function, every path. Two branches with two types need `any` — or a redesign.
+- **`[any P]` in a hot loop.** Every element access goes through the box and the witness table. Consider a generic algorithm or an enum of known cases instead.
+- **Forgetting that `some` in parameters is just a generic.** `func f(_ x: some P)` doesn't box anything — it's sugar, and often the cleanest option.
+
+## Interview lens
+
+If asked the difference, draw the contrast in one breath: `any P` is an existential box that can hold *different* concrete types, paying boxing and dynamic dispatch; `some P` is an opaque type — *one* hidden concrete type — with static dispatch and no box, but it must be the same type on every return path.
+
+The follow-up is usually SwiftUI: explain that `body: some View` works because each `body` produces exactly one concrete view type, and that this is why you can't return a `Text` in one branch and an `Image` in the other without a wrapper.
+
+Drop the phrase "reverse generic" and explain it: a normal generic lets the caller pick the type, `some` lets the implementation pick and hide it while the compiler keeps full knowledge. Then give the guidance an interviewer wants to hear: prefer `some` or a generic constraint for performance, use `any` only for genuine heterogeneity — and mention that Swift 5.7 made the `any` keyword mandatory specifically to make the existential's cost visible in source code.

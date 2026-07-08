@@ -1,63 +1,129 @@
-## The problem: the same get/set boilerplate on many properties
+## The problem: the same accessor logic, copy-pasted
 
-You want several properties that clamp to a range, or trim whitespace, or read from `UserDefaults`. Writing a custom getter/setter on each is repetitive and error-prone. A **property wrapper** packages that access logic **once** into a type, then you attach it to any property with `@WrapperName` — the wrapper runs its get/set behavior transparently. It's how `@State`, `@Published`, and `@AppStorage` are built.
+Say a game needs stats that stay between 0 and 100:
 
-## The problem they solve
+```swift
+struct Player {
+    var health: Int = 100 {
+        didSet { health = min(max(health, 0), 100) }
+    }
+    var mana: Int = 50 {
+        didSet { mana = min(max(mana, 0), 100) }
+    }
+}
+```
 
-A property wrapper factors out **reusable access logic** — the code that runs when you read or write a property. Instead of copy-pasting a `didSet`/computed pattern, you define the behavior in a wrapper type and reuse it via an annotation. The property still *looks* like a normal value at the use site.
+The clamping logic is written twice. Add stamina, shield, and rage, and it's written five times — five chances to typo a bound.
 
-## `wrappedValue`
+The logic that runs when a property is read or written shouldn't have to live *on* the property. A **property wrapper** packages that access logic into a reusable type you attach with an `@` annotation. This is the mechanism behind `@State`, `@Published`, and `@AppStorage`.
 
-A property wrapper is a type marked **`@propertyWrapper`** with a required **`wrappedValue`** property. `wrappedValue`'s getter/setter is the logic that runs on access:
+## Build the wrapper
+
+Start with a plain type holding the logic:
 
 ```swift
 @propertyWrapper
 struct Clamped {
     private var value: Int
     let range: ClosedRange<Int>
-    init(wrappedValue: Int, _ range: ClosedRange<Int>) {
-        self.range = range
-        self.value = min(max(wrappedValue, range.lowerBound), range.upperBound)
-    }
+
     var wrappedValue: Int {
         get { value }
         set { value = min(max(newValue, range.lowerBound), range.upperBound) }
     }
 }
+```
 
+Two things make this a wrapper. The `@propertyWrapper` attribute marks the type, and the property named `wrappedValue` is required — its getter and setter are the logic that runs on every access.
+
+Now give it an initializer:
+
+```swift
+    init(wrappedValue: Int, _ range: ClosedRange<Int>) {
+        self.range = range
+        self.value = min(max(wrappedValue, range.lowerBound), range.upperBound)
+    }
+```
+
+The parameter name `wrappedValue` is special — it's what lets the familiar `= 100` default syntax work, as you'll see in a moment. The extra `range` parameter is per-property configuration.
+
+Attach it:
+
+```swift
 struct Player {
     @Clamped(0...100) var health = 100
+    @Clamped(0...100) var mana = 50
 }
 ```
 
-At the use site, `player.health` is an `Int`; behind the scenes it's stored in a `Clamped` and clamped on every write. The compiler rewrites the property into a hidden stored wrapper instance plus a computed accessor delegating to `wrappedValue`.
+One line per property, logic written once.
 
-## `projectedValue` (`$`)
+Predict: what does this print?
 
-A wrapper can optionally expose a **`projectedValue`** — a *second* value accessed with the **`$`** prefix, for extra API beyond the plain value:
+```swift
+var player = Player()
+player.health = 250
+print(player.health)
+```
+
+Answer: `100`. The assignment went through `Clamped`'s setter, which clamped 250 down to the range's upper bound. At the use site `health` still looks like a plain `Int` — the wrapper is invisible.
+
+## What the compiler actually generates
+
+The `@Clamped` line is shorthand. The compiler rewrites it into ordinary code — this rewriting of friendly syntax into plainer code is called **desugaring**. Roughly:
+
+```swift
+struct Player {
+    private var _health = Clamped(wrappedValue: 100, 0...100)
+
+    var health: Int {
+        get { _health.wrappedValue }
+        set { _health.wrappedValue = newValue }
+    }
+}
+```
+
+Read that carefully — it explains three facts you'll need later.
+
+First: there's a hidden stored property, `_health`, holding the wrapper instance. A wrapper adds real storage to the enclosing type.
+
+Second: `= 100` became `Clamped(wrappedValue: 100, 0...100)`. That's why `init(wrappedValue:)` matters — without it, the default-value syntax doesn't compile.
+
+Third: `health` itself became a computed property delegating to `wrappedValue`. Every read and write runs your logic, always.
+
+## $: a second value the wrapper can project
+
+A wrapper can expose one more thing — an optional **projected value**, reached with the `$` prefix:
 
 ```swift
 @propertyWrapper
 struct Validated {
     private(set) var wrappedValue: String
-    var projectedValue: Bool { !wrappedValue.isEmpty }   // $ gives validity
+    var projectedValue: Bool { !wrappedValue.isEmpty }
 }
 
 struct Form { @Validated var name = "" }
-// form.name    -> the String (wrappedValue)
-// form.$name   -> Bool (projectedValue: is it non-empty?)
 ```
 
-`$name` returns the `projectedValue`. In SwiftUI, `@State`'s `projectedValue` is a `Binding`, which is exactly why `$count` gives you a `Binding` to pass to a `TextField`.
+Now one property answers two questions:
 
-## Building a custom wrapper
+```swift
+form.name    // "" — the String   (wrappedValue)
+form.$name   // false — is it valid?  (projectedValue)
+```
 
-The recipe: a `@propertyWrapper` type with (1) an `init(wrappedValue:...)` (so `@Wrapper var x = default` works and you can pass config), (2) a `wrappedValue` computed property holding the access logic, and optionally (3) a `projectedValue`. A common real example wraps `UserDefaults`:
+`$name` is compiler shorthand for `_name.projectedValue`. The projected value can be any type at all — a validity flag, a publisher, a binding — whatever extra API the wrapper wants to offer beside the plain value.
+
+## A real wrapper: backing a property with UserDefaults
+
+`UserDefaults` is the system's small key-value store for user preferences. Reading and writing it by hand is classic boilerplate — perfect wrapper material:
 
 ```swift
 @propertyWrapper
 struct UserDefault<T> {
-    let key: String; let defaultValue: T
+    let key: String
+    let defaultValue: T
+
     var wrappedValue: T {
         get { UserDefaults.standard.object(forKey: key) as? T ?? defaultValue }
         set { UserDefaults.standard.set(newValue, forKey: key) }
@@ -65,17 +131,58 @@ struct UserDefault<T> {
 }
 ```
 
-## Wrappers in SwiftUI
+The getter reads the store and falls back to a default; the setter writes through. Attach it and the persistence disappears from view:
 
-SwiftUI is built on property wrappers: **`@State`**, **`@Binding`**, **`@Published`**, **`@StateObject`/`@ObservedObject`**, **`@Environment`**, **`@AppStorage`**, **`@FocusState`**. Their `wrappedValue` is the value you read; their `projectedValue` (`$`) is usually a `Binding` or publisher. Understanding property wrappers demystifies why `@State` stores state outside the struct and why `$state` yields a binding.
+```swift
+struct Settings {
+    @UserDefault(key: "volume", defaultValue: 5) var volume: Int
+}
 
-## Composition & limits
+Settings().volume = 9   // silently persisted to UserDefaults
+```
 
-- **Composition:** you can nest wrappers (`@A @B var x`), applied outermost-in — but it's fiddly and each wrapper's `wrappedValue` must line up with the next; use sparingly.
-- **Limits:** a wrapped property **can't also be `lazy`/`@NSCopying`**, generally can't be overridden, has restrictions in protocols, and the wrapper's storage lives with the instance (so wrappers add a hidden stored property — you can't use one where stored properties aren't allowed, e.g. in an extension). The `init(wrappedValue:)` ordering also matters for how `@Wrapper var x = value` is desugared.
+## SwiftUI runs on property wrappers
 
-## The interview lens
+SwiftUI has its own lessons, but here's the connection worth banking now: `@State`, `@Binding`, `@Published`, `@StateObject`, `@ObservedObject`, `@Environment`, `@AppStorage`, and `@FocusState` are all property wrappers — the exact mechanism you just built.
 
-Define a property wrapper as a **`@propertyWrapper` type with a `wrappedValue`** that packages **reusable get/set logic**, attached to a property via `@Name`; at the use site the property reads/writes like a normal value while the wrapper's `wrappedValue` accessor runs the logic. Explain the **`projectedValue`** — the `$`-prefixed secondary value — and that **SwiftUI's `@State` projects a `Binding`**, which is why `$count` is a binding.
+Their `wrappedValue` is the value you read in `body`. Their `projectedValue` — the `$` — is usually a `Binding`, a read-write connection to the value:
 
-Senior signals: name that `@State`/`@Published`/`@AppStorage` **are** property wrappers (so you understand the framework, not just use it); know the wrapper adds a **hidden stored instance** (hence can't go where stored properties can't, and can't combine with `lazy`); and that `init(wrappedValue:)` enables the `@Wrapper var x = default` syntax. Bonus: wrappers **compose** (`@A @B`) but with careful ordering.
+```swift
+@State private var count = 0
+
+TextField("Count", value: $count, format: .number)   // $count is the Binding
+```
+
+That's the demystification: `$count` isn't magic syntax, it's `_count.projectedValue`. And `@State` storing its value outside the struct is just a wrapper whose hidden instance manages external storage.
+
+## Wrappers compose, within limits
+
+You can stack wrappers on one property:
+
+```swift
+@A @B var x = 0   // applied outermost-in: A wraps B wraps the value
+```
+
+Each wrapper's `wrappedValue` type must line up with the next wrapper's expected input — it works, but it's fiddly. Use sparingly.
+
+The limits come straight from the hidden-stored-property desugaring:
+
+- A wrapped property can't live in an extension — extensions can't add stored properties, and the wrapper *is* one.
+- A wrapped property can't also be `lazy` or `@NSCopying` — those features compete for the same accessor machinery.
+- Wrapped properties generally can't be overridden, and can't be declared in protocols.
+- The `init(wrappedValue:)` signature dictates how `@Wrapper var x = value` desugars — get the parameter name wrong and the default syntax breaks.
+
+## Common pitfalls
+
+- **Confusing `name` and `$name`.** Plain name → `wrappedValue`; `$` → `projectedValue`. They can be completely different types.
+- **No `init(wrappedValue:)`, then `@Wrapper var x = 0` fails.** The default-value syntax needs that exact parameter name.
+- **Putting a wrapped property in an extension.** It's a stored property in disguise — the compiler refuses.
+- **Forgetting the wrapper adds storage.** Every `@Wrapped` property carries a hidden instance; on a tiny struct that's a real size change.
+
+## Interview lens
+
+If asked what a property wrapper is, define it by its parts: a type marked `@propertyWrapper` with a required `wrappedValue`, packaging reusable get/set logic that runs transparently when an annotated property is accessed. Then say what the compiler does — a hidden stored `_name` instance plus a computed accessor delegating to `wrappedValue` — because knowing the desugaring is what separates users from understanders.
+
+Expect the SwiftUI follow-up: explain that `@State` and friends *are* property wrappers, and that `$count` is the projected value, which for `@State` is a `Binding`. That one sentence shows you understand the framework's plumbing, not just its incantations.
+
+Senior signals to drop: the wrapper adds a hidden stored property, which is exactly why it can't go in extensions or combine with `lazy`; `init(wrappedValue:)` is what powers the `= default` syntax; and wrappers compose (`@A @B`) but with careful ordering. If you've written a `UserDefault` or `Clamped` wrapper yourself, say so — a concrete custom wrapper is the most convincing answer in this topic.

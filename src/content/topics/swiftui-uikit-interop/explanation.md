@@ -1,85 +1,161 @@
 ## The problem: two frameworks, one app
 
-No real app is 100% SwiftUI. You need a `MKMapView`, a `WKWebView`, a mature third-party UIKit control, or a camera controller SwiftUI doesn't wrap — and existing apps embed new SwiftUI screens into a UIKit navigation stack. SwiftUI provides **bridges in both directions**: `UIViewRepresentable`/`UIViewControllerRepresentable` to put UIKit **inside** SwiftUI, and `UIHostingController` to put SwiftUI **inside** UIKit.
+You're building a SwiftUI screen and you need a web view:
 
-## `UIViewRepresentable`
+```swift
+struct HelpScreen: View {
+    var body: some View {
+        WKWebView()   // ❌ does not compile — WKWebView is not a View
+    }
+}
+```
 
-Conform to **`UIViewRepresentable`** to wrap a `UIView` as a SwiftUI view. You implement two required methods:
+SwiftUI has no web view. No map view as capable as `MKMapView`, no camera controller, no wrapper for that mature third-party UIKit control your app depends on. And the reverse problem is everywhere too: most real apps are UIKit at the core, and new SwiftUI screens have to slot into an existing UIKit navigation stack.
+
+No real app is 100% SwiftUI. So SwiftUI ships bridges in both directions: representable protocols to put UIKit *inside* SwiftUI, and a hosting controller to put SwiftUI *inside* UIKit. This lesson walks both bridges, plus the piece that trips everyone up — how events flow back.
+
+## Wrapping a UIView for SwiftUI
+
+Fix the broken code by conforming to **UIViewRepresentable** — the protocol that turns a `UIView` into a SwiftUI view:
 
 ```swift
 struct WebView: UIViewRepresentable {
     let url: URL
+
     func makeUIView(context: Context) -> WKWebView {
-        WKWebView()                       // create the UIKit view once
+        WKWebView()                          // create the UIKit view — once
     }
+
     func updateUIView(_ webView: WKWebView, context: Context) {
-        webView.load(URLRequest(url: url)) // push SwiftUI state → UIKit
+        webView.load(URLRequest(url: url))   // push SwiftUI state → UIKit
     }
 }
 ```
 
-- **`makeUIView`** — called **once** to create the view.
-- **`updateUIView`** — called whenever SwiftUI state the wrapper depends on changes; this is where you sync SwiftUI → UIKit.
+Two required methods, two distinct jobs.
 
-Then `WebView(url: ...)` is usable anywhere like any SwiftUI view.
+`makeUIView` runs once, when SwiftUI first needs the view. It creates the UIKit object.
 
-## `UIViewControllerRepresentable`
+`updateUIView` runs every time SwiftUI state the wrapper depends on changes. This is where you sync SwiftUI → UIKit: read the struct's properties, apply them to the view.
 
-Same idea for a whole **`UIViewController`** (image picker, camera, a complex existing screen): implement `makeUIViewController` and `updateUIViewController`.
+Now `WebView(url: helpURL)` drops into any SwiftUI body like a native view.
+
+### Predict: the url changes — how many times does makeUIView run?
+
+The parent re-renders with a different `url`. What gets called?
+
+Answer: `makeUIView` runs zero more times. SwiftUI keeps the `WKWebView` it already made and calls `updateUIView` with the new state. Create once, update many — burn that split into memory, because violating it is the classic interop performance bug.
+
+## Wrapping a whole view controller
+
+Some UIKit things aren't views but entire view controllers — the image picker, the camera, a complex legacy screen. Same idea, different protocol:
 
 ```swift
 struct ImagePicker: UIViewControllerRepresentable {
-    func makeUIViewController(context: Context) -> UIImagePickerController { ... }
+    func makeUIViewController(context: Context) -> UIImagePickerController {
+        UIImagePickerController()
+    }
     func updateUIViewController(_ vc: UIImagePickerController, context: Context) { }
 }
 ```
 
-## Coordinators
+**UIViewControllerRepresentable** mirrors its sibling exactly: `make` creates once, `update` syncs on change. Everything else in this lesson applies to both.
 
-UIKit talks back through **delegates and target-action**, which are objects — but a SwiftUI `Representable` is a value type. The **Coordinator** is the bridge: a class you create in `makeCoordinator()` that acts as the UIKit view's delegate and forwards events back into SwiftUI (updating bindings, calling closures).
+## The bridge back: Coordinators
+
+So far data flows one way — SwiftUI into UIKit. But the image picker needs to tell SwiftUI "the user picked this photo". How does UIKit talk back?
+
+UIKit's answer to callbacks is delegates and target-action — patterns that require an *object* to receive the messages. Our `ImagePicker` struct is a value: it's copied and recreated constantly, so it can't be anyone's delegate.
+
+The solution is the **Coordinator**: a class you create for exactly this purpose. It lives as long as the UIKit view does, acts as its delegate, and forwards events back into SwiftUI.
+
+Build it in three steps. First, declare what SwiftUI wants back — a binding:
 
 ```swift
 struct ImagePicker: UIViewControllerRepresentable {
     @Binding var image: UIImage?
+```
 
-    func makeCoordinator() -> Coordinator { Coordinator(self) }
+Second, create the coordinator and make it the delegate:
 
-    final class Coordinator: NSObject, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
+```swift
+    func makeCoordinator() -> Coordinator {
+        Coordinator(self)
+    }
+
+    func makeUIViewController(context: Context) -> UIImagePickerController {
+        let picker = UIImagePickerController()
+        picker.delegate = context.coordinator   // SwiftUI made it, hands it to you here
+        return picker
+    }
+```
+
+SwiftUI calls `makeCoordinator` before `make…`, then exposes the instance as `context.coordinator` so you can wire it up.
+
+Third, implement the delegate methods inside the coordinator and write back to SwiftUI:
+
+```swift
+    final class Coordinator: NSObject,
+        UIImagePickerControllerDelegate, UINavigationControllerDelegate {
+
         let parent: ImagePicker
         init(_ parent: ImagePicker) { self.parent = parent }
+
         func imagePickerController(_ p: UIImagePickerController,
-                                   didFinishPickingMediaWithInfo info: [...: Any]) {
-            parent.image = info[.originalImage] as? UIImage   // UIKit event → SwiftUI binding
+                didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]) {
+            parent.image = info[.originalImage] as? UIImage
+            // UIKit delegate event → SwiftUI binding. The circle closes.
         }
     }
 }
 ```
 
-SwiftUI creates the coordinator and hands it to you via `context.coordinator` so you can set it as the delegate in `makeUIView(Controller)`.
+The user picks a photo, UIKit fires the delegate method, the coordinator writes to `parent.image`, the `@Binding` updates SwiftUI's source of truth, and every SwiftUI view reading it re-renders. UIKit event in, SwiftUI update out.
 
-## Hosting SwiftUI in UIKit (`UIHostingController`)
+## The other direction: SwiftUI inside UIKit
 
-The reverse bridge: **`UIHostingController`** wraps a SwiftUI `View` in a `UIViewController` you can push, present, or embed in a UIKit hierarchy.
+Now flip the whole problem. You have a UIKit app, and you built one new screen in SwiftUI. How do you push it?
 
 ```swift
 let host = UIHostingController(rootView: ProfileView(user: user))
 navigationController?.pushViewController(host, animated: true)
 ```
 
-This is how teams **adopt SwiftUI incrementally** in an existing UIKit app — build a screen in SwiftUI, host it, and push it from the existing flow.
+**UIHostingController** wraps any SwiftUI `View` in a plain `UIViewController`. Push it, present it modally, embed it as a child — UIKit doesn't know or care that SwiftUI is inside.
 
-## Data flow across the boundary
+This one class is how teams adopt SwiftUI incrementally: build the next screen in SwiftUI, host it, push it from the existing UIKit flow. No rewrite required.
 
-Keep data flowing the SwiftUI way across the bridge:
+## Data flow across the boundary, summarized
 
-- **SwiftUI → UIKit (down)**: pass values into the `Representable`'s properties; apply them in `updateUIView(Controller)` when they change.
-- **UIKit → SwiftUI (up)**: the **Coordinator** receives delegate/callback events and writes back to a **`@Binding`** or calls a closure — so the SwiftUI source of truth updates.
-- **`@Binding`** is the typical conduit for two-way values (like the picked image); closures for one-off events.
+Keep the flow SwiftUI-shaped even at the border. Down and up work differently:
 
-Avoid doing heavy work or creating the UIKit object in `updateUIView` (it runs repeatedly) — create in `make…` once, update incrementally.
+```swift
+struct WebView: UIViewRepresentable {
+    let url: URL              // DOWN: plain property, applied in updateUIView
+    @Binding var canGoBack: Bool   // UP: coordinator writes here from a delegate
+    var onFinish: () -> Void       // UP: closure for one-off events
+}
+```
 
-## The interview lens
+Downstream — SwiftUI to UIKit — you pass values in as properties and apply them in `update…` when they change.
 
-Name the three bridges: **`UIViewRepresentable`** (wrap a `UIView`) and **`UIViewControllerRepresentable`** (wrap a `UIViewController`) put UIKit **inside** SwiftUI via `make…` (create once) + `update…` (sync SwiftUI state → UIKit on change); **`UIHostingController`** puts SwiftUI **inside** UIKit, the standard path for **incremental SwiftUI adoption**.
+Upstream — UIKit to SwiftUI — the coordinator receives delegate calls and either writes to a `@Binding` or calls a closure. Bindings suit two-way values like the picked image; closures suit one-shot events like "loading finished".
 
-The senior crux is the **Coordinator**: because `Representable`s are value types but UIKit communicates via **delegate/target-action objects**, you create a Coordinator class in `makeCoordinator()` to be the delegate and forward UIKit events **back into SwiftUI** (writing to a `@Binding`/closure). Summarize data flow: **down** via representable properties applied in `update…`, **up** via the Coordinator into a binding — and remember `make…` runs once while `update…` runs repeatedly (don't rebuild the view there).
+One discipline rule: never create the UIKit object or do heavy work in `update…`. It runs on every relevant state change — sometimes very often. Create in `make…` once; update incrementally.
+
+## Common pitfalls
+
+- **Rebuilding the UIKit view in `updateUIView`.** `update…` runs repeatedly; creating views or doing expensive work there wrecks performance. Create in `make…`, mutate in `update…`.
+- **Trying to make the representable struct the delegate.** It's a value type — it can't be. That's precisely what the Coordinator class exists for.
+- **Forgetting to assign the coordinator as delegate.** `makeCoordinator` alone does nothing; you must set `picker.delegate = context.coordinator` in `make…`, or events go nowhere.
+- **Bypassing bindings and mutating UIKit state directly from SwiftUI.** Keep one source of truth on the SwiftUI side; push it down in `update…`.
+
+## Interview lens
+
+If asked "how do SwiftUI and UIKit interoperate?", name all three bridges up front: `UIViewRepresentable` wraps a `UIView`, `UIViewControllerRepresentable` wraps a `UIViewController` — both put UIKit inside SwiftUI — and `UIHostingController` goes the other way, putting SwiftUI inside UIKit. Add that the hosting controller is the standard path for incremental SwiftUI adoption in existing apps; interviewers asking this usually have exactly that migration on their team.
+
+Explain the make/update split precisely, because it's the follow-up: `make…` runs once to create, `update…` runs on every relevant state change to sync SwiftUI state into the UIKit object — so never build the view in `update…`.
+
+The senior differentiator is the Coordinator, and specifically the *why*: representables are value types, but UIKit communicates through delegate and target-action objects, so you create a Coordinator class in `makeCoordinator()` to receive those events and forward them into SwiftUI via a `@Binding` or closure. Candidates who can only recite the methods miss this reasoning — giving it unprompted is the tell.
+
+Close with the data-flow summary if there's room: down through representable properties applied in `update…`, up through the coordinator into a binding. One clean sentence each direction.
