@@ -146,7 +146,7 @@ One caution about `AnyView`: it lets you return different view types from one fu
 
 ## Build your own type eraser
 
-The classic hand-rolled pattern stores **closures** that capture the wrapped conformer. Start with the shell:
+The classic hand-rolled pattern stores closures that capture the wrapped conformer. Start with the shell:
 
 ```swift
 struct AnyContainer<Item> {

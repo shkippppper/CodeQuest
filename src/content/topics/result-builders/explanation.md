@@ -35,7 +35,7 @@ enum StringBuilder {
 }
 ```
 
-The `@resultBuilder` attribute marks the type. `buildBlock` is the one *required* method: it receives the block's statements as arguments and combines them.
+The `@resultBuilder` attribute marks the type. **`buildBlock`** is the one required method: it receives the block's statements as arguments and combines them.
 
 Now attach the builder to a function:
 
@@ -105,7 +105,7 @@ Each piece of syntax maps to its own optional method:
 - `buildFinalResult(_:)` — one last transform on the assembled value.
 - `buildLimitedAvailability(_:)` — handles `if #available`.
 
-You implement only what your syntax needs. And the rule cuts both ways: **if a builder doesn't implement a method, that syntax is a compile error inside it.** No `buildArray` means no `for` loops in that builder — that's why some builder-based APIs allow loops and others don't. `guard` and early `return` are never part of the transform, in any builder.
+You implement only what your syntax needs. And the rule cuts both ways: if a builder doesn't implement a method, that syntax is a *compile error* inside it. No `buildArray` means no `for` loops in that builder — that's why some builder-based APIs allow loops and others don't. `guard` and early `return` are never part of the transform, in any builder.
 
 ## ViewBuilder is exactly this
 
