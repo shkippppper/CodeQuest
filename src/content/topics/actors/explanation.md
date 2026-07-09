@@ -1,21 +1,33 @@
-## The problem: shared mutable state across threads
+## The problem: two tasks, one variable
 
-When two threads touch the same mutable variable and at least one writes, you have a **data race** — corrupted values, crashes, Heisenbugs. The old fix was manual locks (`NSLock`, serial queues), which are easy to forget or misuse. **Actors** bake the protection into the type system: an actor guarantees that only **one task at a time** touches its mutable state, and the compiler enforces it.
-
-## The data-race problem
+Here's an innocent-looking class:
 
 ```swift
-class Counter {                 // ❌ not thread-safe
+class Counter {
     var value = 0
     func increment() { value += 1 }
 }
 ```
 
-If two tasks call `increment()` concurrently, the read-modify-write of `value` can interleave and lose updates. Nothing in the type stops that.
+Now hit it from two tasks at once:
 
-## Actor isolation
+```swift
+let counter = Counter()
+Task { for _ in 0..<1000 { counter.increment() } }
+Task { for _ in 0..<1000 { counter.increment() } }
+```
 
-Make it an `actor` and the compiler **isolates** its mutable state: all access is serialized, so races are impossible.
+Predict: after both tasks finish, what does `value` hold?
+
+Answer: nobody knows. Often less than 2000 — sometimes a crash. `value += 1` is secretly three steps: read the current value, add one, write it back. If both tasks read `5` at the same moment, both write `6`, and one increment vanishes.
+
+Two threads touching the same mutable data, where at least one is writing, is a **data race** — the source of corrupted values, crashes, and bugs that disappear the moment you try to reproduce them.
+
+The pre-Swift-concurrency fixes were manual: wrap every access in an `NSLock`, or funnel everything through a serial queue. Both work — until someone adds a new method and forgets the lock. Nothing in the *type* stops them.
+
+## Turning the class into an actor
+
+Change one keyword:
 
 ```swift
 actor Counter {
@@ -25,56 +37,89 @@ actor Counter {
 }
 ```
 
-Inside the actor, code runs with exclusive access — you write `value += 1` normally, no locks. The actor's *executor* ensures only one task runs actor-isolated code at a time.
+An `actor` is a reference type, like a class, with one built-in guarantee: only one task at a time may touch its mutable state. This protection is called **actor isolation** — the state is isolated inside the actor, and the compiler enforces the boundary.
 
-## `await` on actor methods
+Notice what's *not* in the code: no locks, no queues. Inside the actor's own methods, you write `value += 1` like plain single-threaded code, because it effectively is — the actor's **executor**, the machinery that runs its code, only ever runs one task's actor work at a time. Callers that arrive while it's busy simply wait their turn.
 
-From **outside** the actor, every access is potentially a suspension point, because you may have to wait your turn — so you must `await`:
+## Talking to an actor from outside
+
+Now use the actor from outside:
 
 ```swift
 let counter = Counter()
-await counter.increment()        // await: might wait for the actor
-let n = await counter.current()  // await to read isolated state too
+await counter.increment()          // await — you may wait your turn
+let n = await counter.current()    // even a read needs await
 ```
 
-You can't touch an actor's isolated properties synchronously from outside (`counter.value` won't compile). The `await` is the visible marker that you're crossing into the actor's serialized world.
+Every call from outside is marked `await`. Why? Because the actor might be busy serving another task — your call may have to *suspend* until it's your turn. The `await` is the visible marker that you're crossing into the actor's serialized world.
 
-## Actor reentrancy
+What about skipping the method and reading the property directly?
 
-The subtle senior trap: **actors are reentrant.** When an actor method hits an `await` (suspends), the actor is *free to run other tasks* while it waits. So state you checked *before* an `await` may have changed *after* it.
+```swift
+print(counter.value)   // ❌ does not compile
+```
+
+The compiler refuses. Isolated state is not reachable synchronously from outside — that's the enforcement part. With a lock-based class, forgetting the lock compiles fine and races at runtime; with an actor, the same mistake is a compile error.
+
+## The actor lets others in while it waits
+
+Now the trap that separates senior answers from junior ones. Actors are **reentrant**: when actor code hits an `await` and suspends, the actor does *not* stay locked — it's free to run *other* tasks' calls while the first one waits.
+
+Watch what that does to this bank:
 
 ```swift
 actor Bank {
-    var balance = 0
+    var balance = 100
     func withdraw(_ amount: Int) async {
-        guard balance >= amount else { return }
-        await audit()             // ⚠️ suspension — another withdraw can run here
-        balance -= amount         // balance may have changed since the guard!
+        guard balance >= amount else { return }   // check
+        await audit()                             // suspension point!
+        balance -= amount                         // mutate
     }
 }
 ```
 
-Reentrancy prevents deadlocks (the actor doesn't freeze while awaiting), but it means **invariants you checked before an `await` can be stale after it**. Re-check state after suspension, or avoid awaiting between a check and the dependent mutation.
+Two tasks each call `withdraw(100)` at the same time. Predict the final balance.
 
-## `nonisolated` members
+Answer: it can go to `-100`. Task A passes the `guard` (balance is 100), then suspends at `await audit()`. The actor is now free — Task B enters, *also* passes the guard (balance is still 100), suspends at its own `audit()`. Both resume and both subtract. The guard each task checked was stale by the time it mattered.
 
-Not everything on an actor needs protection. A member that doesn't touch mutable isolated state can be marked **`nonisolated`**, making it callable synchronously without `await`.
+Note this is not a data race — accesses were still one-at-a-time, and memory is intact. It's a logic bug: an assumption you verified *before* an `await` silently expired *during* it.
+
+Why does Swift allow this? Because the alternative — keeping the actor locked across every `await` — would deadlock the moment two actors awaited each other. Reentrancy trades deadlock-freedom for this rule:
+
+*State checked before an `await` must be re-checked after it — or don't `await` between the check and the mutation at all.*
+
+```swift
+func withdraw(_ amount: Int) async {
+    await audit()                             // suspend FIRST
+    guard balance >= amount else { return }   // then check-and-mutate
+    balance -= amount                         // with no await in between
+}
+```
+
+## `nonisolated`: opting members out
+
+Not everything on an actor needs guarding. Immutable data can't race — so Swift lets you mark members that never touch mutable state as `nonisolated`, making them callable synchronously, no `await`:
 
 ```swift
 actor User {
-    let id: UUID                       // immutable
-    var name: String = ""
-    nonisolated var shortID: String {  // touches only immutable `id`
-        id.uuidString.prefix(8).description
+    let id: UUID                        // immutable — set once
+    var name = ""                       // mutable — stays isolated
+    nonisolated var shortID: String {   // only reads immutable `id`
+        String(id.uuidString.prefix(8))
     }
 }
+
+let user = User(id: UUID())
+print(user.shortID)    // no await needed
 ```
 
-`nonisolated` is also how an actor conforms to synchronous protocols (like `CustomStringConvertible`) — those methods can't access isolated state.
+The compiler still checks you: a `nonisolated` member that tries to read `name` won't compile, because `name` is mutable isolated state.
 
-## Global actors
+`nonisolated` also solves a practical problem: conforming an actor to a synchronous protocol. `CustomStringConvertible` requires a plain, non-async `description` — only a `nonisolated` implementation can satisfy it, and it can only use non-isolated members.
 
-A **global actor** is a single shared actor whose isolation you can apply to *any* declaration with an attribute. The built-in one is **`@MainActor`** (covered in its own topic), which pins work to the main thread. You can define your own:
+## Global actors: one isolation domain, many types
+
+A regular actor protects its own properties. But some state doesn't live in one type — "everything that touches the database" might span a dozen files. A **global actor** is a single shared actor whose isolation you can stamp onto any declaration, anywhere, with an attribute:
 
 ```swift
 @globalActor
@@ -82,13 +127,25 @@ actor DataActor {
     static let shared = DataActor()
 }
 
-@DataActor func writeToDisk() { }   // always runs on DataActor's executor
+@DataActor func writeToDisk() { }      // runs on DataActor's executor
+@DataActor var cache: [String: Data] = [:]   // protected by the same actor
 ```
 
-Everything annotated with the same global actor shares one serialized execution context, no matter where it's declared — a way to protect a whole subsystem's state.
+Every declaration marked `@DataActor` shares one serialized execution context — one at a time across all of them, no matter where they're declared. It's how you protect a whole subsystem rather than a single object.
 
-## The interview lens
+The global actor you'll use daily is built in: `@MainActor`, which pins work to the main thread. It has its own lesson coming up.
 
-The headline: *"How do actors prevent data races?"* — they **isolate** mutable state so only one task accesses it at a time (serialized by the actor's executor), enforced by the compiler; cross-actor access requires `await`. That replaces manual locks with a type-level guarantee.
+## Common pitfalls
 
-The senior differentiator is **reentrancy**: because an actor yields at every `await`, other tasks can mutate its state while a method is suspended, so **invariants checked before an `await` may be invalid after it** — re-check, or don't suspend mid-transaction. Bonus points for `nonisolated` (synchronous access to non-isolated/immutable members, and conforming to sync protocols) and **global actors** (`@MainActor` and custom ones) that apply one shared isolation domain across many declarations.
+- **Treating `await actor.method()` as instant.** It's a potential suspension — the actor may be busy, and you queue up. Don't hold assumptions about timing across it.
+- **Checking state before an `await` and using it after.** Reentrancy means another task may have changed the state during your suspension. Re-check, or restructure so check and mutation have no `await` between them.
+- **Fighting the compiler with `nonisolated` on mutable state.** It won't compile — and that's the feature. If you need sync access, the data must be immutable or protected some other way.
+- **Making everything an actor.** Actors serialize access, which is a bottleneck by design. Value types you copy between tasks don't need one.
+
+## Interview lens
+
+If asked "how do actors prevent data races?", the strong answer has the enforcement in it: an actor's mutable state is isolated, its executor runs only one task's code at a time, and — the part that matters — the *compiler* rejects synchronous outside access. Locks are a convention; actors are a guarantee.
+
+The senior differentiator is reentrancy. Say it before they ask: at every `await` inside an actor method, the actor is free to serve other tasks, so invariants checked before the suspension can be stale after it. Give the bank-withdrawal example, note that reentrancy exists to prevent deadlocks, and give the fix — re-check after suspending, or keep check-and-mutate free of `await`s. Be precise that this is a logic hazard, not a data race; memory safety still holds.
+
+Round it out with `nonisolated` — synchronous access for members that only touch immutable state, and the only way an actor conforms to synchronous protocols like `CustomStringConvertible` — and global actors: one shared isolation domain applied by attribute across many declarations, with `@MainActor` as the everyday example.

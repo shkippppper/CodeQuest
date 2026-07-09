@@ -1,14 +1,45 @@
-## The problem with callbacks
+## The problem: work that takes time
 
-Before Swift 5.5, asynchronous code meant completion handlers. They nest, they're easy to forget to call, and error handling is bolted on:
+Run this:
+
+```swift
+let data = downloadFile()   // takes 3 seconds
+print("done")
+```
+
+If `downloadFile()` simply runs until the download finishes, the thread it's on is stuck for 3 seconds. On the main thread, that's a frozen app — no scrolling, no taps, nothing.
+
+The classic fix, from the GCD lesson, is to hand the work a closure to call when it's done:
+
+```swift
+downloadFile { data in
+    print("done")           // runs 3 seconds later
+}
+```
+
+That closure is a **completion handler** — a function you pass in, to be called later with the result. It unfreezes the app, but watch what happens when steps start to chain.
+
+## Watch callbacks turn into a pyramid
+
+Two steps: fetch data, then decode it. Each step is asynchronous, so each needs its own completion handler:
+
+```swift
+fetchData { data in
+    decode(data) { user in
+        print(user.name)
+    }
+}
+```
+
+Already one level of nesting. Now add error handling, the way real code must:
 
 ```swift
 func loadUser(completion: @escaping (Result<User, Error>) -> Void) {
     fetchData { result in
         switch result {
         case .success(let data):
-            decode(data) { decoded in
-                completion(.success(decoded)) // easy to forget on some path
+            decode(data) { user in
+                completion(.success(user))
             }
         case .failure(let error):
             completion(.failure(error))
@@ -17,27 +48,58 @@ func loadUser(completion: @escaping (Result<User, Error>) -> Void) {
 }
 ```
 
-`async`/`await` lets you write the same logic as straight-line code that *reads* synchronous but *runs* asynchronously.
+Look closely at the `.success` branch. If you forget that one `completion(.success(user))` line, the function compiles fine — and the caller waits forever. The compiler cannot check that you call the completion handler exactly once on every path.
 
-## `async` functions and `await`
+So callbacks have three built-in problems: they nest deeper with every step, forgetting to call them is a silent bug, and errors have to be hand-carried through every layer.
 
-Marking a function `async` means it can **suspend** — pause partway through, give the thread back to the system, and resume later. You call such a function with `await`, which marks the **suspension point**.
+## The same logic, written straight down
+
+Here is `loadUser` again, using Swift 5.5's `async`/`await`:
 
 ```swift
 func loadUser() async throws -> User {
-    let data = try await fetchData()   // may suspend here
-    let user = try await decode(data)  // and here
+    let data = try await fetchData()
+    let user = try await decode(data)
     return user
 }
 ```
 
-At each `await`, the function may suspend. While suspended it occupies **no thread** — the thread is free to do other work. When the awaited operation finishes, the function resumes (possibly on a different thread). This is the key mental model: `await` is a point where the function *might* pause, not a blocking call.
+It reads top to bottom, like ordinary synchronous code. Errors use the ordinary `throws` machinery from the error-handling lesson. And the compiler now *enforces* that every path returns a `User` or throws — the "forgot to call completion" bug is impossible.
 
-`async` and `throws` compose; the order in a call is always `try await`.
+The `async` keyword on the function means: this function is allowed to pause partway through and continue later. Each pause-and-resume spot is marked with `await`.
 
-## Where can you call async code?
+## What actually happens at an `await`
 
-You can only `await` from an asynchronous context: another `async` function, or a `Task`. You can't just call `await` from `main()` or a synchronous button handler. To bridge from sync to async, you create a `Task`:
+Zoom in on one line:
+
+```swift
+let data = try await fetchData()   // may pause here
+```
+
+The `await` marks a **suspension point** — a place where the function may pause, hand its thread back to the system, and resume when the result is ready.
+
+Here's the question interviewers use to separate people who've read about this from people who understand it. While `loadUser` is suspended waiting for the network, what is its thread doing?
+
+Answer: anything *except* waiting. A suspended function occupies *no thread at all*. The thread is released and free to run other work — drawing UI, running other tasks. Compare that with a blocking call, where the thread sits parked and useless for the whole 3 seconds.
+
+Two more details of the mental model:
+
+- When the awaited work finishes, the function resumes — *possibly on a different thread* than the one it started on.
+- `await` means the function *might* pause there. If the result is already available, it may not pause at all.
+
+One syntax rule: when a call is both throwing and async, the keywords always come in the order `try await`.
+
+## Where you're allowed to write `await`
+
+Try to `await` inside a button handler:
+
+```swift
+Button("Load") {
+    let user = try await loadUser()   // ❌ won't compile
+}
+```
+
+The handler is a synchronous function — it has no ability to suspend. `await` is only legal in an asynchronous context: inside another `async` function, or inside a `Task`. To bridge from the synchronous world, you wrap the work in one:
 
 ```swift
 Button("Load") {
@@ -52,74 +114,121 @@ Button("Load") {
 }
 ```
 
-A `Task` is a unit of asynchronous work that starts running immediately on creation. It inherits the current actor and priority by default.
+A `Task` is a unit of asynchronous work. It starts running immediately when created — no `.start()` call — and by default it inherits the current actor and the current priority. Actors get their own lesson soon; for now, read "inherits the current actor" as "if you create it from main-thread UI code, it stays on the main thread."
 
-## Sequential vs. parallel
+## Two awaits run one after another
 
-A common interview trap. Each `await` runs **sequentially** — the next line waits for the previous to finish:
+Suppose each image takes 2 seconds to fetch. Predict the total time:
 
 ```swift
-// Sequential: total time ≈ A + B
-let first = await fetchImage(1)
+let first  = await fetchImage(1)
 let second = await fetchImage(2)
 ```
 
-If the two operations are independent, that's wasteful. Use `async let` to start them **concurrently** and await the results later:
+Answer: about 4 seconds. Each `await` waits for its line to fully finish before the next line starts. Two sequential awaits means the times *add*.
+
+That's correct when line two needs line one's result. But these two fetches are independent — running them one at a time is pure waste.
+
+## Starting both at once with `async let`
+
+Change `let` to `async let`:
 
 ```swift
-// Parallel: total time ≈ max(A, B)
-async let first = fetchImage(1)
-async let second = fetchImage(2)
-let images = await [first, second] // both already running
+async let first  = fetchImage(1)   // starts running NOW
+async let second = fetchImage(2)   // also starts NOW, in parallel
+let images = await [first, second] // suspend until both are done
 ```
 
-`async let` is a *child task* that begins immediately. You only suspend when you actually `await` its value. For a dynamic number of parallel tasks, use a `TaskGroup`:
+An `async let` starts the work immediately as a *child task* — a separate piece of concurrent work owned by this function. The function only suspends later, at the point where it actually `await`s the values. Total time: about 2 seconds — the *maximum* of the two, not the sum.
+
+## A dynamic number of parallel fetches
+
+`async let` needs you to know at compile time how many tasks there are. For "one task per element of this array", use a task group:
 
 ```swift
-let images = try await withThrowingTaskGroup(of: UIImage.self) { group in
+try await withThrowingTaskGroup(of: UIImage.self) { group in
     for id in ids {
-        group.addTask { try await fetchImage(id) }
+        group.addTask { try await fetchImage(id) }   // one child per id
     }
-    var result: [UIImage] = []
-    for try await image in group {
-        result.append(image)
-    }
-    return result
+    // ...
 }
 ```
 
-## Structured concurrency
+Each `addTask` starts a child task immediately, all running in parallel. Then, still inside the same closure, you collect the results as they finish:
 
-`async let` and task groups are **structured**: child tasks are bound to the scope that created them. The parent cannot return until its children finish, and if the parent is cancelled, cancellation propagates to the children automatically. This guarantees no task outlives its scope by accident — a huge reliability win over free-floating threads.
+```swift
+    var result: [UIImage] = []
+    for try await image in group {   // suspends until the next child finishes
+        result.append(image)
+    }
+    return result
+```
 
-A standalone `Task { }` is **unstructured** — it's not tied to the surrounding scope and you're responsible for its lifetime (you can hold its handle to `await` or `.cancel()` it).
+Note the results arrive in *completion* order, not the order you added them.
 
-## Cancellation is cooperative
+## Child tasks can't outlive their parent
 
-Cancelling a task doesn't forcibly stop it. It sets a flag; your code must check it and stop voluntarily.
+`async let` and task groups share a property worth naming: the child tasks are bound to the scope that created them. The parent function cannot return until every child has finished. And if the parent is cancelled, the cancellation flows down to the children automatically.
+
+This discipline — every task lives inside a parent scope, forming a tree — is called **structured concurrency**. Its guarantee: no task ever accidentally outlives the code that started it. That's a major reliability win over GCD, where a dispatched block floats free with no owner. It gets its own full lesson next.
+
+A bare `Task { }` is the exception — it's *unstructured*. It isn't tied to the scope that created it, so you manage its lifetime yourself, usually by keeping its handle:
+
+```swift
+let handle = Task { await doWork() }
+// later:
+handle.cancel()
+```
+
+## Cancellation is a request, not a kill switch
+
+What does `handle.cancel()` actually do to a running task? It does not stop it. It sets a flag on the task — nothing more. The task must notice the flag and stop *itself*:
 
 ```swift
 for id in ids {
-    try Task.checkCancellation()   // throws CancellationError if cancelled
+    try Task.checkCancellation()   // throws CancellationError if the flag is set
     await process(id)
 }
 ```
 
-Many built-in async APIs (like `URLSession`) already check cancellation for you and throw. Long custom loops should call `Task.checkCancellation()` or read `Task.isCancelled`.
+This is called **cooperative cancellation** — the task cooperates by checking. Two ways to check: `Task.checkCancellation()` throws a `CancellationError`, or read the plain `Task.isCancelled` flag and bail out however you like.
 
-## MainActor and UI updates
+Apple's async APIs — `URLSession`, `Task.sleep` — already check the flag internally and throw when cancelled. It's your own long loops and CPU-heavy work that need explicit checks; forget them and `cancel()` silently does nothing.
 
-UI must be touched on the main thread. The `@MainActor` attribute guarantees code runs there. Mark a function, type, or property, and the compiler enforces it:
+## Getting back to the main thread
+
+UI must only be touched from the main thread — but you just learned an async function can resume on *any* thread. The modern guarantee is the `@MainActor` attribute:
 
 ```swift
 @MainActor
 func updateLabel(_ text: String) {
-    label.text = text // guaranteed on the main thread
+    label.text = text   // compiler guarantees: main thread
 }
 ```
 
-Inside an async function you can also hop explicitly with `await MainActor.run { ... }`. This replaces the old `DispatchQueue.main.async`.
+Mark a function, type, or property `@MainActor` and the compiler ensures it runs on the main thread — callers from elsewhere must `await` the hop. For a one-off block inside an async function, there's also:
 
-## The interview lens
+```swift
+await MainActor.run {
+    label.text = "done"
+}
+```
 
-Be ready to contrast **sequential `await`** with **`async let`/`TaskGroup`** for parallelism — interviewers love handing you two independent network calls and asking how to halve the latency. Also know that `await` is a *suspension point* (the thread is released, not blocked), that structured concurrency ties child task lifetimes to their parent, and that cancellation is **cooperative**, not preemptive.
+Both replace the old `DispatchQueue.main.async`. The full story — including how tasks inherit main-actor context — has its own lesson.
+
+## Common pitfalls
+
+- **Sequential awaits on independent work.** `await a(); await b()` adds the times. If `b` doesn't need `a`'s result, use `async let` to overlap them.
+- **Thinking `await` blocks the thread.** It doesn't — the function suspends and the thread is released. That's the whole point.
+- **Calling `cancel()` and assuming work stopped.** Cancellation only sets a flag; loops that never check `Task.isCancelled` run to completion anyway.
+- **Errors vanishing inside `Task { }`.** A throw inside a bare `Task` goes nowhere unless you `catch` it in the task or keep the handle and `try await handle.value`.
+
+## Interview lens
+
+If asked "what does `await` do?", don't say "it waits". Say it marks a suspension point: the function may pause there, the thread is *released* (not blocked), and the function resumes later — possibly on a different thread. Interviewers are listening for the released-thread part.
+
+The classic practical question is two independent network calls: "how do you halve the latency?" Sequential `await`s add the durations; `async let` (fixed number of tasks) or a `TaskGroup` (dynamic number) run them in parallel, so total time is the max, not the sum.
+
+Expect "how does cancellation work?" The answer is one word plus an explanation: *cooperative*. Cancelling sets a flag; the task must check it via `Task.checkCancellation()` or `Task.isCancelled`. Built-in APIs like `URLSession` check for you; your own loops must do it explicitly.
+
+Finally, know the structured/unstructured split: `async let` and task groups create child tasks bound to their parent scope — the parent waits for them and cancellation propagates automatically — while a bare `Task { }` is unstructured and its lifetime is your problem.
