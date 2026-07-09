@@ -1,121 +1,160 @@
 ## The problem: picking the right container
 
-You almost never store just one thing. You store a list of users, a set of seen ids, a lookup from key to value. Swift gives you three workhorse collections — `Array`, `Set`, and `Dictionary` — and choosing the wrong one turns an O(1) lookup into an O(n) scan, or lets duplicates sneak in where you needed uniqueness. Knowing their guarantees is table-stakes.
+Real programs rarely store just one value — a list of users, a set of ids you've already seen, a lookup from a key to a value. Swift gives you three workhorse collections for this: `Array`, `Set`, and `Dictionary`. Pick the wrong one, and an O(1) lookup silently becomes an O(n) scan, or duplicates sneak in where you needed uniqueness.
 
-All three are **generic value types** (structs), so they're copied on assignment and made cheap by copy-on-write.
+```swift
+var scores = [10, 20, 30]
+```
+
+That line already tells you something the type system won't say out loud: `scores` is a **value type** — a struct, not a class — so assigning it to another variable copies it, not shares it. All three collections in this lesson share that property, and Swift makes the copy cheap with **copy-on-write**: the actual duplication only happens the moment one of the copies is mutated.
 
 ## Arrays
 
-An `Array` is an **ordered** collection that allows duplicates and gives fast index access.
+Keep going with `scores`:
 
 ```swift
 var scores = [10, 20, 30]
 scores.append(40)
 scores[0] = 99
-print(scores)          // [99, 20, 30, 40]
-print(scores.count)    // 4
-print(scores.first ?? -1) // 99
+print(scores)              // [99, 20, 30, 40]
+print(scores.count)        // 4
+print(scores.first ?? -1)  // 99
 ```
 
-- Access by index is O(1); `append` is amortized O(1).
-- Inserting or removing at the front is O(n) — everything after shifts.
-- `contains(_:)` is O(n): an array has to look at each element.
-- Subscripting out of range **crashes**; use `first`, `last`, or `indices.contains(i)` to stay safe.
+An `Array` is an **ordered** collection: elements keep the position you put them in, duplicates are allowed, and you can jump straight to any index.
+
+That direct index access is O(1) — `scores[0]` doesn't scan anything, it computes an offset. `append` is amortized O(1): the buffer occasionally has to grow and copy, but that cost is spread thin across many cheap appends.
+
+Not everything is cheap, though. Inserting or removing at the *front* is O(n), because every element after it has to shift over by one. And `contains(_:)` is O(n) too — an array has no shortcut, it has to check elements one at a time until it finds a match.
+
+One more thing worth knowing before it bites you: subscripting out of range crashes.
+
+```swift
+scores[10]   // fatal error: array index out of range
+```
+
+Use `scores.first`, `scores.last`, or `scores.indices.contains(i)` to check safely instead.
 
 ## Sets and uniqueness
 
-A `Set` is an **unordered** collection of **unique** elements with fast membership tests. Its elements must be `Hashable`.
+Predict: what happens if you insert `"a"` twice into a set that already contains it?
 
 ```swift
 var seen: Set<String> = ["a", "b"]
-seen.insert("a")        // no-op — already present
-print(seen.contains("b")) // true  (O(1) average)
-print(seen.count)         // 2
+seen.insert("a")
+print(seen.count)   // 2
 ```
 
-Sets shine for "have I seen this?" checks and for set algebra:
+Answer: nothing — the second `insert("a")` is a silent no-op. A `Set` is an **unordered** collection where every element is guaranteed **unique**; inserting a duplicate just does nothing.
+
+```swift
+print(seen.contains("b"))   // true, O(1) average
+```
+
+That `contains` check is the whole reason to reach for a `Set`: instead of scanning like an array, it hashes the value and jumps straight to where it would live, so membership tests are O(1) on average. That's also why every element has to be **`Hashable`** — Swift needs a way to compute that hash.
+
+Sets also give you set algebra out of the box:
 
 ```swift
 let a: Set = [1, 2, 3]
 let b: Set = [2, 3, 4]
-print(a.union(b))        // {1, 2, 3, 4}
-print(a.intersection(b)) // {2, 3}
-print(a.subtracting(b))  // {1}
+print(a.union(b))         // {1, 2, 3, 4}
+print(a.intersection(b))  // {2, 3}
+print(a.subtracting(b))   // {1}
 ```
 
-If order matters, a `Set` is the wrong tool — iteration order is not guaranteed.
+The trade-off: if the order you inserted things in matters, a `Set` is the wrong tool. Iteration order is not guaranteed.
 
 ## Dictionaries
 
-A `Dictionary` maps unique **keys** to **values**. Keys must be `Hashable`; lookup, insert, and delete are O(1) on average.
-
 ```swift
 var ages = ["Ada": 36, "Alan": 41]
-ages["Grace"] = 85       // insert
-ages["Ada"] = 37         // update
-
-// Subscript returns an OPTIONAL — the key may be missing
-let a = ages["Ada"]      // Int?  -> Optional(37)
-let missing = ages["Bob"] // nil
-
-// Supply a default to get a non-optional
-let count = ages["Bob", default: 0] // 0
+ages["Grace"] = 85   // insert
+ages["Ada"] = 37      // update
 ```
 
-The optional return is the #1 thing interviewers probe: `dict[key]` is `Value?`, and force-unwrapping it (`dict[key]!`) crashes on a missing key.
+A `Dictionary` maps unique keys to values — think of it as a `Set` of keys, each one additionally carrying a value. Keys must be `Hashable` for the same reason `Set` elements must be; lookup, insert, and delete are all O(1) on average.
+
+Here's the detail that trips people up:
+
+```swift
+let a = ages["Ada"]       // Int?  -> Optional(37)
+let missing = ages["Bob"] // nil
+```
+
+Subscripting a dictionary returns an **optional**, not the value directly, because the key you asked for might not be there. Force-unwrapping that (`ages["Bob"]!`) crashes the instant a key is missing — which is exactly why this is the #1 thing interviewers probe about dictionaries.
+
+The clean way to sidestep the optional when you have a sensible fallback:
+
+```swift
+let count = ages["Bob", default: 0]   // 0
+```
 
 ## Mutability and value semantics
 
-`let` makes an entire collection immutable — you can't append, insert, or reassign elements. `var` makes it mutable.
+`let` versus `var` controls the whole collection, not individual elements:
 
 ```swift
 let fixed = [1, 2, 3]
-// fixed.append(4)   // ❌ compile error
+// fixed.append(4)   // compile error — fixed is a `let`
 
 var flexible = [1, 2, 3]
-flexible.append(4)    // ok
+flexible.append(4)   // fine
 ```
 
-Because collections are value types, assigning one copies it:
+A `let` array can't be appended to, inserted into, or reassigned — the entire collection is locked. `var` allows all of it.
+
+Because these are value types, assigning one to another variable copies it:
 
 ```swift
 var original = [1, 2, 3]
 var copy = original
 copy.append(4)
-print(original) // [1, 2, 3] — unaffected
+print(original)   // [1, 2, 3] — unaffected by copy's append
 ```
 
-Copy-on-write means that copy was free until `append` triggered the actual duplication of the buffer.
+`copy` and `original` look like they share memory right after the assignment, and for a moment they do. Copy-on-write means the actual duplication of the underlying buffer is deferred until the first mutation — here, `copy.append(4)`. Up to that line, the assignment was free.
 
 ## Common operations: map, filter, reduce
 
-These three higher-order functions replace most manual loops and are everywhere in idiomatic Swift.
+Three higher-order functions replace most manual loops in idiomatic Swift.
 
 ```swift
 let nums = [1, 2, 3, 4, 5]
-
-let doubled = nums.map { $0 * 2 }          // [2, 4, 6, 8, 10]
-let evens = nums.filter { $0 % 2 == 0 }    // [2, 4]
-let total = nums.reduce(0, +)              // 15
+let doubled = nums.map { $0 * 2 }
+print(doubled)   // [2, 4, 6, 8, 10]
 ```
 
-- **`map`** transforms every element, returning a new array of the same length.
-- **`filter`** keeps only elements passing a test.
-- **`reduce`** collapses the collection into a single value from an initial seed.
-- **`compactMap`** maps and drops `nil`s; **`flatMap`** flattens nested collections.
+**`map`** transforms every element and returns a new collection the same length as the original.
 
-They chain, and because collections are values, each step returns a fresh collection without touching the original.
+```swift
+let evens = nums.filter { $0 % 2 == 0 }
+print(evens)   // [2, 4]
+```
+
+**`filter`** keeps only the elements that pass a test you give it, dropping the rest.
+
+```swift
+let total = nums.reduce(0, +)
+print(total)   // 15
+```
+
+**`reduce`** collapses the whole collection into a single value, starting from a seed (`0` here) and combining it with each element in turn.
+
+Two more worth knowing: **`compactMap`** works like `map` but drops any `nil` results, and **`flatMap`** flattens a collection of collections into one. All of these chain together, and because collections are values, each step in the chain produces a fresh collection without touching the one before it.
 
 ## Choosing the right collection
 
-- Need **order** and/or **duplicates**, or index access? → **Array**.
-- Need **uniqueness** and fast "contains" checks, order irrelevant? → **Set**.
-- Need to **look things up by a key**? → **Dictionary**.
+Three questions settle it:
 
-A quick tell: if you find yourself calling `array.contains(...)` inside a loop, you probably want a `Set` (turning O(n·m) into O(n)).
+- Need order, duplicates, or direct index access? Reach for **Array**.
+- Need uniqueness and fast "have I seen this?" checks, with order irrelevant? Reach for **Set**.
+- Need to look things up by a key? Reach for **Dictionary**.
 
-## The interview lens
+A concrete tell: if you catch yourself calling `array.contains(...)` inside a loop, that's an O(n·m) pattern hiding behind clean-looking code — swapping the array for a `Set` turns it into O(n).
 
-Two questions come up constantly. First, *"What does `dictionary[key]` return?"* — an **optional**, because the key might be absent; reach for `["key", default: x]` or `if let` instead of `!`. Second, *"Array vs Set — when would you switch?"* — when you only care about membership and uniqueness, not order; a `Set` turns O(n) `contains` into O(1) average and dedupes for free.
+## Interview lens
 
-Bonus points for mentioning that all three are **value types with copy-on-write**, so passing a big array around is cheap until someone mutates it, and for knowing that `Set`/`Dictionary` keys must be `Hashable`.
+Two questions come up in almost every interview that touches collections. First: "What does `dictionary[key]` return?" The answer is an optional, because the key might not be there — reach for `["key", default: x]` or `if let` instead of force-unwrapping. Second: "When would you use a `Set` instead of an `Array`?" — whenever you only care about membership and uniqueness, not order; it turns an O(n) `contains` into O(1) average and dedupes for free along the way.
+
+Worth mentioning even if not asked: all three collections are value types with copy-on-write, so passing a large array around is cheap right up until someone mutates their copy, and both `Set` elements and `Dictionary` keys have to be `Hashable`.

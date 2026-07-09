@@ -1,33 +1,57 @@
-## The problem: ObservableObject over-renders
+## The problem: one property changes, the whole screen redraws
 
-`ObservableObject`/`@Published` observation is **object-level**: any `@Published` change fires `objectWillChange`, so **every** view observing that object re-renders — even ones that read a completely different property. In a big model, one field changing can invalidate half your UI. It's also boilerplate-heavy (`@Published` on every property) and awkward with non-class state. The **Observation framework** (iOS 17+), driven by the **`@Observable`** macro, fixes both: precise per-property tracking and near-zero ceremony.
+Here's a typical `ObservableObject` model:
+
+```swift
+class CartModel: ObservableObject {
+    @Published var items: [Item] = []
+    @Published var total: Decimal = 0
+}
+```
+
+Now picture a view that only reads `total`:
+
+```swift
+struct TotalView: View {
+    @ObservedObject var cart: CartModel
+    var body: some View {
+        Text("\(cart.total)")   // never touches items
+    }
+}
+```
+
+Predict: if code elsewhere appends to `cart.items`, does `TotalView` redraw?
+
+Answer: yes — even though `TotalView` never reads `items`. `@Published` observation is **object-level**: any published property changing fires `objectWillChange`, and *every* view observing that object redraws, whether or not it actually reads the property that changed. In a large model, one unrelated field changing can invalidate half your UI.
 
 ## Why Observation replaced ObservableObject
 
-Two wins:
+iOS 17 introduced the **Observation framework**, built around a macro called **`@Observable`**. It targets exactly the problem above, plus a second one: the ceremony of writing `@Published` on every property and choosing between `@StateObject`, `@ObservedObject`, and `@EnvironmentObject` depending on where a model came from.
 
-1. **Fine-grained tracking** — a view re-renders only when a property **it actually read** changes, not on any change to the object.
-2. **Less boilerplate** — no `@Published`, no `ObservableObject` conformance, no `@StateObject` vs `@ObservedObject` juggling for observation.
+Observation fixes both:
 
-It's the recommended approach for new SwiftUI code targeting iOS 17+.
+1. **Fine-grained tracking** — a view redraws only when a property it actually read last time changes.
+2. **Less boilerplate** — one macro on the class, no per-property `@Published`, no separate wrapper for owning vs. receiving a model.
+
+It's the recommended default for new SwiftUI code targeting iOS 17 and later.
 
 ## The `@Observable` macro
 
-Annotate a class with `@Observable` and it's done — plain stored properties are automatically tracked.
+Rewrite the cart model with `@Observable`:
 
 ```swift
 @Observable
 final class CartModel {
-    var items: [Item] = []     // no @Published needed
+    var items: [Item] = []
     var total: Decimal = 0
 }
 ```
 
-The macro rewrites property access to register reads and signal writes to SwiftUI's observation system. You mostly just write a normal class.
+No `: ObservableObject`, no `@Published` on either property. The macro rewrites property access under the hood so that reading `items` registers "this view read `items`," and writing it signals "anyone who read `items` needs to redraw." You write what looks like an ordinary class.
 
 ## Fine-grained tracking
 
-The headline behavior: SwiftUI records **which properties a view's `body` reads**, and re-renders that view only when *those* change.
+Rerun the earlier scenario with the `@Observable` model:
 
 ```swift
 struct TotalView: View {
@@ -36,55 +60,66 @@ struct TotalView: View {
         Text("\(cart.total)")   // reads only `total`
     }
 }
-// Mutating cart.items does NOT re-render TotalView — it never read `items`.
 ```
 
-With `ObservableObject`, changing `items` would have re-rendered `TotalView` too. Observation eliminates that wasted work automatically — a real performance improvement for large models.
+Now mutate `cart.items` from elsewhere in the app. `TotalView`'s `body` never touched `items`, so this time it does *not* redraw. SwiftUI recorded exactly which properties `TotalView` read the last time its `body` ran, and only that specific set of properties can trigger a redraw. That's the entire headline feature: redraws now track *properties*, not *objects*.
 
 ## Using it in views
 
-Observation collapses the wrapper zoo. For a model a view **owns**, use `@State` (yes — `@State` now holds `@Observable` reference models too):
+Because tracking moved to the property level, the wrapper you use to hold a model also changed. A view that owns its model uses `@State` — yes, the same `@State` you'd use for an `Int`, now also holding reference-type `@Observable` models:
 
 ```swift
 struct CartScreen: View {
-    @State private var cart = CartModel()   // owns the @Observable model
-    var body: some View { CartBadge(cart: cart) }
-}
-
-struct CartBadge: View {
-    let cart: CartModel                     // just pass it — no @ObservedObject
-    var body: some View { Text("\(cart.items.count)") }
+    @State private var cart = CartModel()
+    var body: some View {
+        CartBadge(cart: cart)
+    }
 }
 ```
 
-A child that only reads can take the model as a **plain `let`** — no `@ObservedObject`. For the environment, use `.environment(cart)` and `@Environment(CartModel.self)`.
+A child view that only reads the model — never owns it — takes it as a plain `let`, with no wrapper at all:
+
+```swift
+struct CartBadge: View {
+    let cart: CartModel
+    var body: some View {
+        Text("\(cart.items.count)")
+    }
+}
+```
+
+There's no `@ObservedObject` here, because there's nothing left for it to do — fine-grained tracking already handles the "redraw when read data changes" job that `@ObservedObject` used to do. For values placed in the environment, the pattern is `.environment(cart)` to inject it and `@Environment(CartModel.self)` to read it back out — replacing `@EnvironmentObject`.
 
 ## `@Bindable`
 
-When you need **two-way bindings** into an `@Observable` model's properties (for a `TextField`, `Toggle`, etc.), use **`@Bindable`** to get `$` projections:
+`let cart: CartModel` is fine for reading, but a `TextField` or `Toggle` needs a two-way `$` binding into a specific property. That's what **`@Bindable`** provides:
 
 ```swift
 struct EditView: View {
     @Bindable var cart: CartModel
     var body: some View {
-        TextField("Note", text: $cart.note)   // $ binding via @Bindable
+        TextField("Note", text: $cart.note)
     }
 }
 ```
 
-`@State`-owned `@Observable` values already expose `$` for bindings; `@Bindable` is how you get them from a model **passed in** (or bind to an `@Environment` model).
+`@Bindable var cart: CartModel` takes the same model passed in from outside — it doesn't own it — but unlocks `$cart.note` as a working binding. A model owned via `@State` already exposes `$` directly without needing `@Bindable`; you reach for `@Bindable` specifically when the model arrived from a parameter or from the environment and you now need to bind into one of its fields.
 
 ## Migration notes
 
-Moving from `ObservableObject` → `@Observable`:
+Moving an existing `ObservableObject` model to `@Observable` is mostly mechanical:
 
-- Remove `: ObservableObject` and all `@Published` (plain `var`s are tracked).
-- `@StateObject` → **`@State`**; `@ObservedObject` (passed in) → **plain `let`** (or `@Bindable` if you need bindings).
-- `@EnvironmentObject` → `@Environment(Type.self)`, injected with `.environment(_:)`.
-- Requires **iOS 17+**; pre-17 code stays on `ObservableObject`. You can migrate incrementally, model by model.
+- Remove `: ObservableObject` from the class and delete every `@Published` — plain `var` properties are tracked automatically.
+- Where a view owned the model with `@StateObject`, switch to `@State`.
+- Where a view received the model with `@ObservedObject`, switch to a plain `let` — or `@Bindable` if that view needs to write into it via bindings.
+- Where a view used `@EnvironmentObject`, switch to `@Environment(Type.self)`, and inject with `.environment(_:)` instead of `.environmentObject(_:)`.
 
-## The interview lens
+`@Observable` requires iOS 17 or later; code that still supports older OS versions stays on `ObservableObject`. The two systems can coexist, so migration can happen model by model rather than all at once.
 
-The core: **Observation (`@Observable`) replaces `ObservableObject` with fine-grained, per-property tracking** — a view re-renders only when a property **it read** changes, versus `ObservableObject`'s **object-level** invalidation that re-renders all observers on any `@Published` change. That's both **less boilerplate** (no `@Published`/conformance) and a **performance** win for large models.
+## Interview lens
 
-Know the wrapper mapping for iOS 17+: own a model with **`@State`** (not `@StateObject`), pass it as a **plain `let`** to read-only children (not `@ObservedObject`), use **`@Bindable`** to get `$` bindings from a passed-in/environment model, and `@Environment(Type.self)` + `.environment(_:)` for the environment. Mention it requires **iOS 17+** and can be adopted incrementally — pre-17 uses `ObservableObject`.
+If asked "why did Observation replace ObservableObject?", lead with the redraw granularity: `ObservableObject` invalidates every observer on any `@Published` change, while `@Observable` tracks which properties a view actually read and redraws only when those specific properties change. Frame it as a real performance fix for large models, not just less typing — though it's also less typing.
+
+If asked how to use it, walk the wrapper mapping for iOS 17+: `@State` to own a model (replacing `@StateObject`), a plain `let` to receive a read-only model (replacing `@ObservedObject`), `@Bindable` when you need `$` bindings into a model you don't own, and `@Environment(Type.self)` with `.environment(_:)` for environment-injected models (replacing `@EnvironmentObject`).
+
+If pushed on adoption, say it requires iOS 17+, that `ObservableObject` still works and can be migrated incrementally, and that the migration itself is mostly mechanical — drop `@Published`, add `@Observable`, and swap each property wrapper to its Observation equivalent based on who owns the model.
