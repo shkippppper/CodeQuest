@@ -140,17 +140,17 @@ Note the `===` in `slow === fast`, not `==`. `Node` is a class, so `===` checks 
 
 A handful of patterns cover most linked-list interview questions, and they mostly reuse the two-pointer idea from cycle detection:
 
-- **Find the middle node** — a slow/fast pair where `fast` moves twice as fast; when `fast` reaches the end, `slow` is sitting at the middle. Same shape as cycle detection, different stopping condition.
-- **Detect and locate the start of a cycle** — after `slow` and `fast` meet inside a loop, resetting one pointer to `head` and advancing both one step at a time makes them meet again exactly at the cycle's starting node. It's a clever bit of pointer arithmetic worth memorizing rather than re-deriving under pressure.
-- **Merge two sorted lists** — walk both lists with one pointer each, always splicing the smaller current node onto the result, exactly like the merge step of merge sort but on linked nodes instead of array slices.
-- **Remove the nth node from the end** — advance one pointer `n` steps ahead first, then move both pointers together; when the lead pointer hits the end, the trailing pointer is at the node to remove. One pass, no need to know the list's length up front.
-- **Detect a palindrome list** — find the middle (slow/fast), reverse the second half in place, then compare the two halves node by node.
+- Find the middle node — a slow/fast pair where `fast` moves twice as fast; when `fast` reaches the end, `slow` is sitting at the middle. Same shape as cycle detection, different stopping condition.
+- Detect and locate the start of a cycle — after `slow` and `fast` meet inside a loop, resetting one pointer to `head` and advancing both one step at a time makes them meet again exactly at the cycle's starting node. It's a clever bit of pointer arithmetic worth memorizing rather than re-deriving under pressure.
+- Merge two sorted lists — walk both lists with one pointer each, always splicing the smaller current node onto the result, exactly like the merge step of merge sort but on linked nodes instead of array slices.
+- Remove the nth node from the end — advance one pointer `n` steps ahead first, then move both pointers together; when the lead pointer hits the end, the trailing pointer is at the node to remove. One pass, no need to know the list's length up front.
+- Detect a palindrome list — find the middle (slow/fast), reverse the second half in place, then compare the two halves node by node.
 
 ## Common pitfalls
 
-- **Losing the rest of the list during reversal.** Overwriting `next` before saving it into a temporary orphans everything after that node. Always save `next` first.
-- **Off-by-one errors walking near the end.** `fast?.next != nil` (checking `next`, not `fast` itself) is what prevents force-unwrapping `nil` inside `fast?.next?.next`. Get the loop guard right or it crashes.
-- **Forgetting `weak` on `prev` in a doubly linked list.** Two strong pointers pointing at each other (`next` and `prev`) is a textbook retain cycle — nodes leak forever once the list itself is deallocated.
+- Losing the rest of the list during reversal. Overwriting `next` before saving it into a temporary orphans everything after that node. Always save `next` first.
+- Off-by-one errors walking near the end. `fast?.next != nil` (checking `next`, not `fast` itself) is what prevents force-unwrapping `nil` inside `fast?.next?.next`. Get the loop guard right or it crashes.
+- Forgetting `weak` on `prev` in a doubly linked list. Two strong pointers pointing at each other (`next` and `prev`) is a textbook retain cycle — nodes leak forever once the list itself is deallocated.
 
 ## Interview lens
 

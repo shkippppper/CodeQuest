@@ -125,7 +125,9 @@ This runs in O(n) overall, not O(n log n). The intuition: most nodes in a comple
 
 ## Implementing a heap in Swift
 
-Putting it together as a reusable type, generic over any `Comparable` element, with a closure deciding max-heap vs min-heap:
+Time to package everything into one reusable type. The earlier `siftUp`/`siftDown` were hardcoded for a max-heap (using `<` and `>` directly). Generalize them by storing a comparison closure that decides which of two elements belongs "on top" — pass `>` for a max-heap, `<` for a min-heap.
+
+Start with just the storage and that closure:
 
 ```swift
 struct Heap<T> {
@@ -137,19 +139,16 @@ struct Heap<T> {
     }
 
     var isEmpty: Bool { items.isEmpty }
-    var peek: T? { items.first }
+    var peek: T? { items.first }   // the root — the most extreme element
+}
+```
 
+Insert is the earlier "append, then bubble up", except the comparison now goes through `areInOrder` instead of a hardcoded `<`:
+
+```swift
     mutating func insert(_ value: T) {
         items.append(value)
         siftUp(items.count - 1)
-    }
-
-    mutating func extract() -> T? {
-        guard !items.isEmpty else { return nil }
-        items.swapAt(0, items.count - 1)
-        let top = items.removeLast()
-        if !items.isEmpty { siftDown(0) }
-        return top
     }
 
     private mutating func siftUp(_ i: Int) {
@@ -159,7 +158,23 @@ struct Heap<T> {
             i = (i - 1) / 2
         }
     }
+```
 
+Extract is the earlier "swap root with the last slot, remove it, bubble down":
+
+```swift
+    mutating func extract() -> T? {
+        guard !items.isEmpty else { return nil }
+        items.swapAt(0, items.count - 1)
+        let top = items.removeLast()
+        if !items.isEmpty { siftDown(0) }
+        return top
+    }
+```
+
+And `siftDown`, likewise routed through `areInOrder` — it swaps toward whichever child belongs on top:
+
+```swift
     private mutating func siftDown(_ i: Int) {
         var i = i
         while true {
@@ -172,10 +187,9 @@ struct Heap<T> {
             i = top
         }
     }
-}
 ```
 
-`areInOrder(a, b)` returning `a > b` gives a max-heap; `a < b` gives a min-heap. Everything above — `siftUp`, `siftDown`, `heapify` via repeated `insert` — becomes one implementation that serves both.
+Those four blocks are all members of the same `struct Heap<T>` — split apart here only to narrate each piece. `areInOrder(a, b)` returning `a > b` gives a max-heap; `a < b` gives a min-heap. Everything above — `siftUp`, `siftDown`, `heapify` via repeated `insert` — becomes one implementation that serves both.
 
 ```swift
 var maxHeap = Heap<Int>(>)
