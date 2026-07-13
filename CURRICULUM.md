@@ -183,17 +183,17 @@ The app currently ships four category ids in `src/content/types.ts` (`language`,
 ## 7. Reactive Programming & Combine
 `reactive` · icon `GitBranch` — declarative event streams.
 
-- **Combine Fundamentals** — `combine-basics` · mid · ⬜
+- **Combine Fundamentals** — `combine-basics` · mid · ✅
   Sections: Publishers · Subscribers · The `Subscription` contract · `Just` / `Future` / `Deferred` · Demand & lifecycle
-- **Operators** — `combine-operators` · mid · ⬜
+- **Operators** — `combine-operators` · mid · ✅
   Sections: Transforming (`map`/`flatMap`) · Filtering · Combining (`merge`/`zip`/`combineLatest`) · Error handling (`catch`/`retry`) · Debounce & throttle
-- **Subjects & Multicasting** — `combine-subjects` · senior · ⬜
+- **Subjects & Multicasting** — `combine-subjects` · senior · ✅
   Sections: `PassthroughSubject` · `CurrentValueSubject` · Multicasting & `share` · Bridging imperative code · Backpressure considerations
-- **Schedulers & Threading** — `combine-schedulers` · senior · ⬜
+- **Schedulers & Threading** — `combine-schedulers` · senior · ✅
   Sections: `receive(on:)` vs `subscribe(on:)` · Available schedulers · Threading mistakes · Testing with virtual time
-- **Memory Management in Combine** — `combine-memory` · mid · ⬜
+- **Memory Management in Combine** — `combine-memory` · mid · ✅
   Sections: `AnyCancellable` · `store(in:)` · Retain cycles in sinks · `[weak self]` in operators · Cancellation
-- **Combine vs async/await** — `combine-vs-async` · senior · ⬜
+- **Combine vs async/await** — `combine-vs-async` · senior · ✅
   Sections: Streams vs single values · Bridging (`.values`) · When to choose each · Migration strategy
 
 ---
@@ -201,25 +201,25 @@ The app currently ships four category ids in `src/content/types.ts` (`language`,
 ## 8. Foundation, Networking & Persistence
 `foundation` · icon `Database` — the system frameworks behind data.
 
-- **URLSession & Networking** — `urlsession` · mid · ⬜
+- **URLSession & Networking** — `urlsession` · mid · ✅
   Sections: `URLSession` & configurations · Data/Download/Upload tasks · `async` URLSession · Request building · Status codes & errors · Authentication challenges
-- **REST, JSON & Codable Pipelines** — `rest-json` · mid · ⬜
+- **REST, JSON & Codable Pipelines** — `rest-json` · mid · ✅
   Sections: Designing a request layer · Endpoint modeling · Decoding into models · Error mapping · Retry & timeout · Mocking the network
-- **WebSockets & Streaming** — `websockets` · senior · ⬜
+- **WebSockets & Streaming** — `websockets` · senior · ✅
   Sections: `URLSessionWebSocketTask` · Send/receive loops · Reconnection & heartbeats · Streaming with AsyncSequence · Backpressure
-- **UserDefaults & Keychain** — `userdefaults-keychain` · junior · ⬜
+- **UserDefaults & Keychain** — `userdefaults-keychain` · junior · ✅
   Sections: `UserDefaults` use & limits · Property-list types · Keychain basics · Storing secrets securely · `@AppStorage`
-- **File System & FileManager** — `file-system` · mid · ⬜
+- **File System & FileManager** — `file-system` · mid · ✅
   Sections: Sandbox directories · `FileManager` operations · URLs vs paths · Reading/writing files · File coordination & protection
-- **Core Data** — `core-data` · mid · ⬜
+- **Core Data** — `core-data` · mid · ✅
   Sections: Stack (container/context/coordinator) · Entities & relationships · Fetch requests & predicates · `NSFetchedResultsController` · Concurrency (contexts) · Migrations
-- **SwiftData** — `swiftdata` · mid · ⬜
+- **SwiftData** — `swiftdata` · mid · ✅
   Sections: `@Model` · `ModelContainer` & `ModelContext` · Queries (`@Query`) · Relationships · Migration from Core Data · SwiftUI integration
-- **SQLite & GRDB** — `sqlite` · senior · ⬜
+- **SQLite & GRDB** — `sqlite` · senior · ✅
   Sections: When raw SQL beats an ORM · GRDB overview · Records & queries · Observation · Migrations · Performance
-- **Caching Strategies** — `caching` · senior · ⬜
+- **Caching Strategies** — `caching` · senior · ✅
   Sections: `NSCache` · Memory vs disk cache · Cache invalidation · `URLCache` & HTTP caching · LRU & eviction
-- **Date, Calendar & Formatters** — `date-formatting` · junior · ⬜
+- **Date, Calendar & Formatters** — `date-formatting` · junior · ✅
   Sections: `Date` as a point in time · `Calendar` & components · Time zones · `DateFormatter` & ISO8601 · The modern `FormatStyle` API · Localization
 
 ---
@@ -255,25 +255,25 @@ The app currently ships four category ids in `src/content/types.ts` (`language`,
 ## 10. SOLID & Clean Code
 `solid` · icon `Ruler` — principles for maintainable code.
 
-- **Single Responsibility Principle** — `srp` · mid · ⬜
+- **Single Responsibility Principle** — `srp` · mid · ✅
   Sections: One reason to change · Identifying responsibilities · Splitting a class · SRP in Swift types · Over-splitting risk
-- **Open/Closed Principle** — `ocp` · mid · ⬜
+- **Open/Closed Principle** — `ocp` · mid · ✅
   Sections: Open for extension, closed for modification · Protocols & polymorphism · Strategy as OCP · Examples & smells
-- **Liskov Substitution Principle** — `lsp` · mid · ⬜
+- **Liskov Substitution Principle** — `lsp` · mid · ✅
   Sections: Behavioral subtyping · Contract violations · The classic rectangle/square · LSP with protocols · Preconditions/postconditions
-- **Interface Segregation Principle** — `isp` · mid · ⬜
+- **Interface Segregation Principle** — `isp` · mid · ✅
   Sections: Fat interfaces · Splitting protocols · Role interfaces · ISP in Cocoa delegates · Default implementations
-- **Dependency Inversion Principle** — `dip` · mid · ⬜
+- **Dependency Inversion Principle** — `dip` · mid · ✅
   Sections: Depend on abstractions · High vs low level modules · Inversion via protocols · DIP vs DI · Boundaries
-- **DRY, KISS & YAGNI** — `dry-kiss-yagni` · junior · ⬜
+- **DRY, KISS & YAGNI** — `dry-kiss-yagni` · junior · ✅
   Sections: DRY & duplication · The cost of wrong abstraction · KISS · YAGNI & speculative generality · Balancing them
-- **Clean Code Practices** — `clean-code` · mid · ⬜
+- **Clean Code Practices** — `clean-code` · mid · ✅
   Sections: Naming · Small functions · Comments (when not to) · Command/query separation · Guard clauses & early return · Readability
-- **Code Smells & Refactoring** — `refactoring` · senior · ⬜
+- **Code Smells & Refactoring** — `refactoring` · senior · ✅
   Sections: Common smells · Refactoring catalog · Safe refactoring with tests · Extract method/type · Replace conditionals with polymorphism
-- **Composition over Inheritance** — `composition-inheritance` · mid · ⬜
+- **Composition over Inheritance** — `composition-inheritance` · mid · ✅
   Sections: Inheritance pitfalls · Composition & protocols · Has-a vs is-a · Protocol-oriented composition · Examples
-- **Law of Demeter** — `law-of-demeter` · senior · ⬜
+- **Law of Demeter** — `law-of-demeter` · senior · ✅
   Sections: "Don't talk to strangers" · Train-wreck calls · Tell-don't-ask · Encapsulation benefits · Pragmatic limits
 
 ---
@@ -282,39 +282,39 @@ The app currently ships four category ids in `src/content/types.ts` (`language`,
 `patterns` · icon `Puzzle` — GoF and Cocoa patterns, in idiomatic Swift.
 
 ### Creational
-- **Singleton** — `singleton` · junior · ⬜
+- **Singleton** — `singleton` · junior · ✅
   Sections: Intent · Swift implementation · Thread safety · Why it's often an anti-pattern · Testable alternatives
-- **Factory & Abstract Factory** — `factory` · mid · ⬜
+- **Factory & Abstract Factory** — `factory` · mid · ✅
   Sections: Factory method · Abstract factory · Static factories in Swift · Decoupling creation · Examples
-- **Builder** — `builder` · mid · ⬜
+- **Builder** — `builder` · mid · ✅
   Sections: Intent · Fluent builders · Result-builder DSLs · Builder vs default args · Examples
 
 ### Structural
-- **Adapter** — `adapter` · mid · ⬜
+- **Adapter** — `adapter` · mid · ✅
   Sections: Intent · Object vs protocol adapter · Wrapping third-party APIs · Examples
-- **Decorator** — `decorator` · mid · ⬜
+- **Decorator** — `decorator` · mid · ✅
   Sections: Intent · Composition-based decoration · Protocol decorators · Examples vs subclassing
-- **Facade** — `facade` · mid · ⬜
+- **Facade** — `facade` · mid · ✅
   Sections: Intent · Simplifying subsystems · Facade vs API layer · Examples
-- **Proxy** — `proxy` · senior · ⬜
+- **Proxy** — `proxy` · senior · ✅
   Sections: Intent · Virtual/protection/remote proxy · Lazy loading · Examples
-- **Composite** — `composite` · senior · ⬜
+- **Composite** — `composite` · senior · ✅
   Sections: Intent · Tree structures · Uniform treatment · SwiftUI views as composites · Examples
 
 ### Behavioral
-- **Delegate & DataSource (Cocoa)** — `delegate-pattern` · junior · ⬜
+- **Delegate & DataSource (Cocoa)** — `delegate-pattern` · junior · ✅
   Sections: The delegation idiom · Protocols & `weak` delegates · Delegate vs closure vs Combine · DataSource separation · Multiple delegates
-- **Observer** — `observer` · mid · ⬜
+- **Observer** — `observer` · mid · ✅
   Sections: Intent · NotificationCenter · KVO · Combine/Observation as observer · Trade-offs
-- **Strategy** — `strategy` · mid · ⬜
+- **Strategy** — `strategy` · mid · ✅
   Sections: Intent · Protocol-based strategies · Closures as strategies · Runtime selection · Examples
-- **Command** — `command` · senior · ⬜
+- **Command** — `command` · senior · ✅
   Sections: Intent · Encapsulating actions · Undo/redo · Command queues · Examples
-- **State** — `state-pattern` · senior · ⬜
+- **State** — `state-pattern` · senior · ✅
   Sections: Intent · State machines · Enum-driven state · State objects · Examples
-- **Iterator** — `iterator` · mid · ⬜
+- **Iterator** — `iterator` · mid · ✅
   Sections: Intent · `Sequence` & `IteratorProtocol` · Custom iterators · Lazy sequences
-- **Protocol-Witness & POP Patterns** — `pop-patterns` · senior · ⬜
+- **Protocol-Witness & POP Patterns** — `pop-patterns` · senior · ✅
   Sections: Protocol witnesses as values · Dependency injection via structs of closures · Testability · Trade-offs vs protocols
 
 ---
@@ -322,21 +322,21 @@ The app currently ships four category ids in `src/content/types.ts` (`language`,
 ## 12. Testing & Quality
 `testing` · icon `FlaskConical` — proving code works and stays working.
 
-- **Unit Testing with XCTest** — `xctest` · mid · ⬜
+- **Unit Testing with XCTest** — `xctest` · mid · ✅
   Sections: Test anatomy (AAA) · Assertions · Setup/teardown · Test organization · Async expectations · What to test
-- **The Swift Testing Framework** — `swift-testing` · mid · ⬜
+- **The Swift Testing Framework** — `swift-testing` · mid · ✅
   Sections: `@Test` & `#expect` · Traits & parameterized tests · Suites · Migrating from XCTest · async support
-- **Test Doubles** — `test-doubles` · mid · ⬜
+- **Test Doubles** — `test-doubles` · mid · ✅
   Sections: Dummy/stub/spy/mock/fake · Hand-rolled doubles in Swift · Protocol-based mocking · Verifying interactions · Over-mocking
-- **Test-Driven Development** — `tdd` · senior · ⬜
+- **Test-Driven Development** — `tdd` · senior · ✅
   Sections: Red-green-refactor · Designing through tests · TDD trade-offs · Outside-in vs inside-out
-- **UI Testing (XCUITest)** — `ui-testing` · mid · ⬜
+- **UI Testing (XCUITest)** — `ui-testing` · mid · ✅
   Sections: `XCUIApplication` · Element queries & accessibility · Actions & assertions · Flakiness & waits · Page Object pattern
-- **Snapshot Testing** — `snapshot-testing` · senior · ⬜
+- **Snapshot Testing** — `snapshot-testing` · senior · ✅
   Sections: What snapshot tests catch · Recording & comparing · Handling device/OS variance · When snapshots hurt
-- **Testing Async & Concurrent Code** — `testing-async` · senior · ⬜
+- **Testing Async & Concurrent Code** — `testing-async` · senior · ✅
   Sections: Testing `async` functions · Controlling time/schedulers · Testing actors · Avoiding flakiness · Determinism
-- **Test Strategy & Coverage** — `test-strategy` · senior · ⬜
+- **Test Strategy & Coverage** — `test-strategy` · senior · ✅
   Sections: The testing pyramid · What/what-not to test · Coverage as a signal not a goal · CI integration · Maintaining suites
 
 ---
@@ -344,21 +344,21 @@ The app currently ships four category ids in `src/content/types.ts` (`language`,
 ## 13. Performance & Optimization
 `performance` · icon `Gauge` — making apps fast and efficient.
 
-- **Instruments & Profiling** — `instruments` · mid · ⬜
+- **Instruments & Profiling** — `instruments` · mid · ✅
   Sections: Time Profiler · Allocations & Leaks · Signposts · Reading flame graphs · Measure before optimizing
-- **Leak & Retain-Cycle Debugging** — `leak-debugging` · mid · ⬜
+- **Leak & Retain-Cycle Debugging** — `leak-debugging` · mid · ✅
   Sections: Memory graph debugger · Leaks instrument · Common leak sources · Verifying fixes
-- **Launch Time Optimization** — `launch-time` · senior · ⬜
+- **Launch Time Optimization** — `launch-time` · senior · ✅
   Sections: Cold vs warm launch · Pre-main time · Dynamic libraries & dyld · Deferring work · Measuring with signposts
-- **Rendering Performance & Hitches** — `rendering-performance` · senior · ⬜
+- **Rendering Performance & Hitches** — `rendering-performance` · senior · ✅
   Sections: The 120Hz frame budget · Offscreen rendering · Overdraw & blending · Hitch debugging · SwiftUI/UIKit specifics
-- **Image Loading & Memory** — `image-performance` · mid · ⬜
+- **Image Loading & Memory** — `image-performance` · mid · ✅
   Sections: Decoding cost · Downsampling · Caching · `UIImage` vs `CGImage` · Async image pipelines
-- **Background Tasks & Energy** — `background-tasks` · mid · ⬜
+- **Background Tasks & Energy** — `background-tasks` · mid · ✅
   Sections: Background modes · `BGTaskScheduler` · Energy impact · QoS choices · Network efficiency
-- **Build Time Optimization** — `build-time` · senior · ⬜
+- **Build Time Optimization** — `build-time` · senior · ✅
   Sections: Diagnosing slow builds · Type-inference cost · Module boundaries · Incremental builds · Whole-module optimization
-- **Value Types & Performance** — `value-perf` · senior · ⬜
+- **Value Types & Performance** — `value-perf` · senior · ✅
   Sections: Stack allocation wins · COW costs · Existential overhead · Inlining & specialization · Measuring
 
 ---
@@ -366,25 +366,25 @@ The app currently ships four category ids in `src/content/types.ts` (`language`,
 ## 14. Mobile System Design
 `system-design` · icon `Network` — the senior interview round.
 
-- **Mobile System Design Framework** — `mobile-system-design` · senior · ⬜
+- **Mobile System Design Framework** — `mobile-system-design` · senior · ✅
   Sections: Clarifying requirements · Functional vs non-functional · High-level components · API contract · Data flow · Trade-off discussion · Bottlenecks
-- **Designing a Feed / Timeline** — `design-feed` · senior · ⬜
+- **Designing a Feed / Timeline** — `design-feed` · senior · ✅
   Sections: Requirements · Pagination & prefetch · Caching & freshness · Media handling · Offline & optimistic updates · Scroll performance
-- **Designing an Image-Loading Library** — `design-image-loader` · senior · ⬜
+- **Designing an Image-Loading Library** — `design-image-loader` · senior · ✅
   Sections: API surface · In-memory & disk cache · Cancellation · Decoding & downsampling · Prefetch · Concurrency model
-- **Designing Offline-First Sync** — `design-offline-sync` · senior · ⬜
+- **Designing Offline-First Sync** — `design-offline-sync` · senior · ✅
   Sections: Local source of truth · Sync engine · Conflict resolution · Change tracking · Retry & idempotency · Consistency
-- **Designing a Chat / Messaging System** — `design-chat` · senior · ⬜
+- **Designing a Chat / Messaging System** — `design-chat` · senior · ✅
   Sections: Realtime transport · Message ordering & delivery state · Local persistence · Sync & pagination · Presence & typing · Offline
-- **Designing a Networking Layer** — `design-networking-layer` · senior · ⬜
+- **Designing a Networking Layer** — `design-networking-layer` · senior · ✅
   Sections: Request abstraction · Auth & token refresh · Retry/backoff · Caching · Error model · Testability
-- **Pagination Strategies** — `pagination` · mid · ⬜
+- **Pagination Strategies** — `pagination` · mid · ✅
   Sections: Offset vs cursor · Prefetch triggers · Deduplication · Error/empty states · Cache coherence
-- **Caching & Data Consistency** — `system-caching` · senior · ⬜
+- **Caching & Data Consistency** — `system-caching` · senior · ✅
   Sections: Cache layers · Invalidation strategies · Staleness vs freshness · Single source of truth · Cache-aside vs write-through
-- **API Design & Versioning** — `api-design` · senior · ⬜
+- **API Design & Versioning** — `api-design` · senior · ✅
   Sections: Resource modeling · Pagination & filtering contracts · Error contracts · Versioning strategies · Backward compatibility
-- **Push Notifications Architecture** — `push-notifications` · mid · ⬜
+- **Push Notifications Architecture** — `push-notifications` · mid · ✅
   Sections: APNs flow · Token registration · Payloads & silent push · Notification service/content extensions · Reliability
 
 ---
@@ -392,21 +392,21 @@ The app currently ships four category ids in `src/content/types.ts` (`language`,
 ## 15. Tooling & Ecosystem
 `tooling` · icon `Wrench` — the build/ship pipeline.
 
-- **Swift Package Manager** — `spm` · mid · ⬜
+- **Swift Package Manager** — `spm` · mid · ✅
   Sections: `Package.swift` manifest · Targets & products · Dependencies & resolution · Local vs remote packages · Resources & plugins
-- **Xcode Build System** — `xcode-build` · mid · ⬜
+- **Xcode Build System** — `xcode-build` · mid · ✅
   Sections: Targets, schemes & configurations · Build settings & `.xcconfig` · Build phases · Workspaces · Common build errors
-- **Provisioning, Signing & Distribution** — `signing-distribution` · mid · ⬜
+- **Provisioning, Signing & Distribution** — `signing-distribution` · mid · ✅
   Sections: Certificates & profiles · App IDs & capabilities · TestFlight · App Store submission · Automatic vs manual signing
-- **CI/CD** — `ci-cd` · senior · ⬜
+- **CI/CD** — `ci-cd` · senior · ✅
   Sections: Pipeline stages · Fastlane · GitHub Actions · Test & build automation · Code signing in CI · Release automation
-- **Linting & Formatting** — `linting` · junior · ⬜
+- **Linting & Formatting** — `linting` · junior · ✅
   Sections: SwiftLint · SwiftFormat · Custom rules · Pre-commit hooks · Enforcing in CI
-- **Debugging** — `debugging` · mid · ⬜
+- **Debugging** — `debugging` · mid · ✅
   Sections: Breakpoints (symbolic/conditional) · LLDB commands · `po` / `expr` · View hierarchy debugger · Watchpoints
-- **Crash Reporting & Analytics** — `crash-analytics` · mid · ⬜
+- **Crash Reporting & Analytics** — `crash-analytics` · mid · ✅
   Sections: Symbolication & dSYMs · Crash report anatomy · Tools (Crashlytics/Sentry) · Privacy · Actionable analytics
-- **Feature Flags & A/B Testing** — `feature-flags` · senior · ⬜
+- **Feature Flags & A/B Testing** — `feature-flags` · senior · ✅
   Sections: Flag types · Remote config · Rollout strategies · Experiment design · Cleanup & flag debt
 
 ---
@@ -420,23 +420,23 @@ The app currently ships four category ids in `src/content/types.ts` (`language`,
   Sections: Array internals & complexity · Two pointers · Sliding window · In-place tricks · String specifics in Swift
 - **Linked Lists** — `ds-linked-lists` · mid · ✅
   Sections: Singly vs doubly · Building one in Swift (value vs reference) · Reversal · Cycle detection · Common problems
-- **Stacks & Queues** — `ds-stacks-queues` · junior · ⬜
+- **Stacks & Queues** — `ds-stacks-queues` · junior · ✅
   Sections: Stack operations & uses · Queue & deque · Implementations in Swift · Monotonic stack · Examples
-- **Hash Tables** — `ds-hash-tables` · mid · ⬜
+- **Hash Tables** — `ds-hash-tables` · mid · ✅
   Sections: Hashing & buckets · `Hashable` in Swift · Collision handling · Complexity · Set/Dictionary problems
-- **Trees & Binary Search Trees** — `ds-trees` · mid · ⬜
+- **Trees & Binary Search Trees** — `ds-trees` · mid · ✅
   Sections: Tree terminology · Traversals (in/pre/post/level) · BST operations · Balancing (overview) · Recursion patterns
-- **Graphs & Traversal** — `ds-graphs` · senior · ⬜
+- **Graphs & Traversal** — `ds-graphs` · senior · ✅
   Sections: Representations (matrix/list) · BFS · DFS · Topological sort · Shortest path (overview) · Cycle detection
-- **Heaps & Priority Queues** — `ds-heaps` · senior · ⬜
+- **Heaps & Priority Queues** — `ds-heaps` · senior · ✅
   Sections: Heap property · Build/insert/extract · Implementing in Swift · Top-K problems · Heapsort
-- **Sorting Algorithms** — `algo-sorting` · mid · ⬜
+- **Sorting Algorithms** — `algo-sorting` · mid · ✅
   Sections: Comparison sorts overview · Merge/quick/heap sort · Stability · Swift's `sort` internals · Choosing a sort
-- **Searching & Two Pointers** — `algo-searching` · mid · ⬜
+- **Searching & Two Pointers** — `algo-searching` · mid · ✅
   Sections: Binary search & variants · Two pointers · Fast/slow pointers · Search-space reduction
-- **Recursion & Dynamic Programming** — `algo-dp` · senior · ⬜
+- **Recursion & Dynamic Programming** — `algo-dp` · senior · ✅
   Sections: Recursion & base cases · Memoization · Tabulation · Common DP patterns · Recognizing DP problems
-- **Concurrency Primitives (CS)** — `cs-concurrency` · senior · ⬜
+- **Concurrency Primitives (CS)** — `cs-concurrency` · senior · ✅
   Sections: Locks & mutexes · Semaphores · Atomicity · Deadlock/livelock/starvation · Producer-consumer
 
 ---
