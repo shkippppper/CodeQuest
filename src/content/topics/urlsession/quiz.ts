@@ -7,9 +7,9 @@ const quiz: Question[] = [
     prompt: "What is `URLSession` responsible for?",
     options: [
       "Managing network requests: connections, TLS, redirects, caching, and delivering responses",
-      "Only parsing URL strings",
-      "Rendering JSON into SwiftUI views",
-      "Encrypting local files on disk",
+      "Only parsing and validating URL strings into their scheme, host, path, and query-parameter components before handing off to other APIs",
+      "Rendering decoded JSON payloads directly into SwiftUI views using a built-in declarative binding between network responses and view state",
+      "Encrypting local files on disk using the system keychain to store the per-file AES keys for protected data at rest",
     ],
     answer: 0,
     explanation:
@@ -23,9 +23,9 @@ const quiz: Question[] = [
 // server responds 404 Not Found`,
     options: [
       "No — a 404 is still a successful network round trip; it does not throw",
-      "Yes — any non-200 status throws automatically",
-      "Only if the body is empty",
-      "It throws a decoding error",
+      "Yes — URLSession automatically throws a URLError.badServerResponse for any status code outside the 200–299 success range",
+      "It throws only when the response body is completely empty, because URLSession treats empty-body non-200 responses as unrecoverable transport failures",
+      "It throws a DecodingError because Foundation's JSON decoder is invoked automatically and fails when given a 404 error-page HTML body",
     ],
     answer: 0,
     explanation:
@@ -60,9 +60,9 @@ const quiz: Question[] = [
     prompt: "What distinguishes `URLSessionConfiguration.ephemeral` from `.default`?",
     options: [
       "Ephemeral keeps cache, cookies, and credentials in memory only, with nothing persisted to disk",
-      "Ephemeral is faster because it skips TLS",
-      "Ephemeral disables background transfers only",
-      "There is no functional difference",
+      "Ephemeral skips the TLS handshake entirely on repeat connections, making subsequent requests significantly faster than the default configuration",
+      "Ephemeral disables background transfers but otherwise behaves identically to the default configuration in every other respect",
+      "There is no functional difference between the two — both persist cache, cookies, and credentials to the same on-disk location Apple manages for the app",
     ],
     answer: 0,
     explanation:
@@ -83,9 +83,9 @@ const quiz: Question[] = [
     prompt: "Why does a background `URLSessionConfiguration` require a delegate rather than the async/await task APIs?",
     options: [
       "Because the OS itself may run the transfer while the app is suspended or terminated, and can only deliver the result by relaunching the app and calling a delegate method",
-      "Because background sessions don't support HTTPS",
-      "Because delegates are required for all URLSession usage",
-      "Background sessions are identical to ephemeral sessions",
+      "Because background URLSession configurations disable TLS entirely and therefore cannot authenticate the server certificate without a delegate to accept the raw challenge",
+      "Because URLSession mandates a delegate for every configuration — the async/await APIs are merely thin wrappers that internally create an anonymous delegate on your behalf",
+      "Background sessions are functionally identical to ephemeral sessions, both operating entirely in-memory, so no persistent delegate is needed for either",
     ],
     answer: 0,
     difficulty: "senior",
@@ -100,9 +100,9 @@ const quiz: Question[] = [
 let (data, response) = try await session.data(for: request)`,
     options: [
       "Nothing goes wrong — with no delegate, the session falls back to default handling, which succeeds for ordinary trusted HTTPS servers",
-      "The request always fails with an authentication error",
-      "It silently sends the request over plain HTTP instead",
-      "It throws a compile-time error",
+      "The request always fails with a URLError.clientCertificateRequired authentication error, because URLSession requires a delegate to provide the client identity for any HTTPS connection",
+      "Without a delegate to approve the TLS challenge, URLSession silently downgrades the request to plain HTTP, bypassing certificate validation entirely",
+      "The Swift compiler rejects the code with a compile-time error, because URLSession(configuration:) requires a non-nil delegate argument in its designated initializer",
     ],
     answer: 0,
     difficulty: "senior",

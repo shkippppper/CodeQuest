@@ -7,9 +7,9 @@ const quiz: Question[] = [
     prompt: "What are the three steps of the TDD cycle, in order?",
     options: [
       "Red (write a failing test), green (write the minimal code to pass), refactor (clean up with tests still passing)",
-      "Design, implement, test",
-      "Green, red, refactor",
-      "Write all tests, then write all implementation code",
+      "Design the complete API up front, implement every method in full, then write tests to lock in the completed behavior",
+      "Green, red, refactor — always start from a passing baseline implementation and then deliberately introduce controlled failures",
+      "Write every test in the complete test suite in a single upfront session, then write all the implementation code in one batch afterwards",
     ],
     answer: 0,
     explanation:
@@ -21,9 +21,9 @@ const quiz: Question[] = [
     prompt: "What does \"green\" mean in the red-green-refactor cycle?",
     options: [
       "The smallest amount of code that makes the current failing test pass — nothing extra",
-      "The final, fully-featured implementation",
-      "All tests in the suite are passing",
-      "The code has been refactored and optimized",
+      "The final, fully-featured implementation that is complete, optimized, and production-ready",
+      "The state where all tests in the entire suite are simultaneously green without any skips",
+      "The code has been refactored, profiled, and performance-optimized after all tests were written",
     ],
     answer: 0,
     explanation:
@@ -36,9 +36,9 @@ const quiz: Question[] = [
     code: `func test_totalWithNoDiscount() {\n    let cart = ShoppingCart()\n    cart.add(price: 10.0)\n    cart.add(price: 25.0)\n    XCTAssertEqual(cart.total(), 35.0)\n}`,
     options: [
       "It fails to compile / build, since ShoppingCart doesn't exist yet — this is the red step",
-      "It passes automatically because XCTest infers the type",
-      "It runs but is skipped",
-      "It throws a runtime exception only, compiling fine",
+      "It passes automatically because XCTest infers the missing type and generates a stub implementation",
+      "It compiles and runs, but the test method is silently skipped and reported as passing by the runner",
+      "It compiles without error and throws a runtime NSException only when the missing type is first accessed",
     ],
     answer: 0,
     explanation:
@@ -73,9 +73,9 @@ const quiz: Question[] = [
     prompt: "How does writing the test first influence the design of the code under test?",
     options: [
       "It forces you to decide the shape of the API — parameters, return values, collaborators — before deciding how it works internally",
-      "It has no effect on design; design and testing are unrelated concerns",
-      "It only affects naming conventions",
-      "It guarantees the code will need fewer classes",
+      "It has absolutely no documented effect on software design whatsoever; testing and system design are entirely orthogonal engineering concerns",
+      "It influences only superficial naming conventions and has no impact on structural decisions like parameter types or collaborator boundaries",
+      "Academic research provides a statistical guarantee that code produced via TDD will always require measurably fewer total classes than alternatives",
     ],
     answer: 0,
     difficulty: "senior",
@@ -88,9 +88,9 @@ const quiz: Question[] = [
     prompt: "What distinguishes outside-in (London school) TDD from inside-out (Detroit school) TDD?",
     options: [
       "Outside-in starts from an acceptance test at the user-facing boundary and stubs collaborators with doubles as it discovers them; inside-out starts from small low-level units and composes them upward using mostly real objects",
-      "Outside-in never uses test doubles at all",
-      "Inside-out always starts with UI tests",
-      "They are two names for the exact same practice",
+      "Outside-in is functionally identical to inside-out in every respect, but adds the one explicit constraint of prohibiting all test doubles, stubs, and mocks at every single abstraction layer of the system, from the top-level acceptance test all the way down to the smallest unit",
+      "Inside-out mandates starting every session from UI-level full-stack acceptance tests before any unit-level logic may be designed or written",
+      "They are two different community-coined labels that describe exactly the same TDD practice with no meaningful distinction between them",
     ],
     answer: 0,
     difficulty: "senior",
@@ -104,9 +104,9 @@ const quiz: Question[] = [
     code: `// one production implementation, one protocol, no second conformer in sight`,
     options: [
       "The test author guessed at flexibility that wasn't needed yet, rather than writing the minimal code to go green and refactoring toward simplicity",
-      "TDD always produces exactly this outcome and can't be avoided",
-      "The test was written after the implementation",
-      "XCTest requires all types to be protocols",
+      "TDD always produces this exact outcome without any exception — over-abstraction is a mathematically unavoidable property of the methodology",
+      "The single-conformer protocol appeared specifically because the test was written after the implementation and retrofitted abstraction was subsequently needed",
+      "XCTest's internal test runner unconditionally requires every collaborator type to conform to a protocol so the runner can inject test doubles automatically",
     ],
     answer: 0,
     difficulty: "senior",

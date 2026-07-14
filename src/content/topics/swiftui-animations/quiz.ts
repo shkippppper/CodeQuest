@@ -7,9 +7,9 @@ const quiz: Question[] = [
     prompt: "What do you animate in SwiftUI?",
     options: [
       "State changes — SwiftUI interpolates between the old and new rendered views",
-      "Individual frames, one at a time",
-      "CALayer properties directly",
-      "The run loop timing",
+      "Individual frames, one at a time, by supplying a new view description at each display-link tick inside the animation block",
+      "CALayer properties directly, since SwiftUI animations ultimately translate to Core Animation at the rendering layer",
+      "The run loop timing, by scheduling timed callbacks that nudge a value along a curve on each pass of the main run loop",
     ],
     answer: 0,
     explanation:
@@ -21,9 +21,9 @@ const quiz: Question[] = [
     prompt: "What does `withAnimation { isExpanded.toggle() }` do?",
     options: [
       "Animates every view whose appearance depends on the state changed inside the closure",
-      "Only animates the button that was tapped",
-      "Runs the closure on a background thread",
-      "Disables animations",
+      "Only animates the button that was tapped, leaving sibling views that also read isExpanded to update without any transition",
+      "Runs the closure on a background thread so the state mutation doesn't block the main thread during the animation",
+      "Disables animations for the closure's mutations, since the explicit block overrides any implicit .animation modifiers already on the views",
     ],
     answer: 0,
     explanation:
@@ -44,9 +44,9 @@ const quiz: Question[] = [
     prompt: "What does a `.transition(...)` animate?",
     options: [
       "A view being inserted into or removed from the hierarchy",
-      "A color change on a persistent view",
-      "Scroll position",
-      "Text content updates",
+      "A color change on a persistent view, interpolating each RGB channel independently from the old value to the new one",
+      "Scroll position, sliding the content offset from one coordinate to another over the animation's duration",
+      "Text content updates, cross-fading between the old and new string whenever the Text's content binding changes",
     ],
     answer: 0,
     explanation:
@@ -58,9 +58,9 @@ const quiz: Question[] = [
     prompt: "What is `matchedGeometryEffect` for?",
     options: [
       "Shared-element/'hero' animations — morphing one view into another that shares an id in a namespace",
-      "Matching two colors",
-      "Aligning text baselines",
-      "Detecting device geometry",
+      "Matching two colors so SwiftUI interpolates between them using the same curve as the surrounding animation block",
+      "Aligning text baselines across different font sizes in a horizontal stack by sharing a common measurement namespace",
+      "Detecting device geometry so a view can position itself relative to a named anchor point elsewhere on screen",
     ],
     answer: 0,
     explanation:
@@ -86,9 +86,9 @@ const quiz: Question[] = [
     prompt: "You want to animate a custom numeric 'count-up' in a Text. What must you provide?",
     options: [
       "Conform to `Animatable` and expose the value via `animatableData` so SwiftUI can interpolate it",
-      "Nothing — Text animates numbers automatically",
-      "A CADisplayLink timer",
-      "A withAnimation call is enough on its own",
+      "Nothing — Text animates numbers automatically when the binding changes inside a withAnimation block, no extra conformance needed",
+      "A CADisplayLink timer that fires each frame and updates the displayed value by a fixed step toward the target",
+      "A withAnimation call is enough on its own; SwiftUI detects numeric Text content and interpolates the digits without any protocol work",
     ],
     answer: 0,
     difficulty: "senior",
@@ -107,9 +107,9 @@ show.toggle()   // NOT inside withAnimation
 `,
     options: [
       "The banner appears/disappears instantly — the transition doesn't play without an animation driving the change",
-      "It always animates regardless",
-      "It crashes",
-      "The transition plays in reverse",
+      "It always animates regardless, because SwiftUI applies a default spring animation to any transition attached to a conditional view",
+      "It crashes with a runtime assertion because attaching a transition modifier to a view that isn't inside withAnimation is unsupported",
+      "The transition plays in reverse every time, sliding the banner in from the wrong edge because no curve was specified",
     ],
     answer: 0,
     difficulty: "senior",
@@ -122,9 +122,9 @@ show.toggle()   // NOT inside withAnimation
     prompt: "Why is the modern `.animation(_:value:)` preferred over the deprecated valueless `.animation(_:)`?",
     options: [
       "It scopes the animation to changes of a specific value, avoiding accidentally animating unrelated changes",
-      "It's faster to type",
-      "It animates on a background thread",
-      "It disables transitions",
+      "It's faster to type because you can omit the value parameter and rely on the default any-change behavior from the old API",
+      "It animates on a background thread, offloading interpolation work from the main thread to avoid blocking the UI during the curve",
+      "It disables transitions on views that have a .transition modifier, preventing them from playing when the same value changes",
     ],
     answer: 0,
     difficulty: "senior",

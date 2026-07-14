@@ -7,9 +7,9 @@ const quiz: Question[] = [
     prompt: "What makes a feed harder to design than a static, fixed-length list?",
     options: [
       "It's unbounded, changes underneath the user while they scroll, and is rendering-heavy (media)",
-      "It only ever shows text, never images",
-      "It never needs pagination since feeds are short",
-      "It's identical to a static list in every way",
+      "It only ever shows plain text rows, so image-loading, caching, and aspect-ratio reservation are never concerns",
+      "It never needs pagination because social feeds are kept deliberately short by the server to reduce bandwidth costs",
+      "It is architecturally identical to a finite static list, differing only in that it may have slightly more rows to display",
     ],
     answer: 0,
     explanation:
@@ -23,9 +23,9 @@ const quiz: Question[] = [
 // 3 new posts were inserted at the top since page 2 was fetched`,
     options: [
       "Everything shifts down by 3, so page 3 now overlaps with items already shown on page 2 — duplicates appear",
-      "Nothing changes; page numbers are immune to inserts",
-      "The server rejects the request",
-      "The app automatically deduplicates with no extra logic",
+      "Nothing changes; the server freezes the page boundaries at the moment page 1 was fetched, making page numbers immune to any subsequent inserts",
+      "The server detects the offset conflict and rejects the page 3 request with a 409 Conflict until the client re-fetches from page 1",
+      "The app automatically deduplicates all incoming items by id and silently discards repeated posts with no extra pagination logic needed",
     ],
     answer: 0,
     explanation:
@@ -46,9 +46,9 @@ const quiz: Question[] = [
     prompt: "New posts arrive in the background while the user is reading the feed. What's the better UX default, and why?",
     options: [
       "Show a non-disruptive \"N new posts\" banner rather than silently splicing them above the user's scroll position",
-      "Silently insert them at the top immediately so the feed is always maximally fresh",
-      "Ignore new posts entirely until the next full app relaunch",
-      "Reload the entire feed from scratch on a timer regardless of scroll position",
+      "Silently splice the new posts in at the exact top of the feed immediately, so the timeline is always maximally up-to-date without any user interaction",
+      "Ignore all new posts entirely and refuse to surface them until the user kills and relaunches the app to force a full data refresh",
+      "Discard the cached feed and reload every post from the network on a fixed timer every 30 seconds, regardless of the user's current scroll position",
     ],
     answer: 0,
     explanation:
@@ -60,9 +60,9 @@ const quiz: Question[] = [
     prompt: "Why does the PostDTO in this lesson include imageAspectRatio instead of letting the cell size itself once the image downloads?",
     options: [
       "So the cell can reserve the correct height immediately, avoiding a layout jump when the image finishes loading",
-      "It's required by every image format",
-      "It replaces the need for a thumbnail URL",
-      "It has no effect on layout, only on decoding speed",
+      "Every modern image format requires an aspect ratio field in its metadata header, and iOS cannot decode the file without reading it first",
+      "Providing the aspect ratio in the DTO eliminates the need for a separate thumbnail URL, since the cell can scale the full image to fit the placeholder",
+      "The aspect ratio field has no effect on layout whatsoever — it is only used to hint the image decoder about the target output size for faster decoding",
     ],
     answer: 0,
     explanation:
@@ -90,9 +90,9 @@ const quiz: Question[] = [
 // home feed: other people's posts, arriving continuously`,
     options: [
       "No — silently applying every incoming update mid-scroll disorients the reader, so a feed favors showing cached content plus an explicit \"new posts\" affordance instead",
-      "Yes — every cache in a mobile app should always be write-through, no exceptions",
-      "No — feeds should never cache anything at all",
-      "It makes no difference which one you pick",
+      "Yes — write-through caching is a universal mobile best practice that must always be applied consistently to every cache in the app without exceptions, regardless of whether the user is actively scrolling",
+      "No — feeds must never use any caching layer at all, since stale content is always worse than waiting for a fresh network response before rendering anything",
+      "It makes no architectural difference; both strategies produce identical user-visible behavior in every scroll and refresh scenario",
     ],
     answer: 0,
     difficulty: "senior",
@@ -105,9 +105,9 @@ const quiz: Question[] = [
     prompt: "A feed uses proper cell reuse (UICollectionView/LazyVStack) but still stutters while scrolling past image-heavy posts. What's the most likely remaining cause?",
     options: [
       "Image decoding is happening synchronously on the main thread, competing with frame rendering",
-      "Cell reuse is inherently incompatible with images",
-      "The cursor-based pagination scheme is too slow",
-      "The FeedPage struct is missing a nextCursor field",
+      "Cell reuse is inherently incompatible with asynchronous image loading, because reused cells cancel in-flight image tasks mid-decode",
+      "The cursor-based pagination scheme introduces extra network round-trips when scrolling back, stealing bandwidth that image downloads need",
+      "The FeedPage struct is missing a nextCursor field, causing the collection view to request the same page repeatedly and stall the render pipeline",
     ],
     answer: 0,
     difficulty: "senior",

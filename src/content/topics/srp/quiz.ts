@@ -21,9 +21,9 @@ const quiz: Question[] = [
     prompt: "A class has methods for calculating tax, formatting a receipt, and saving to a database. What's the fast way to tell if it violates SRP?",
     options: [
       "Ask who would file a bug report or feature request against each method — different answers mean different responsibilities",
-      "Count the number of methods — more than 5 is always a violation",
-      "Check if it uses generics",
-      "Check if it's a class instead of a struct",
+      "Count the total number of methods — any type with more than 5 methods automatically violates SRP regardless of what they do",
+      "Check if the type uses generics, since generic types always combine multiple responsibilities by definition",
+      "Check if it's declared as a class rather than a struct, since only class types can accumulate multiple responsibilities",
     ],
     answer: 0,
     explanation:
@@ -50,9 +50,9 @@ struct InvoicePrinter {
 }`,
     options: [
       "No — InvoiceCalculator doesn't depend on or call InvoicePrinter",
-      "Yes — they share the InvoiceManager superclass",
-      "Yes — Swift recompiles all structs in the same file together",
-      "It depends on access control",
+      "Yes — they still share the InvoiceManager superclass, so a change to the superclass propagates to both subtypes",
+      "Yes — Swift recompiles all structs declared in the same source file together, so a change in one triggers recompilation of all",
+      "It depends on the access control level of InvoicePrinter.format — internal access could still couple them indirectly",
     ],
     answer: 0,
     explanation:
@@ -78,9 +78,9 @@ struct InvoicePrinter {
     prompt: "A `User` struct conforms to `Codable` and also has an `isValidEmail()` business-rule method. Per SRP guidance in this lesson, what's the typical judgment call?",
     options: [
       "Codable is often left on the model since it's mechanical and low-risk, but growing validation logic deserves its own type like UserValidator",
-      "Both must always be split into separate types with no exceptions",
-      "Codable and validation are always the same responsibility",
-      "Neither should ever live on the model type",
+      "Both must always be split into entirely separate types with zero exceptions, since co-locating any conformance on the model is by definition an SRP violation",
+      "Codable conformance and business validation rules are always the same single responsibility because both of them operate directly on the model's underlying data",
+      "Neither Codable nor any validation logic should ever live on a model type under any circumstances — both categories always belong in dedicated standalone service types",
     ],
     answer: 0,
     explanation:
@@ -101,9 +101,9 @@ struct InvoicePrinter {
     prompt: "An interviewer asks: \"isn't splitting every class like this over-engineering for a small app?\" What's the strongest senior-level answer?",
     options: [
       "SRP is a judgment call — the goal is one reason to change per type, and over-splitting into one-method classes is just as real a failure mode as under-splitting",
-      "No, every app should always split every class into the maximum number of pieces possible",
-      "SRP only applies to apps with more than 100,000 lines of code",
-      "SRP is outdated and shouldn't be used in Swift",
+      "No — every app regardless of size should always split every class into the maximum number of independently deployable single-method pieces possible",
+      "SRP only becomes meaningful once a codebase exceeds 100,000 lines; small apps gain no measurable design or maintainability benefit from applying it at all",
+      "SRP is an outdated object-oriented relic with no practical relevance to modern Swift development, which solves the same problems more cleanly with value types and protocols",
     ],
     answer: 0,
     difficulty: "senior",

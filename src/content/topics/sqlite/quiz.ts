@@ -6,10 +6,10 @@ const quiz: Question[] = [
     type: "mcq",
     prompt: "When does raw SQL (or a lightweight wrapper like GRDB) tend to beat an ORM like Core Data or SwiftData?",
     options: [
-      "For simple single-entity CRUD screens",
+      "For simple single-entity CRUD screens where the ORM's automatic row mapping removes the need for any hand-written SQL",
       "For aggregates, multi-table joins, full-text search, or hot paths where query performance matters most",
-      "Only when the app has no database at all",
-      "Never — ORMs are always faster",
+      "Only when the app has no persistent database at all and needs to query a transient in-memory SQLite instance",
+      "Never — ORMs are always faster because they cache the query plan and avoid repeated SQLite compilation overhead",
     ],
     answer: 1,
     explanation:
@@ -45,9 +45,9 @@ const quiz: Question[] = [
     prompt: "What's the difference between GRDB's DatabaseQueue and DatabasePool?",
     options: [
       "DatabaseQueue serializes every read and write on one queue; DatabasePool allows concurrent reads via SQLite's write-ahead log while writes still serialize",
-      "They are interchangeable with no functional difference",
-      "DatabasePool is single-threaded, DatabaseQueue is multi-threaded",
-      "DatabaseQueue is only for reads, DatabasePool is only for writes",
+      "They are completely interchangeable — GRDB automatically selects between them internally based on your access pattern and workload characteristics",
+      "DatabasePool is strictly single-threaded and processes all operations sequentially, while DatabaseQueue dispatches reads and writes across a pool of background threads",
+      "DatabaseQueue is designed exclusively for read-only queries while DatabasePool handles only write transactions, so apps must configure and use both together",
     ],
     answer: 0,
     difficulty: "senior",
@@ -83,9 +83,9 @@ const quiz: Question[] = [
     prompt: "What is the 'N+1 problem'?",
     options: [
       "Running one query to fetch N parent rows, then N more queries to fetch each one's related rows individually, instead of one joined query",
-      "A migration that adds N+1 columns",
-      "An off-by-one error in a for loop",
-      "A SQLite file size limit",
+      "A schema migration bug that accidentally adds N+1 duplicate columns to a table rather than the N columns specified in the migration definition",
+      "An off-by-one error in a for-loop index that reads one extra row past the last valid result when iterating over a database cursor",
+      "A hard SQLite per-database file size limit that the device filesystem enforces when a table's total stored data exceeds N+1 gigabytes",
     ],
     answer: 0,
     explanation:
@@ -98,9 +98,9 @@ const quiz: Question[] = [
     code: `// A\nfor book in books {\n    try dbQueue.write { db in try book.insert(db) }\n}\n\n// B\ntry dbQueue.write { db in\n    for book in books { try book.insert(db) }\n}`,
     options: [
       "A — each call to write() opens its own transaction with its own disk sync, 1,000 times over",
-      "B — batching always adds overhead",
-      "They perform identically",
-      "A is faster because it releases the queue between inserts",
+      "B — batching all inserts into a single write closure always adds overhead because GRDB must lock the queue for the entire duration",
+      "They perform identically, because GRDB internally coalesces consecutive write() calls into one transaction automatically",
+      "A is faster because releasing the queue between inserts allows other readers to interleave, improving overall throughput",
     ],
     answer: 0,
     difficulty: "senior",

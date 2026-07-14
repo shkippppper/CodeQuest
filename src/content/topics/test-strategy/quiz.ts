@@ -7,9 +7,9 @@ const quiz: Question[] = [
     prompt: "What does the testing pyramid recommend about the relative number of each test type?",
     options: [
       "Many fast, narrow unit tests at the base; fewer integration tests in the middle; a small number of slow UI tests at the top for critical paths",
-      "An equal number of unit, integration, and UI tests",
-      "Mostly UI tests, since they give the most end-to-end confidence",
-      "Only unit tests — integration and UI tests are redundant if unit tests pass",
+      "An equal and balanced number of unit, integration, and UI tests, since each layer independently catches a distinct class of bug the other two layers miss entirely",
+      "Mostly UI tests because they exercise the entire running application end-to-end and deliver the highest overall confidence that every feature works together correctly",
+      "Exclusively unit tests — integration and UI tests are wholly redundant overhead once every single unit has its own comprehensive passing test suite in place",
     ],
     answer: 0,
     explanation:
@@ -23,9 +23,9 @@ const quiz: Question[] = [
     code: `// Suite shape: 1800 UI tests, 200 unit tests`,
     options: [
       "An inverted pyramid — slow, broad tests dominate, so failures are hard to localize and the team stops trusting red runs",
-      "The team needs to delete all UI tests immediately",
-      "XCTest doesn't support this many UI tests",
-      "The bug is unrelated to test strategy and purely a code review failure",
+      "The team should immediately delete every UI test in the suite and rewrite them as unit tests to restore confidence in CI",
+      "XCTest has an internal limit on the number of UI test methods it can run, so the suite silently dropped tests beyond that threshold",
+      "The problem is unrelated to test strategy and is purely attributable to inadequate code review discipline on the team",
     ],
     answer: 0,
     explanation:
@@ -37,9 +37,9 @@ const quiz: Question[] = [
     prompt: "Which is the best candidate for a dedicated unit test?",
     options: [
       "A discount calculation with a tier check and a threshold edge case",
-      "A plain struct with two stored properties and no logic",
-      "A UILabel's text being set and immediately read back",
-      "Generated code from a framework you don't own",
+      "A plain data struct with two stored properties, no computed values, and absolutely no branching logic",
+      "A UILabel whose text property is set and then immediately read back in the same test to confirm assignment",
+      "Auto-generated model code produced by a third-party framework or tool that the team does not own or maintain",
     ],
     answer: 0,
     explanation:
@@ -65,9 +65,9 @@ const quiz: Question[] = [
 }`,
     options: [
       "Coverage goes up because every line executes, but it verifies nothing — a wrong discount value would still pass",
-      "Coverage stays the same because there's no assertion",
-      "It fails to compile because there's no XCTAssert call",
-      "Coverage goes up and it fully verifies the discount logic",
+      "Coverage stays exactly the same as before because the tool only counts lines with at least one XCTAssert call present",
+      "It fails to compile because XCTest requires at least one XCTAssert call in every method whose name starts with 'test'",
+      "Coverage goes up and the test fully verifies the discount logic, since executing without a crash proves the output is correct",
     ],
     answer: 0,
     explanation:
@@ -93,9 +93,9 @@ const quiz: Question[] = [
     prompt: "A test asserts `mockRepository.fetchCallCount == 3` instead of checking the resulting data the view model exposes. What's the risk?",
     options: [
       "It's brittle — a refactor of how data is fetched can break the test even when observable behavior is unchanged",
-      "It runs slower than an assertion on observable behavior",
-      "It can never be written using XCTest",
-      "It provides stronger correctness guarantees than asserting on outcomes",
+      "It introduces noticeable latency into each test run because mock call-count tracking adds per-invocation overhead at runtime",
+      "It can never be written using XCTest, which only exposes assertion APIs for values and errors, not for method invocation counts",
+      "It provides much stronger correctness guarantees than asserting on observable outcomes, since internal call counts expose more code paths",
     ],
     answer: 0,
     explanation:
@@ -109,9 +109,9 @@ const quiz: Question[] = [
     code: `// Checkout is the app's single highest-value, most-trafficked user flow`,
     options: [
       "Yes — it's exactly the kind of critical, end-to-end path the pyramid reserves its small UI-test budget for, unlike a minor screen's third settings toggle",
-      "No — the pyramid says UI tests should never be written",
-      "Yes — every flow in the app deserves an equal number of UI tests",
-      "No — checkout should only ever be tested manually since it involves payment",
+      "No — the pyramid explicitly forbids UI tests for any flow that already has unit test coverage, because duplicate coverage wastes CI time and budget",
+      "Yes — every user-facing flow in the app deserves an equal number of UI tests to maintain consistent end-to-end confidence across all screens and journeys",
+      "No — checkout flows always involve live payment provider integrations and must be validated exclusively through manual QA sessions on a physical device",
     ],
     answer: 0,
     difficulty: "senior",

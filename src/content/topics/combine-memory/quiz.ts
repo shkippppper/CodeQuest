@@ -7,9 +7,9 @@ const quiz: Question[] = [
     prompt: "What happens if you never store the AnyCancellable that sink returns?",
     options: [
       "The token deallocates immediately, which cancels the subscription before it can deliver values",
-      "The subscription runs forever regardless",
-      "It causes a compile error",
-      "The publisher automatically retries the subscription",
+      "The subscription runs forever regardless, because Combine keeps an internal strong reference to every active sink",
+      "It causes a compile error, since the result of sink must be assigned to avoid a discarded-result warning",
+      "The publisher automatically retries the subscription each time the previous token is deallocated",
     ],
     answer: 0,
     explanation:
@@ -43,9 +43,9 @@ const quiz: Question[] = [
 }`,
     options: [
       "No — self owns cancellables, which owns the AnyCancellable, which owns a closure capturing self: a retain cycle",
-      "Yes — Combine automatically breaks retain cycles",
-      "Yes — sink closures never capture self strongly",
-      "No — but only because searchPublisher never completes",
+      "Yes — Combine automatically breaks retain cycles by capturing the sink closure with a weak reference internally",
+      "Yes — sink closures never capture self strongly because the Combine runtime always uses an unowned capture list",
+      "No — but only because searchPublisher never completes and therefore holds the closure open indefinitely",
     ],
     answer: 0,
     explanation:
@@ -57,9 +57,9 @@ const quiz: Question[] = [
     prompt: "What does adding [weak self] to a sink closure change?",
     options: [
       "The closure captures self without incrementing its reference count, breaking the retain cycle through that closure",
-      "It cancels the subscription immediately",
-      "It makes the publisher run on a background thread",
-      "It prevents the closure from ever running",
+      "It immediately cancels the entire subscription, tearing down every operator in the pipeline before any values can be delivered",
+      "It makes the publisher switch to a background dispatch queue so the closure always runs off the main thread automatically",
+      "It prevents the closure from ever executing, because Combine treats a nil weak reference as a signal to skip all downstream delivery",
     ],
     answer: 0,
     explanation:
@@ -78,9 +78,9 @@ const quiz: Question[] = [
     .store(in: &cancellables)`,
     options: [
       "No — map and filter still capture self strongly, and the whole pipeline is retained by self via cancellables",
-      "Yes — the terminal sink is the only closure that matters for retain cycles",
-      "Yes — map and filter never capture self even if written to",
-      "No — because store(in:) itself causes the leak regardless of captures",
+      "Yes — the terminal sink is the only closure that matters for retain cycles; upstream closures are not retained",
+      "Yes — map and filter closures are never retained by the pipeline because they run synchronously and immediately",
+      "No — because store(in:) itself holds a strong reference back to the ViewModel regardless of capture lists",
     ],
     answer: 0,
     difficulty: "senior",
@@ -102,9 +102,9 @@ const quiz: Question[] = [
     prompt: "A publisher was set up with .share() and has two subscribers. One subscriber cancels its AnyCancellable. What happens to the other subscriber?",
     options: [
       "It keeps receiving values — cancelling one subscriber doesn't tear down shared upstream work for others",
-      "Both subscribers stop receiving values immediately",
-      "The publisher restarts from scratch for the remaining subscriber",
-      "Cancellation is not possible on a shared publisher",
+      "Both subscribers stop receiving values immediately, since share() ties all subscribers to a single upstream token",
+      "The publisher restarts entirely from scratch and replays all previously emitted values for the remaining subscriber",
+      "Cancellation is not possible once share() is used, because the upstream reference is locked to both subscribers",
     ],
     answer: 0,
     explanation:

@@ -7,9 +7,9 @@ const quiz: Question[] = [
     prompt: "What is composition, as an alternative to inheritance?",
     options: [
       "Building a type's behavior by combining smaller, independent objects it holds, instead of subclassing a parent",
-      "Writing every method inline in one giant class",
-      "Using generics instead of protocols",
-      "Overriding every method a superclass defines",
+      "Writing every method for all behaviors inline in one giant class so nothing needs to be delegated to a separate object",
+      "Using generics with type constraints instead of protocol conformances to share behavior across unrelated types",
+      "Overriding every method that a superclass defines in order to customize or extend the parent's default behavior",
     ],
     answer: 0,
     explanation:
@@ -30,9 +30,9 @@ const quiz: Question[] = [
     prompt: "A `Dragon` holds a `Wings` object that implements flying, rather than subclassing a `FlyingCharacter`. What relationship is this?",
     options: [
       "Has-a — Dragon has a flying capability, it isn't defined by it",
-      "Is-a — Dragon is a kind of Wings",
-      "Neither — this isn't a real relationship",
-      "Is-a — Dragon is a kind of FlyingCharacter",
+      "Is-a — Dragon is a kind of Wings, inheriting all wing behaviors whether they make sense for a dragon or not",
+      "Neither — holding an object as a property is just storage and doesn't represent any recognized design relationship",
+      "Is-a — Dragon is a kind of FlyingCharacter because every Dragon that can fly is substitutable for a FlyingCharacter instance",
     ],
     answer: 0,
     explanation:
@@ -47,9 +47,9 @@ const quiz: Question[] = [
 }`,
     options: [
       "The caller's assumption silently breaks — the override changed what attack() means, violating the Liskov Substitution Principle",
-      "It's a compile error, since the override changes behavior",
-      "Nothing changes — attack() always means the same thing regardless of override",
-      "Swift automatically warns at runtime whenever a subclass overrides a method",
+      "It's a compile error, since Swift enforces at build time that overrides preserve the semantic contract of the overridden method",
+      "Nothing changes — attack() always means the same thing regardless of which subclass overrides it, because Swift binds calls statically",
+      "Swift automatically emits a runtime warning to the console whenever a subclass override changes the observable behavior of a method",
     ],
     answer: 0,
     explanation:
@@ -84,9 +84,9 @@ const quiz: Question[] = [
     prompt: "When does inheritance (is-a) genuinely remain the right choice over composition?",
     options: [
       "When a subtype really behaves like a more specific version of its parent in every context the parent is used, e.g. a Square really is a Shape for every Shape operation",
-      "Never — composition should always replace inheritance",
-      "Whenever two types share even one method name",
-      "Only for value types like structs",
+      "Never — protocol-based composition with default implementations should always replace class inheritance in every codebase without any exception",
+      "Whenever two types happen to share even one method name with identical signatures, because shared naming is a reliable signal of a genuine is-a identity relationship",
+      "Only for value types such as structs, since reference-type class inheritance introduces retain cycles and tight coupling that pure value-type struct hierarchies always avoid",
     ],
     answer: 0,
     difficulty: "senior",
@@ -100,9 +100,9 @@ const quiz: Question[] = [
     code: `// five levels of subclassing, one change at the root`,
     options: [
       "The fix can ripple unpredictably through four subclasses that override or depend on it — tight coupling that composition avoids by keeping capabilities in small, independent, separately-testable objects",
-      "Nothing — Swift guarantees subclass behavior is unaffected by superclass changes",
-      "The compiler blocks the change until every subclass is manually reviewed",
-      "Composition has the exact same risk, so there's no benefit either way",
+      "Nothing — Swift guarantees at compile time that any change to a superclass method will leave all existing subclass overrides and their callers completely unaffected by the edit",
+      "The Swift compiler automatically blocks any superclass method change and refuses to build the target until every affected subclass in the entire hierarchy is manually reviewed and recompiled by the developer",
+      "Composition carries the exact same unpredictable coupling risk as deep inheritance does, because the composed capability objects are still reachable through the same shared type hierarchy at runtime",
     ],
     answer: 0,
     difficulty: "senior",

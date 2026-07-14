@@ -7,9 +7,9 @@ const quiz: Question[] = [
     prompt: "What is a feature flag?",
     options: [
       "A runtime check guarding a feature whose value can change without shipping a new build",
-      "A compiler directive that removes dead code",
-      "A comment marking TODO items in source",
-      "A SwiftLint rule for naming conventions",
+      "A compiler directive that removes dead code branches by evaluating conditions at build time instead of at runtime",
+      "A comment marking TODO items in source so they can be tracked in the issue backlog without affecting behavior",
+      "A SwiftLint rule for naming conventions that flags identifiers which don't follow the module's agreed-upon naming guidelines",
     ],
     answer: 0,
     explanation:
@@ -45,9 +45,9 @@ const quiz: Question[] = [
     code: `static var newCheckoutEnabled: Bool {\n    RemoteConfig.shared.bool(forKey: "new_checkout_enabled", default: false)\n}`,
     options: [
       "false — the safe, already-shipped behavior, since the fetch never completed",
-      "The app crashes because there's no value to read",
-      "true — flags default to enabled",
-      "It throws a compile error",
+      "The app crashes because there's no value to read — RemoteConfig requires a completed fetch before any key access is valid",
+      "true — flags always default to enabled so new features reach users even without a completed network fetch",
+      "It throws a compile error because the `default:` label conflicts with reserved Swift keyword syntax inside a function call",
     ],
     answer: 0,
     explanation:
@@ -68,9 +68,9 @@ const quiz: Question[] = [
     prompt: "What question does an A/B test answer that a plain gradual rollout does not?",
     options: [
       "Which of two variants actually performs better, measured statistically",
-      "Whether the new code compiles",
-      "Whether the feature flag system is online",
-      "How many total users are in the app",
+      "Whether the new code compiles cleanly and passes all unit tests before being enabled for any real users",
+      "Whether the feature flag system is online and successfully delivering values to all targeted user segments",
+      "How many total users are currently active in the app and eligible to be included in the on-group percentage",
     ],
     answer: 0,
     explanation:
@@ -97,9 +97,9 @@ const quiz: Question[] = [
     code: `if FeatureFlags.newCheckoutEnabled { showNewCheckout() } else { showLegacyCheckout() }\n// rollout has been 100% for 8 months`,
     options: [
       "Flag debt — a permanent dead if/else branch that doubles the paths a future change must reason about, even though only one branch has run in months",
-      "No real cost — an unused branch has zero runtime overhead",
-      "It automatically gets deleted by the remote config service after 90 days",
-      "It causes the app to crash on the next build",
+      "No real cost — an unused branch has zero runtime overhead and the compiler will eliminate the dead code entirely during optimization, leaving no footprint in the binary",
+      "It automatically gets deleted by the remote config service after 90 days, once the platform detects the flag has been at 100% rollout with no recent value changes",
+      "It causes the app to crash on the next build, because the compiler detects the unreachable else branch and treats it as a logical error in release configuration",
     ],
     answer: 0,
     difficulty: "senior",

@@ -7,9 +7,9 @@ const quiz: Question[] = [
     prompt: "You `switch` over an enum and handle every case explicitly. Do you need a `default`?",
     options: [
       "No — an exhaustive switch needs no `default`",
-      "Yes — every switch requires a `default`",
-      "Only if the enum has associated values",
-      "Only in release builds",
+      "Yes — the Swift compiler requires a default case on every switch statement to guarantee a code path for unforeseen values",
+      "Only if the enum has associated values, because associated values add complexity the compiler cannot always verify exhaustively",
+      "Only in release builds, where the optimizer strips out exhaustiveness metadata and the default is needed as a fallback",
     ],
     answer: 0,
     explanation:
@@ -39,9 +39,9 @@ default:
     prompt: "What must the `else` block of a `guard` statement do?",
     options: [
       "Transfer control out of the current scope (return / throw / break / continue)",
-      "Assign a default value",
-      "Nothing — it's optional",
-      "Call `fatalError()`",
+      "Assign a fallback default value to the variable being checked so execution can continue normally past the guard",
+      "Nothing — the else block is entirely optional and the compiler accepts a guard statement with no else clause at all",
+      "Call `fatalError()` with a descriptive message explaining which precondition was violated by the failing guard check",
     ],
     answer: 0,
     explanation:
@@ -147,7 +147,7 @@ case 2:
 default:
     print("c")
 }`,
-    options: ["a, then b", "a", "a, b, c", "b"],
+    options: ["a, then b", "a only", "a, b, then c", "b only"],
     answer: 0,
     difficulty: "senior",
     explanation:
@@ -169,9 +169,9 @@ func f(_ v: E) {
 }`,
     options: [
       "No — fallthrough can't enter a case that binds a new variable",
-      "Yes — it prints both x and y",
-      "No — enums can't use fallthrough",
-      "Yes — but only .a runs",
+      "Yes — it prints both x and y because fallthrough runs the next case body with x still bound from the previous match",
+      "No — Swift enums with associated values are not allowed to use fallthrough under any circumstances whatsoever",
+      "Yes — but only .a runs because the compiler silently drops the fallthrough when it detects a binding conflict at build time",
     ],
     answer: 0,
     difficulty: "senior",

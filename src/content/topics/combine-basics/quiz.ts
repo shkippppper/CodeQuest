@@ -7,9 +7,9 @@ const quiz: Question[] = [
     prompt: "What is a publisher in Combine?",
     options: [
       "Any type that can deliver a sequence of values over time to whoever subscribes",
-      "A closure that runs once on the main thread",
-      "A class that wraps a delegate callback",
-      "A global singleton that stores app state",
+      "A closure that executes once on the main thread and returns the single result to its caller",
+      "A class that wraps a delegate callback, converting each delegate method into a type-erased call",
+      "A global singleton that stores app state and pushes updates to any registered observer object",
     ],
     answer: 0,
     explanation:
@@ -49,9 +49,9 @@ const quiz: Question[] = [
     prompt: "Why does `sink` return an `AnyCancellable` that you need to store?",
     options: [
       "It's a token representing the live subscription; when it deallocates, the subscription is torn down automatically",
-      "It's only used for logging purposes and has no functional effect",
-      "It forces the publisher to emit synchronously",
-      "It converts the publisher's Failure type to Never",
+      "It is only used for debugging and cancellation logging and has absolutely no effect on the subscription\\'s lifetime",
+      "It forces the publisher to emit all buffered values synchronously on the current thread before returning control to the caller",
+      "It permanently type-erases the publisher\\'s Failure type to Never, preventing any error from ever reaching the downstream subscriber",
     ],
     answer: 0,
     explanation:
@@ -87,9 +87,9 @@ func receive(completion: Subscribers.Completion<Never>) {
 }`,
     options: [
       "value: 1, value: 2 — nothing else, \"done\" never prints",
-      "value: 1 through value: 5, then \"done\"",
-      "value: 1, value: 2, then \"done\" immediately",
-      "Nothing prints — the subscription never starts",
+      "value: 1 through value: 5, then \"done\", because the publisher ignores demand and pushes all values eagerly",
+      "value: 1, value: 2, then \"done\" immediately because the publisher closes once demand is satisfied",
+      "Nothing prints — the subscription never starts because the custom subscriber's type doesn't conform fully",
     ],
     answer: 0,
     difficulty: "senior",
@@ -102,9 +102,9 @@ func receive(completion: Subscribers.Completion<Never>) {
     prompt: "When does the closure passed to `Future` execute?",
     options: [
       "Immediately at creation time, exactly once, and the result is cached and replayed to every subscriber",
-      "Only when the first subscriber attaches, and again for every new subscriber",
-      "Lazily, the first time the returned value is accessed",
-      "On a background queue after a one-second delay",
+      "Only when the first subscriber attaches, and again independently for every new subscriber that joins later",
+      "Lazily, the first time the returned AnyPublisher value is accessed or awaited by a caller",
+      "On a background DispatchQueue after a one-second configurable delay set by the scheduler parameter",
     ],
     answer: 0,
     difficulty: "senior",
@@ -126,9 +126,9 @@ func receive(completion: Subscribers.Completion<Never>) {
     prompt: "What does `.eraseToAnyPublisher()` do?",
     options: [
       "Wraps the concrete pipeline type in `AnyPublisher`, hiding it behind a plain \"publisher of Output, Failure\" interface",
-      "Cancels the current subscription and starts a new one",
-      "Converts the publisher's Failure type to Never",
-      "Forces the pipeline to run on the main thread",
+      "Cancels the current subscription immediately and restarts a completely fresh subscription from the beginning of the pipeline",
+      "Permanently converts the publisher\\'s Failure type to Never by silently swallowing all errors that flow through the pipeline",
+      "Forces the entire upstream pipeline to run synchronously on the main thread regardless of any scheduler hops already applied",
     ],
     answer: 0,
     explanation:

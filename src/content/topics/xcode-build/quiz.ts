@@ -7,9 +7,9 @@ const quiz: Question[] = [
     prompt: "You add a new Swift file to the project, but the app fails to see the type it defines. Most likely cause?",
     options: [
       "The file's Target Membership checkbox isn't checked for the app target",
-      "Xcode needs to be restarted",
-      "Swift files must be added via a Run Script phase",
-      "The file needs its own scheme",
+      "Xcode needs to be restarted for its module index to pick up any Swift file added outside the source editor",
+      "Swift files added via Finder must be registered through a Run Script phase to appear in the compiler's input list",
+      "The file needs its own scheme before Xcode's build system will include it in a compile invocation",
     ],
     answer: 0,
     explanation:
@@ -21,9 +21,9 @@ const quiz: Question[] = [
     prompt: "What's the relationship between a scheme and a build configuration?",
     options: [
       "A scheme decides which configuration each action (run/test/archive) uses; they're independent settings",
-      "They're the same thing, just different names",
-      "A configuration always determines exactly one scheme",
-      "Schemes only exist for Release builds",
+      "They're the same concept with different names — a scheme and a configuration both describe the same set of build flags",
+      "A configuration always determines exactly one scheme; each Debug or Release bucket owns its own immutable scheme",
+      "Schemes only exist for Release and Archive builds; Debug builds always use the default implicit scheme",
     ],
     answer: 0,
     explanation:
@@ -38,9 +38,9 @@ print("verbose log")
 #endif`,
     options: [
       "No — Profile builds with the Release configuration by default, where DEBUG isn't defined",
-      "Yes — Profile always uses Debug",
-      "Only on the first run",
-      "It crashes",
+      "Yes — the Profile action always uses the Debug configuration so Instruments can attach to a debuggable binary",
+      "Only on the first profiling run; subsequent runs use a cached Release binary that omits the DEBUG block",
+      "It crashes because print() is not available in a Release build stripped of standard library symbols",
     ],
     answer: 0,
     explanation:
@@ -75,9 +75,9 @@ print("verbose log")
     prompt: "A Run Script build phase reruns on every single build, even when nothing relevant changed. What's the likely fix?",
     options: [
       "Declare explicit Input/Output Files so Xcode can skip the phase when nothing changed",
-      "Move the script to the end of Compile Sources",
-      "Rename the script phase",
-      "Disable the scheme's Test action",
+      "Move the script to the very end of the Compile Sources phase so it shares that phase's incremental build cache",
+      "Rename the script phase to start with an underscore, which signals Xcode to treat it as a dependency-analysis exempt step",
+      "Disable the scheme's Test action so the script only runs during Run and Archive builds, reducing total invocations",
     ],
     answer: 0,
     explanation:
@@ -89,9 +89,9 @@ print("verbose log")
     prompt: "Why would you open a `.xcworkspace` instead of the `.xcodeproj` inside it?",
     options: [
       "A workspace lets targets in separate .xcodeproj files reference each other and share a build folder",
-      "A workspace is required for every Xcode project, even single-project ones",
-      "Workspaces replace schemes entirely",
-      "It's purely cosmetic — no functional difference",
+      "A workspace is required for every Xcode project, even single-project ones, because the build system no longer reads bare .xcodeproj files",
+      "Workspaces replace schemes entirely; once a workspace exists, scheme files inside .xcodeproj are ignored by the build system",
+      "It is purely cosmetic — the .xcworkspace wrapper contains no additional build metadata and Xcode treats it identically to opening the .xcodeproj",
     ],
     answer: 0,
     explanation:
@@ -104,9 +104,9 @@ print("verbose log")
     code: `import NetworkingKit // error: No such module 'NetworkingKit'`,
     options: [
       "The importing target is missing a dependency link or the framework isn't added under Link Binary with Libraries",
-      "A typo in the import statement itself",
-      "The Swift file needs a semicolon",
-      "The project needs to be reinstalled",
+      "A typo in the import statement itself — the module name is case-sensitive and must match the framework product name exactly",
+      "The Swift file needs a semicolon after the import statement to satisfy the older Swift module parser",
+      "The project's derived data needs to be deleted and Xcode fully reinstalled to regenerate the module map cache",
     ],
     answer: 0,
     difficulty: "senior",

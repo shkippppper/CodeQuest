@@ -7,9 +7,9 @@ const quiz: Question[] = [
     prompt: "What is the core idea of the State pattern?",
     options: [
       "Give an object's status its own type, and let behavior branch on that type instead of on a pile of boolean flags",
-      "Cache expensive computations so they run once",
-      "Wrap a legacy API in a compatible interface",
-      "Restrict a class to a single instance",
+      "Cache expensive computations so they run once, since computing them on every call wastes CPU cycles on repeated work",
+      "Wrap a legacy API in a compatible interface so new code can call it without knowing its old signatures",
+      "Restrict a class to a single instance so global state stays in one well-known place",
     ],
     answer: 0,
     explanation:
@@ -21,9 +21,9 @@ const quiz: Question[] = [
     prompt: "What's the main problem with tracking status using several independent Bool properties?",
     options: [
       "Nothing stops the type system from allowing contradictory combinations, like isDownloading and isComplete both true",
-      "Booleans are slower than enums at runtime",
-      "Booleans cannot be stored in a class",
-      "Swift doesn't allow more than 3 Bool properties per type",
+      "Booleans are slower than enums at runtime because each Bool check requires an extra branch prediction step that enums avoid",
+      "Booleans cannot be stored in a class, only in struct properties, which makes them unsuitable for reference-type state machines",
+      "Swift doesn't allow more than 3 Bool properties per type without triggering a compiler warning about flag proliferation",
     ],
     answer: 0,
     explanation:
@@ -44,9 +44,9 @@ func describe(_ state: DownloadState) -> String {
 }`,
     options: [
       "No — the switch is missing .failed and .paused, and switches over enums must be exhaustive",
-      "Yes — Swift fills in missing cases with a default no-op",
-      "Yes — enums only require the first case to be handled",
-      "No — enums cannot be used in a switch statement",
+      "Yes — Swift fills in missing cases with a default no-op that returns an empty string for the unhandled branches",
+      "Yes — enums only require the first case to be handled, and the compiler synthesizes returns for the rest",
+      "No — enums cannot be used in a switch statement; you must use if-case patterns instead",
     ],
     answer: 0,
     explanation:
@@ -78,9 +78,9 @@ let d = Download()
 d.pause()`,
     options: [
       "Nothing — the guard fails because state is .idle, not .downloading, so pause() silently does nothing",
-      "It crashes because .paused doesn't exist yet",
-      "It sets state to .paused(progress: 0) regardless of the current state",
-      "It throws a runtime error for an invalid transition",
+      "It crashes because .paused doesn't exist yet and the compiler can't resolve the associated value at runtime",
+      "It sets state to .paused(progress: 0) regardless of the current state, using a default progress value of zero",
+      "It throws a runtime error for an invalid transition, since the enum enforces legal moves at runtime",
     ],
     answer: 0,
     explanation:
@@ -106,9 +106,9 @@ d.pause()`,
     prompt: "In the protocol-based State pattern, what role does the 'context' object play?",
     options: [
       "It holds the current State object and forwards calls to it, letting that state decide what happens and what the next state is",
-      "It stores every possible state simultaneously",
-      "It is the shared protocol that all states conform to",
-      "It converts the state enum into a String for logging",
+      "It stores every possible state object simultaneously in memory so any transition can complete without allocating a new instance",
+      "It is the shared protocol that every concrete state type must conform to, defining the full method interface each state must implement",
+      "It serializes the current state enum value into a String for structured logging and diagnostics in debug and release builds",
     ],
     answer: 0,
     explanation:
@@ -120,9 +120,9 @@ d.pause()`,
     prompt: "Why is adding a default: case to a state switch \"just in case\" considered a pitfall?",
     options: [
       "It silently swallows any new state you add later and forget to explicitly handle, defeating the compiler's exhaustiveness check",
-      "Swift doesn't allow default: in a switch over an enum",
-      "It makes the switch run slower at runtime",
-      "It forces every case to return the same type",
+      "Swift prohibits the use of default: in any switch statement over a non-frozen enum, so the build always fails when it appears",
+      "It makes the compiled switch run measurably slower at runtime because the CPU evaluates the default branch last in the comparison chain",
+      "It forces every case in the switch to return the exact same type, which is incompatible with enums whose cases carry differently-shaped associated values",
     ],
     answer: 0,
     difficulty: "senior",

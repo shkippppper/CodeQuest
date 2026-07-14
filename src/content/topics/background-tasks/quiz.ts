@@ -7,9 +7,9 @@ const quiz: Question[] = [
     prompt: "What does `BGAppRefreshTaskRequest.earliestBeginDate` actually guarantee?",
     options: [
       "Only that the task won't run before that time — the actual run time is chosen by the system",
-      "The exact time the task will run",
-      "The task will run within one minute of that time",
-      "Nothing — the property is ignored by iOS",
+      "The exact time the task will run, with OS-level precision guaranteed by the scheduler",
+      "The task will run within one minute of that time, using an internal timer backed by the kernel watchdog",
+      "Nothing — the property is silently discarded by the BGTaskScheduler at registration time",
     ],
     answer: 0,
     explanation:
@@ -21,9 +21,9 @@ const quiz: Question[] = [
     prompt: "What's the difference between `BGAppRefreshTask` and `BGProcessingTask`?",
     options: [
       "BGAppRefreshTask is short, for keeping content fresh; BGProcessingTask is longer and deferrable, for maintenance work that can require power/network conditions",
-      "They are interchangeable aliases for the same API",
-      "BGProcessingTask can only run in the foreground",
-      "BGAppRefreshTask requires external power, BGProcessingTask does not",
+      "They are interchangeable aliases registered under different identifiers in the same BGTaskScheduler queue",
+      "BGProcessingTask can only run in the foreground while the app is visible to the user",
+      "BGAppRefreshTask requires external power and a Wi-Fi connection while BGProcessingTask runs freely on battery with any available network and no scheduling constraints",
     ],
     answer: 0,
     explanation:
@@ -48,9 +48,9 @@ const quiz: Question[] = [
 }`,
     options: [
       "No further refreshes are scheduled — each request is one-shot and must be resubmitted for the next run",
-      "iOS automatically reschedules it forever",
-      "The task runs continuously in a loop",
-      "The app crashes on the next launch",
+      "iOS automatically reschedules it at the same earliestBeginDate interval forever without requiring any developer action",
+      "The task runs in a continuous background loop until the expiration handler fires and stops it",
+      "The app crashes on the next launch because BGTaskScheduler detects the missing re-submission",
     ],
     answer: 0,
     explanation:
@@ -90,9 +90,9 @@ const quiz: Question[] = [
     prompt: "Why is batching several small network requests into one request more energy-efficient in the background?",
     options: [
       "Radio wake-ups are one of the most expensive operations on the device, and batching avoids paying that cost repeatedly",
-      "Batched requests always transmit fewer total bytes",
-      "iOS refuses to grant background time for multiple separate requests",
-      "It has no measurable energy effect, only latency benefit",
+      "Batched requests always transmit fewer total bytes because headers are deduplicated by the network stack",
+      "iOS refuses to grant more than one concurrent background task slot regardless of request count",
+      "It has no measurable energy effect at all; the cellular and Wi-Fi radios drain exactly the same total power regardless of whether requests are spread out or grouped",
     ],
     answer: 0,
     difficulty: "senior",
@@ -107,9 +107,9 @@ const quiz: Question[] = [
 config.isDiscretionary = true`,
     options: [
       "Lets the system choose an optimal time and network (e.g. wait for Wi-Fi) to run the transfer efficiently",
-      "Forces the transfer to start immediately regardless of network",
-      "Disables the transfer from ever running in the background",
-      "Makes the transfer synchronous on the calling thread",
+      "Forces the transfer to start immediately on the current network connection regardless of available Wi-Fi or remaining battery state",
+      "Disables the background URLSession entirely, falling back to foreground-only session behavior",
+      "Makes the transfer run synchronously on the calling thread, blocking until the transfer completes",
     ],
     answer: 0,
     difficulty: "senior",

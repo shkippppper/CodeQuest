@@ -7,9 +7,9 @@ const quiz: Question[] = [
     prompt: "Why is binary search O(log n) instead of O(n)?",
     options: [
       "Each comparison discards half of the remaining search range",
-      "It uses a hash table internally",
-      "It only works on arrays smaller than 100 elements",
-      "It caches previous results",
+      "It uses an internal hash table to jump directly to candidate positions instead of scanning",
+      "It is restricted to arrays smaller than 100 elements, which are small enough to search in constant passes",
+      "It caches the results of previous comparisons so each element is examined at most once across all calls",
     ],
     answer: 0,
     explanation:
@@ -31,9 +31,9 @@ const quiz: Question[] = [
     code: `while lo < hi {\n    let mid = lo + (hi - lo) / 2\n    if a[mid] < target { lo = mid + 1 }\n    else { hi = mid }\n}`,
     options: [
       "mid itself might be the answer, so excluding it from the range (mid - 1) could throw away the correct result",
-      "It's a typo — mid - 1 would also work fine",
-      "hi = mid makes the loop run in O(n) instead of O(log n)",
-      "It only matters when the array has duplicates",
+      "It's a harmless typo — mid - 1 would converge to the same boundary because the sorted order makes up for the offset",
+      "hi = mid forces the loop to scan the skipped half linearly, degrading the search from O(log n) to O(n)",
+      "It only matters when the array contains duplicate values, which cause the boundary to shift by more than one position",
     ],
     answer: 0,
     explanation:
@@ -45,9 +45,9 @@ const quiz: Question[] = [
     prompt: "Searching a rotated sorted array like [4, 5, 6, 7, 0, 1, 2] in O(log n) works because...",
     options: [
       "At every midpoint, at least one of the two halves is still fully sorted, so you can check which one and decide if the target could be in it",
-      "You first un-rotate the array in O(n), then binary search normally",
-      "Rotated arrays can only be searched in O(n)",
-      "You binary search twice, once for each possible rotation direction",
+      "You first un-rotate the array in O(n) by finding the pivot index, then binary search the restored sorted array normally",
+      "Rotated arrays can only be searched in O(n) because the rotation breaks the precondition binary search relies on entirely",
+      "You binary search the array twice — once assuming the rotation went clockwise and once assuming it went counter-clockwise — then take whichever of the two runs succeeds",
     ],
     answer: 0,
     explanation:
@@ -60,9 +60,9 @@ const quiz: Question[] = [
     code: `while fast != nil, fast?.next != nil {\n    slow = slow?.next\n    fast = fast?.next?.next\n}`,
     options: [
       "The gap between them inside the cycle shrinks by exactly one node per iteration, so a finite gap must eventually reach zero",
-      "fast always completes exactly one full lap before slow moves at all",
-      "It's not guaranteed — it depends on the cycle's length being even",
-      "slow stops moving once fast enters the cycle",
+      "fast always completes exactly one full lap of the cycle before slow enters it, guaranteeing they meet at the entry node",
+      "It's not guaranteed to terminate — if the cycle has an odd length, fast skips over slow on every pass and they never land on the same node",
+      "slow stops moving entirely once fast enters the cycle, so fast inevitably laps it and they meet at slow's position",
     ],
     answer: 0,
     explanation:
@@ -74,9 +74,9 @@ const quiz: Question[] = [
     prompt: "The standard O(n²) approach to 3Sum (find all triples summing to 0) is built from which combination?",
     options: [
       "Sort the array, then fix one element and run an opposite-ends two-pointer scan on the rest",
-      "A hash set alone, checked for every possible triple in O(n³)",
-      "Binary search for every pair of elements",
-      "Fast/slow pointers over the sorted array",
+      "A hash set alone, checked for every possible triple in O(n³) by testing all combinations exhaustively",
+      "Binary search for every pair of elements, reducing the third lookup from O(n) to O(log n) for an O(n² log n) total",
+      "Fast/slow pointers that traverse the sorted array and detect when three values sum within a tolerance window",
     ],
     answer: 0,
     explanation:
@@ -102,9 +102,9 @@ const quiz: Question[] = [
     prompt: "What happens if you run standard binary search on an unsorted array?",
     options: [
       "It silently returns a wrong answer (or a false negative) — there's no error, just incorrect results",
-      "It throws a runtime exception",
-      "It automatically falls back to a linear scan",
-      "It still works correctly, just slower",
+      "It throws a runtime exception identifying which comparison violated the sorted-order precondition",
+      "It automatically detects the disorder and falls back to a full linear scan to find the target correctly",
+      "It still works correctly for every input, just a constant factor slower than on a sorted array",
     ],
     answer: 0,
     difficulty: "senior",

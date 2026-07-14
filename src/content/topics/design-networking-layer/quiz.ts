@@ -7,9 +7,9 @@ const quiz: Question[] = [
     prompt: "What's the main benefit of defining requests as an `Endpoint` protocol and a single `NetworkClient.send(_:)` entry point instead of building `URLRequest`s at every call site?",
     options: [
       "Auth, retry, caching, and error mapping live in one place instead of being duplicated and drifting out of sync across every screen",
-      "It makes the app's JSON smaller over the wire",
-      "It removes the need for JSONDecoder entirely",
-      "It automatically makes every request idempotent",
+      "It reduces the size of the JSON payloads sent over the wire by stripping unused fields before encoding",
+      "It removes the need for JSONDecoder entirely, since the Endpoint protocol handles deserialization without a separate decoding step",
+      "It automatically makes every outgoing request idempotent, so retrying on timeout can never create duplicate server-side resources",
     ],
     answer: 0,
     explanation:
@@ -26,9 +26,9 @@ const quiz: Question[] = [
 }`,
     options: [
       "Up to fifteen simultaneous refresh calls, and if refresh tokens are single-use, most of them fail or invalidate each other",
-      "Exactly one refresh call happens automatically because URLSession deduplicates identical requests",
-      "All fifteen requests succeed with no issue",
-      "The app crashes",
+      "Exactly one refresh call happens automatically, because URLSession detects identical endpoints and coalesces concurrent token-refresh requests behind the scenes",
+      "All fifteen requests succeed with no issue, because the server accepts the same expired token for a short grace period after expiry",
+      "The app crashes with an authentication error on the first 401 before any of the other in-flight requests can retry",
     ],
     answer: 0,
     explanation:
@@ -77,9 +77,9 @@ const quiz: Question[] = [
     prompt: "Why translate HTTP status codes into a typed `NetworkError` enum instead of letting call sites switch on raw integers?",
     options: [
       "It gives call sites meaningful cases to switch on (like `.validation(fields:)`) without knowing or caring about the underlying status code",
-      "Swift doesn't allow switching on Int values",
-      "It makes the network layer faster",
-      "It removes the need for a decoding step",
+      "Swift does not allow switching on raw Int values, so status codes must be converted to a named type before any pattern matching can occur",
+      "It makes the network layer faster by reducing the number of integer comparisons performed at each response-handling site",
+      "It removes the separate JSON decoding step, since the enum cases carry the decoded payload directly without an additional Codable conversion",
     ],
     answer: 0,
     explanation:
@@ -102,9 +102,9 @@ const quiz: Question[] = [
 // retry policy: retry any request on timeout, up to 3 attempts`,
     options: [
       "A second order is created — the retry has no way to know the first attempt already succeeded",
-      "The server automatically rejects the duplicate",
-      "Nothing — timeouts always mean the request failed",
-      "The client's local cache prevents the duplicate",
+      "The server automatically detects and rejects the duplicate order, because HTTP POST requests carry an implicit idempotency guarantee",
+      "Nothing happens on retry — a timeout always means the server never processed the original request, so retrying is always safe",
+      "The client's local order cache intercepts the retry and prevents a second network request from being issued entirely",
     ],
     answer: 0,
     difficulty: "senior",

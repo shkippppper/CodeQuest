@@ -16,7 +16,7 @@ const quiz: Question[] = [
     prompt: "What is the core idea behind representing a dependency as a struct of closures instead of a protocol?",
     options: [
       "Make the protocol's witness table an explicit, constructible struct value, with one closure field per requirement",
-      "Replace all classes in the app with structs for value semantics",
+      "Replace all classes in the app with structs to gain value semantics and eliminate retain cycles across the codebase",
       "Use generics instead of protocols to avoid associated types entirely",
       "Store every dependency in a global singleton",
     ],
@@ -39,7 +39,7 @@ flaky.fetchUser = { _ in throw URLError(.timedOut) }
 // APIClient.mock is used elsewhere in the same test run`,
     options: [
       "APIClient.mock is unaffected — flaky is an independent copy because APIClient is a struct",
-      "APIClient.mock now also throws URLError(.timedOut), since flaky shares storage with it",
+      "APIClient.mock now also throws URLError(.timedOut), since both variables share the closure's heap storage through a reference",
       "This is a compile error — struct properties can't be reassigned after init",
       "Both flaky and APIClient.mock become nil",
     ],
@@ -53,7 +53,7 @@ flaky.fetchUser = { _ in throw URLError(.timedOut) }
     prompt: "How does swapping in a test-specific dependency work when using a struct of closures for DI, compared to a protocol + mock class?",
     options: [
       "Override just the one or two closure fields you need on a copy, inline in the test — no new mock type required",
-      "You still need to write a new class conforming to the struct's implicit protocol",
+      "You still need to write a new class that conforms to the struct's implicit protocol and implements all its requirements",
       "It's impossible — structs can't be swapped at runtime",
       "You must use @testable import to access private closures",
     ],
@@ -67,9 +67,9 @@ flaky.fetchUser = { _ in throw URLError(.timedOut) }
     prompt: "What is an existential type in Swift?",
     options: [
       "A protocol used as a type itself (e.g. `any APIClient`) — a box that can hold any conforming type, with the concrete type erased and calls routed through the witness table at runtime",
-      "Any type declared with the `struct` keyword",
-      "A type that conforms to Equatable and Hashable",
-      "A closure that captures no variables",
+      "Any Swift type declared with the `struct` keyword, since structs always use static dispatch, value semantics, and copy-on-write, making dynamic type erasure unnecessary by definition",
+      "Any type that conforms to both Equatable and Hashable, enabling it to serve as a dictionary key or set element",
+      "A closure that captures no variables from its surrounding scope",
     ],
     answer: 0,
     explanation:
@@ -81,7 +81,7 @@ flaky.fetchUser = { _ in throw URLError(.timedOut) }
     prompt: "Why does a struct of closures sidestep the associated-type limitation that protocols have?",
     options: [
       "A protocol with an associatedtype requirement generally can't be used as `any Protocol` without extra ceremony (generics or type erasure), while a struct of closures is just a concrete type with no existential needed at all",
-      "Structs cannot have generic parameters, so the issue never arises",
+      "Structs can't have generic parameters of their own, so any protocol-level associated-type limitation simply disappears automatically when you switch to a struct of closures because type-level generic constraints no longer apply at all",
       "Associated types are only a problem for classes, not protocols",
       "Swift automatically converts associated types to generics when used in structs",
     ],
@@ -118,7 +118,7 @@ flaky.fetchUser = { _ in throw URLError(.timedOut) }
 }`,
     options: [
       "The closure captures self strongly, creating a retain cycle since the closure lives inside a property on self — fix with [weak self]",
-      "This is fine because APIClient is a struct, so no reference counting is involved",
+      "This is fine because APIClient is a struct, so its stored closures use value semantics and never cause retain cycles through ARC reference counting",
       "It will crash immediately because self isn't fully initialized",
       "Closures in Swift can never capture self, so this won't compile",
     ],

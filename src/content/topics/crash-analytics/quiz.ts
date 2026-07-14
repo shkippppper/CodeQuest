@@ -7,9 +7,9 @@ const quiz: Question[] = [
     prompt: "A raw crash report frame shows `0x0000000104a2c3e0` instead of a function name and line number. Why?",
     options: [
       "The crashed app was a compiled binary; source names and locations are gone by the time it crashes on-device",
-      "The crash reporting SDK failed to install correctly",
-      "The device ran out of memory to store the trace",
-      "This only happens in Debug builds, never Release",
+      "The crash reporting SDK failed to upload the dSYM to its server during the build archive step, leaving the report unsymbolicated",
+      "The device ran out of available memory and the kernel flushed the in-memory symbol table before the crash report was fully written",
+      "This only happens in Debug builds; Release builds always embed full source names and line numbers directly in the shipped binary",
     ],
     answer: 0,
     explanation:
@@ -31,9 +31,9 @@ const quiz: Question[] = [
     code: `// only v3.2.1's dSYM is available; crash report is from v3.2.0`,
     options: [
       "It can't be correctly symbolicated — the addresses won't reliably map to the right source locations",
-      "It symbolicates perfectly since dSYMs are version-agnostic",
-      "Xcode automatically regenerates the missing dSYM from source",
-      "The crash tool falls back to the app's App Store listing for symbols",
+      "It symbolicates perfectly, since the compiler embeds version-agnostic debug info that any matching dSYM can decode",
+      "Xcode automatically regenerates the correct dSYM for that build from the archived source code on disk",
+      "The crash tool falls back to the App Store binary's embedded symbols and reconstructs line numbers from them",
     ],
     answer: 0,
     explanation:
@@ -45,9 +45,9 @@ const quiz: Question[] = [
     prompt: "A crash report shows `EXC_BAD_ACCESS` with subtype address `0x0000000000000008`. What does the near-zero address suggest?",
     options: [
       "A likely nil-messaging bug — nil is address zero and method tables sit at small fixed offsets from it",
-      "The device is critically low on memory",
-      "A network timeout occurred",
-      "A SwiftLint rule was violated at runtime",
+      "The device is critically low on RAM, and the kernel killed the app by writing a sentinel address near zero",
+      "A network timeout occurred and the OS mapped the error code into a near-zero fault address for reporting",
+      "A SwiftLint rule was enforced at runtime and the linter trap writes to a reserved near-zero guard address",
     ],
     answer: 0,
     explanation:
@@ -83,9 +83,9 @@ const quiz: Question[] = [
     code: `Crashlytics.crashlytics().setCustomValue(user.email, forKey: "user")`,
     options: [
       "It ships PII to a third-party vendor's servers without disclosure/consent — use a hashed/anonymized identifier instead",
-      "There's no concern, custom values are always encrypted automatically",
-      "setCustomValue doesn't accept strings, so this would fail to compile",
-      "Crashlytics blocks PII automatically at the SDK level",
+      "There's no concern, because custom values are end-to-end encrypted before leaving the device and Firebase never stores them in plaintext",
+      "setCustomValue only accepts numeric types, so passing a String email would fail to compile and never reach any server",
+      "Crashlytics automatically scrubs PII at the SDK level before uploading, so email strings are stripped from the report",
     ],
     answer: 0,
     difficulty: "senior",
@@ -98,9 +98,9 @@ const quiz: Question[] = [
     prompt: "A dashboard shows 'applyDiscount crashed 1,204 times, 890 users, since v3.2.0' instead of 1,204 raw stack traces. What made this possible?",
     options: [
       "Grouping reports by a crash signature — a hash of the top stack frames — that collapses duplicates into one distinct issue",
-      "Manual review of every single crash report by an engineer",
-      "Deleting older crash reports to reduce clutter",
-      "Turning off symbolication to simplify the trace",
+      "Manual review of every single incoming crash report by a dedicated engineer who classifies each one and records the tally in a shared spreadsheet",
+      "Automatically deleting older or duplicate crash reports once the per-session occurrence count exceeds a configurable deduplication threshold",
+      "Disabling symbolication for incoming reports so that raw memory addresses produce shorter, more structurally consistent traces that cluster more reliably",
     ],
     answer: 0,
     explanation:

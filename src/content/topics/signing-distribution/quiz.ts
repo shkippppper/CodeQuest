@@ -7,9 +7,9 @@ const quiz: Question[] = [
     prompt: "What does a code signing certificate prove?",
     options: [
       "Which developer identity (backed by a private key) produced the binary",
-      "That the app has no bugs",
-      "That the app is under a certain file size",
-      "Which devices are allowed to install the app",
+      "That the app has passed automated quality checks and contains no crashes or memory leaks",
+      "That the compiled binary is under the maximum file size enforced for App Store submissions",
+      "Which specific devices are allowed to install the app, enforced by comparing the device UDID at install time",
     ],
     answer: 0,
     explanation:
@@ -21,9 +21,9 @@ const quiz: Question[] = [
     prompt: "What's the difference between an Apple Development and an Apple Distribution certificate?",
     options: [
       "Development is for running on your own registered devices; Distribution is required for TestFlight/App Store builds",
-      "They're interchangeable",
-      "Distribution certificates never expire; Development ones expire yearly",
-      "Development certificates are issued per-device, Distribution per-team",
+      "They're interchangeable — Xcode selects the appropriate one automatically based on the destination scheme",
+      "Distribution certificates never expire once issued; Development certificates must be renewed every year",
+      "Development certificates are issued per individual device UDID, while Distribution certificates are issued per team",
     ],
     answer: 0,
     explanation:
@@ -45,10 +45,10 @@ const quiz: Question[] = [
     code: `// UIApplication.shared.registerForRemoteNotifications()
 // entitlements claim push, but App ID doesn't have it registered`,
     options: [
-      "Registration fails, often with a missing aps-environment entitlement error — the entitlements and the App ID's registered capabilities disagree",
-      "It works exactly the same, just delayed by a day",
-      "The app crashes on launch",
-      "Xcode refuses to compile",
+      "Registration fails at runtime, often surfacing as a missing aps-environment entitlement error because the local entitlements file and the App ID's registered capabilities disagree",
+      "It works exactly the same as a correctly configured build because the OS completely ignores the entitlements file at runtime and always allows push registration to succeed unconditionally",
+      "The app crashes immediately on launch as soon as it tries to access the push notification subsystem during the early UIApplicationDelegate setup phase",
+      "Xcode refuses to compile the entire project until the push notifications entitlement is manually removed from the .entitlements file to match the unconfigured App ID",
     ],
     answer: 0,
     explanation:
@@ -74,9 +74,9 @@ const quiz: Question[] = [
     prompt: "Why does manual signing typically replace automatic signing once a project moves to CI?",
     options: [
       "Automatic signing needs an interactive, authenticated Apple ID session to mint profiles, which a headless CI runner doesn't have",
-      "Automatic signing is slower than manual signing",
-      "CI systems can't read .entitlements files",
-      "Apple disables automatic signing for any build not run on a personal Mac",
+      "Automatic signing is significantly slower than manual signing because it makes extra network calls to Apple's developer portal on every build",
+      "CI systems cannot read .entitlements files from the file system, so the build tools cannot validate capability claims",
+      "Apple disables automatic signing for any build that originates from a machine not registered to the developer's personal Apple ID",
     ],
     answer: 0,
     explanation:
@@ -88,9 +88,9 @@ const quiz: Question[] = [
     prompt: "What's the key difference between TestFlight internal and external testers?",
     options: [
       "External testers require a Beta App Review for the first build; internal testers don't",
-      "Internal testers can number in the thousands; external is capped at 100",
-      "External testers need to be on the App Store Connect team",
-      "There's no functional difference",
+      "Internal testers can number in the thousands across any email address; external testers are capped at 100 members of the team",
+      "External testers must have an active App Store Connect team role before they can be added to a TestFlight group",
+      "There's no functional difference — both groups receive builds at the same time with the same review requirements",
     ],
     answer: 0,
     explanation:
@@ -103,9 +103,9 @@ const quiz: Question[] = [
     code: `// TestFlight build uploaded 95 days ago, no newer build distributed`,
     options: [
       "The app can no longer launch — every TestFlight build expires 90 days after upload",
-      "It launches normally, TestFlight builds never expire",
-      "It prompts for an App Store purchase",
-      "It silently downgrades to a cached version",
+      "It launches normally — TestFlight builds never expire and remain installable indefinitely once distributed to a tester",
+      "It prompts the tester to complete an App Store purchase before the expired build can be relaunched on their device",
+      "It silently downgrades to the last unexpired cached version of the build that the tester previously ran",
     ],
     answer: 0,
     difficulty: "senior",

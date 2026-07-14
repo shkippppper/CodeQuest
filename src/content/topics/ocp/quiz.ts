@@ -7,7 +7,7 @@ const quiz: Question[] = [
     prompt: "What does the Open/Closed Principle say?",
     options: [
       "A type should be open for extension but closed for modification — new behavior shouldn't require editing existing, working code",
-      "A type should always be marked `final`",
+      "A type should always be marked `final` so no subclass can accidentally override its carefully tested behavior and introduce hard-to-find regressions",
       "A type should never be extended after it's written",
       "A type's properties should always be private",
     ],
@@ -21,7 +21,7 @@ const quiz: Question[] = [
     prompt: "Which pattern is the classic giveaway that code violates OCP?",
     options: [
       "A growing if/else or switch chain that branches on 'what kind of thing is this'",
-      "A struct that conforms to Codable",
+      "A struct that conforms to Codable and auto-synthesizes both encoding and decoding from its stored properties",
       "A function with more than one parameter",
       "Using `let` instead of `var`",
     ],
@@ -46,7 +46,7 @@ struct BOGODiscount: DiscountStrategy {
 }`,
     options: [
       "No — finalPrice already works with any DiscountStrategy, including ones written after it",
-      "Yes — a new case must be added to a switch inside finalPrice",
+      "Yes — a new case must be added to a switch inside finalPrice to handle the new discount type",
       "Yes — Swift requires re-declaring the protocol for each new conformer",
       "It depends on whether BOGODiscount is a class or a struct",
     ],
@@ -83,7 +83,7 @@ struct BOGODiscount: DiscountStrategy {
     prompt: "When is a switch over an enum often clearer than an OCP-style protocol hierarchy?",
     options: [
       "When the set of cases is genuinely fixed and closed, e.g. the four seasons or a small set of HTTP methods you support",
-      "Never — protocols are always strictly better than enums",
+      "Never — protocols are always strictly better than enums because they allow external conformances and open-ended extensibility",
       "Only when there is exactly one case",
       "Only in unit tests",
     ],
@@ -110,7 +110,7 @@ if order.total > 1000 {
 }`,
     options: [
       "The type-branching OCP was designed to eliminate has crept back in, just relocated to a place with less visibility and testing than before",
-      "This is fine — DiscountStrategy already handles this automatically",
+      "This is fine — DiscountStrategy's protocol dispatch already handles the VIP total threshold automatically without any manual branching in checkout",
       "This is a compile error because VIPDiscount doesn't conform to DiscountStrategy",
       "OCP forbids using if statements anywhere in the codebase",
     ],

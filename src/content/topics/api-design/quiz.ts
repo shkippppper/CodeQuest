@@ -23,9 +23,9 @@ const quiz: Question[] = [
 // a new comment is inserted at position 0 between page 1 and page 2 requests`,
     options: [
       "Every comment shifts down by one, so offset 20 now points at a different comment — the user sees a duplicate or misses one",
-      "Nothing — offset pagination is immune to inserts",
-      "The request fails with an error",
-      "The new comment is automatically inserted into the already-loaded page 1",
+      "Nothing — offset pagination internally stores a snapshot of positions at query time, so any inserts made after page 1 don't affect page 2 at all",
+      "The request fails with a 409 Conflict error because the server detects that the item count changed between requests",
+      "The new comment is automatically inserted into the already-loaded page 1 result via a server-sent push notification",
     ],
     answer: 0,
     explanation:
@@ -46,9 +46,9 @@ const quiz: Question[] = [
     prompt: "Why should client code branch on an error response's `code` field instead of its `message` field?",
     options: [
       "`message` is meant for humans and can be reworded by the backend without notice; `code` is a stable, documented value safe to switch on",
-      "`message` is always localized and `code` never is",
-      "HTTP doesn't allow a `message` field in JSON bodies",
-      "`code` is faster to parse than `message`",
+      "`message` is always fully localized into the user's own language while `code` stays English-only, which makes the message field useless for any display logic",
+      "HTTP strictly forbids a `message` field in JSON error response bodies, so any code reading it violates the spec",
+      "`code` is several times faster to parse at runtime than a string `message`, which matters under high response volume",
     ],
     answer: 0,
     explanation:
@@ -74,9 +74,9 @@ const quiz: Question[] = [
     prompt: "What's the most common way an API serves two incompatible response shapes to old and new clients at the same time?",
     options: [
       "A version segment in the URL (or a version header), with the server running both versions simultaneously",
-      "Randomly picking a shape per request",
-      "Requiring every client to upgrade before any change ships",
-      "Sending both shapes in the same response and letting the client choose",
+      "Randomly picking a response shape per request so that clients are forced to handle both formats defensively",
+      "Requiring every client to upgrade to the new version before the new response shape is allowed to ship at all",
+      "Sending both the old and new response shapes merged inside a single response body so any client version can extract what it needs",
     ],
     answer: 0,
     explanation:
@@ -103,9 +103,9 @@ const quiz: Question[] = [
     prompt: "A client automatically retries a failed request. Which HTTP status class is generally safe to retry, and which almost never is?",
     options: [
       "5xx (server's fault) is usually safe to retry; 4xx (client's fault) almost never is, since retrying resends the same bad request",
-      "4xx is always safe to retry; 5xx should never be retried",
-      "Both classes are equally safe to retry automatically",
-      "Status codes don't indicate retry safety, only the error body does",
+      "4xx is always the safest class to retry because the client controls its own request format and can correct it instantly",
+      "Both 4xx and 5xx are equally safe to retry automatically because the server will simply reject bad requests without side effects",
+      "Status codes alone carry no information about retry safety — only the error body's structured fields can indicate whether a retry makes sense",
     ],
     answer: 0,
     explanation:
@@ -118,9 +118,9 @@ const quiz: Question[] = [
     code: `// v2 shipped, backend team wants to clean up v1 immediately`,
     options: [
       "No — some installed apps won't have upgraded yet and still call v1; it must stay live until adoption of the old version drops to an acceptable level",
-      "Yes — App Store releases update every device instantly",
-      "Yes — v1 and v2 always share the same underlying data so deleting one is harmless",
-      "No — v1 must be kept forever and can never be removed",
+      "Yes — App Store releases push to every device instantly, so the entire installed base is on the new version within minutes",
+      "Yes — v1 and v2 route to the same underlying data store, so removing the v1 route is a no-op with no effect on any client",
+      "No — v1 must be maintained forever alongside every future version, because regulatory, legal, and contractual obligations strictly prohibit ever removing a shipped API route",
     ],
     answer: 0,
     difficulty: "senior",

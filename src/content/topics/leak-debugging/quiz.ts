@@ -7,9 +7,9 @@ const quiz: Question[] = [
     prompt: "What does the Memory Graph Debugger show you?",
     options: [
       "A live snapshot of every object currently alive and the references pointing into each one",
-      "A CPU flame graph of your app",
-      "A list of compiler warnings",
-      "Network request timings",
+      "A CPU flame graph of your app, showing which functions are spending the most wall-clock time during a profiling run",
+      "A list of compiler warnings generated when the static analyzer detects potential memory issues in your source code",
+      "Network request timings broken down by latency, payload size, and HTTP status code for each URLSession task",
     ],
     answer: 0,
     explanation:
@@ -29,9 +29,9 @@ const quiz: Question[] = [
     prompt: "How does the Leaks instrument differ from the Memory Graph Debugger?",
     options: [
       "Leaks records continuously over time and flags reference cycles automatically with a stack trace; the Memory Graph Debugger shows one frozen moment you inspect by hand",
-      "They do exactly the same thing",
-      "Leaks only works in the simulator",
-      "The Memory Graph Debugger can only show one object at a time",
+      "They do exactly the same thing — both pause the app and display an interactive graph of all live objects with incoming reference arrows at the moment you capture",
+      "Leaks only works in the simulator because it requires low-level runtime hooks for cycle detection that Apple does not permit on physical devices used in App Store distribution builds",
+      "The Memory Graph Debugger can only display one object and its direct children at a time, whereas Leaks renders the complete heap graph simultaneously sorted by total allocation size",
     ],
     answer: 0,
     explanation:
@@ -53,9 +53,9 @@ const quiz: Question[] = [
 }`,
     options: [
       "The Timer closure still captures self strongly and the timer is never invalidated, so it's a second, separate strong reference keeping the object alive",
-      "weak self doesn't actually work in Swift",
-      "deinit only runs once per app launch",
-      "Timers cannot be leaked",
+      "weak self does not actually work in Swift because the language always promotes any captured reference to strong when the closure is passed to a scheduled system API like Timer",
+      "deinit only ever runs once per app launch for each class type, so whichever instance is created first for a given class will never be deallocated no matter how references are managed",
+      "Timers cannot be leaked because the RunLoop that owns each timer automatically releases it and its captured references the moment the associated view controller leaves the navigation stack",
     ],
     answer: 0,
     explanation:
@@ -75,9 +75,9 @@ const quiz: Question[] = [
     prompt: "An ever-growing dictionary cache on a shared singleton keeps accumulating images and memory never drops. Will the Leaks instrument flag this?",
     options: [
       "No — Leaks only detects reference cycles; an unbounded cache is a real leak in effect but not a cycle, so it needs a different fix like NSCache or an eviction policy",
-      "Yes, Leaks flags any object that stays alive a long time",
-      "Yes, because singletons are always flagged",
-      "No, because caches can never leak memory",
+      "Yes — Leaks flags any object that remains alive longer than its expected lifetime, including images retained by a singleton dictionary beyond the end of the current user session",
+      "Yes — singletons are always flagged by the Leaks instrument as high-priority memory concerns regardless of how their internal storage is structured or how many objects they hold",
+      "No — caches are unconditionally excluded from cycle detection because the runtime always classifies intentional long-lived storage as unreportable, regardless of how much memory accumulates",
     ],
     answer: 0,
     explanation:
@@ -103,9 +103,9 @@ const quiz: Question[] = [
     prompt: "The Memory Graph Debugger shows three incoming arrows into a leaked DetailViewController instance. You break the closure capture that seems most obvious and rerun, but the leak persists. What went wrong?",
     options: [
       "Breaking one of several strong references isn't enough — every incoming reference must be broken (or the group made fully unreachable) for the object to deallocate",
-      "The Memory Graph Debugger was showing stale data",
-      "deinit can only be triggered by breaking the first arrow shown",
-      "This means the object was never actually leaked",
+      "The Memory Graph Debugger was displaying stale data cached from a previous debug session that was not invalidated when the app relaunched inside the same Xcode debugger session",
+      "deinit can only be triggered by breaking the first reference arrow shown in the graph, because ARC internally ranks references by creation order and uses the earliest one as the single owning reference",
+      "The object was never actually leaked — the three arrows are phantom references caused by a known Xcode visualization bug triggered when the leaked object uses generic type parameters",
     ],
     answer: 0,
     difficulty: "senior",

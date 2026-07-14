@@ -7,9 +7,9 @@ const quiz: Question[] = [
     prompt: "When do you push onto a UINavigationController vs present modally?",
     options: [
       "Push for hierarchical drill-down (back button); present for a self-contained temporary task (dismiss)",
-      "Push for modals; present for hierarchy",
-      "They are identical",
-      "Always present; never push",
+      "Push is the correct choice for modals like login or compose sheets; present is for navigating deeper into a content hierarchy",
+      "They are functionally identical — UIKit routes both through the same internal transition engine with the same animations and lifecycle callbacks",
+      "Always use present for every transition; push is deprecated and removed in iOS 17 and later",
     ],
     answer: 0,
     explanation:
@@ -21,9 +21,9 @@ const quiz: Question[] = [
     prompt: "What does a UINavigationController manage?",
     options: [
       "A stack of view controllers with a nav bar and automatic back button",
-      "A grid of cells",
-      "The keyboard",
-      "A single view controller only",
+      "A scrollable grid of cells and supplementary views, backed by a UICollectionViewLayout that handles positioning",
+      "The system keyboard input pipeline, routing key events from the hardware layer to the first responder in the view hierarchy",
+      "A single view controller at any given time, swapping it out entirely rather than stacking multiple controllers",
     ],
     answer: 0,
     explanation:
@@ -35,9 +35,9 @@ const quiz: Question[] = [
     prompt: "With storyboard segues, where do you pass data to the destination VC?",
     options: [
       "`prepare(for:sender:)` — configure `segue.destination` before the transition",
-      "In viewDidLoad of the source",
-      "In the AppDelegate",
-      "You can't pass data with segues",
+      "In viewDidLoad of the source view controller, by accessing the storyboard segue destination through a stored reference set at segue creation time",
+      "In the AppDelegate's application(_:didFinishLaunchingWithOptions:) method, by storing data in a shared singleton the destination reads on load",
+      "You cannot pass data at all with storyboard segues — programmatic navigation with pushViewController is required for any data-passing flow",
     ],
     answer: 0,
     explanation:
@@ -90,9 +90,9 @@ const quiz: Question[] = [
 // parent: editVC.delegate = self`,
     options: [
       "A retain cycle — the parent owns the child (nav stack) and the child strongly holds the parent as delegate",
-      "Nothing — delegates are always safe",
-      "The delegate never fires",
-      "A compile error",
+      "Nothing at all — UIKit automatically breaks delegate retain cycles at deallocation time, so a strong delegate reference is perfectly safe in practice",
+      "The delegate callbacks silently never fire because UIKit skips calling a delegate stored as a strong reference, only invoking weak delegates",
+      "A compile-time error, because Swift's type system rejects any delegate property declaration that is not explicitly marked weak or unowned",
     ],
     answer: 0,
     difficulty: "senior",
@@ -105,9 +105,9 @@ const quiz: Question[] = [
     prompt: "Why do many teams prefer programmatic navigation over storyboard segues at scale?",
     options: [
       "It's more explicit/testable, avoids storyboard merge conflicts, and composes with coordinators",
-      "Segues are unsupported on modern iOS",
-      "Programmatic navigation is the only way to pass data",
-      "Segues can't animate",
+      "Storyboard segues were removed from the UIKit API surface in iOS 16 and are no longer supported on modern OS versions",
+      "Programmatic pushViewController or present calls are the only mechanism UIKit offers for passing data forward to the destination view controller",
+      "Storyboard segues cannot perform custom animated transitions and always fall back to the default non-animated instantaneous swap between screens",
     ],
     answer: 0,
     difficulty: "senior",
@@ -120,9 +120,9 @@ const quiz: Question[] = [
     prompt: "How does the Coordinator pattern relate to UIKit navigation?",
     options: [
       "It extracts push/present calls out of view controllers into a coordinator, so VCs report events and stay reusable",
-      "It replaces UINavigationController entirely",
-      "It's only for SwiftUI",
-      "It forces every VC to know its next screen",
+      "It replaces UINavigationController entirely with a custom coordinator-owned navigation stack that manages memory and transitions independently",
+      "It is exclusively a SwiftUI pattern and has no applicability to UIKit-based apps using view controllers",
+      "It forces every view controller to explicitly know and import its next destination screen in order to trigger the correct coordinator transition",
     ],
     answer: 0,
     difficulty: "senior",

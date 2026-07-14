@@ -6,10 +6,10 @@ const quiz: Question[] = [
     type: "mcq",
     prompt: "What does reaching an `await` actually do to the current thread?",
     options: [
-      "It blocks the thread until the result is ready",
+      "It blocks the calling thread until the result is ready, preventing it from handling any other work",
       "It marks a possible suspension point; the thread is released to do other work while suspended",
-      "It spawns a new background thread for the rest of the function",
-      "It busy-waits in a loop until the value arrives",
+      "It spawns a new background thread that runs the remainder of the function after the awaited value resolves",
+      "It busy-waits by spinning in a tight loop on the calling thread until the awaited value becomes available",
     ],
     answer: 1,
     explanation:
@@ -23,10 +23,10 @@ const quiz: Question[] = [
     code: `let a = await fetch(1)
 let b = await fetch(2)`,
     options: [
-      "~1 second — they run in parallel",
+      "~1 second — both fetches overlap because Swift automatically parallelizes sequential awaits on the same thread",
       "~2 seconds — each await waits for the previous to finish",
-      "Instant — await doesn't actually wait",
-      "It depends on the number of CPU cores",
+      "Instant — await is syntactic sugar that doesn't introduce any actual delay or suspension",
+      "It depends on the number of CPU cores available, since more cores allow the awaits to overlap at the OS level",
     ],
     answer: 1,
     explanation:
@@ -59,10 +59,10 @@ let results = await [a, b]`,
     type: "mcq",
     prompt: "Which is true about a standalone `Task { ... }` compared to `async let`?",
     options: [
-      "It is structured — its lifetime is bound to the enclosing scope",
+      "It is structured — its lifetime is bound to the enclosing scope, and cancelling the parent cancels it automatically",
       "It is unstructured — it is not tied to the surrounding scope, and you manage its lifetime",
-      "It cannot perform async work",
-      "It always runs on a background thread, never the main actor",
+      "It cannot perform async work; Task is only used to bridge synchronous code that needs to call an async function once",
+      "It always runs on an anonymous background thread and can never be assigned to the main actor for UI updates",
     ],
     answer: 1,
     explanation:
@@ -73,10 +73,10 @@ let results = await [a, b]`,
     type: "mcq",
     prompt: "How does task cancellation work in Swift concurrency?",
     options: [
-      "It immediately kills the task and unwinds the stack",
+      "It immediately kills the task, forcibly unwinds the whole call stack, and runs any defer blocks before returning control to the caller",
       "It is cooperative: a flag is set and your code must check it (e.g. `Task.checkCancellation()`) and stop voluntarily",
-      "It pauses the task so it can be resumed later",
-      "Only the main actor can cancel tasks",
+      "It pauses the task at the current suspension point so it can be resumed later when conditions allow",
+      "Only the main actor is permitted to cancel tasks; calling cancel from a background context has no effect",
     ],
     answer: 1,
     explanation:

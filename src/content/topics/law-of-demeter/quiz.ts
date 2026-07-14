@@ -7,9 +7,9 @@ const quiz: Question[] = [
     prompt: "What does the Law of Demeter say?",
     options: [
       "A method should only call methods on objects it directly knows about — self, its parameters, things it creates, and its own properties — not objects reached by chaining through those",
-      "Every property must be marked private",
-      "A class should never call a method on any other class",
-      "Every function must return an optional",
+      "Every property must be marked private so other objects cannot observe or modify internal state without going through explicit accessors on the owning type",
+      "A class should never call a method on any other class, because every cross-class call inherently introduces tight structural coupling that the Swift compiler is unable to detect or prevent automatically",
+      "Every function must return an optional so that callers are forced to explicitly handle the absent case before proceeding with any downstream logic that depends on the result",
     ],
     answer: 0,
     explanation:
@@ -30,9 +30,9 @@ const quiz: Question[] = [
     prompt: "Inside `CheckoutScreen`, which of these counts as a 'stranger' under the Law of Demeter?",
     options: [
       "order.customer.address — reached by chaining through the order property, not held directly",
-      "order — a direct property of CheckoutScreen",
-      "self — the object the method is defined on",
-      "A local variable created inside the method itself",
+      "order — a direct property of CheckoutScreen, so it counts as a friend and may be called upon freely",
+      "self — the object the method is defined on, always a friend by definition",
+      "A local variable created inside the method itself, which is a friend because the method owns it",
     ],
     answer: 0,
     explanation:
@@ -51,9 +51,9 @@ const quiz: Question[] = [
 }`,
     options: [
       "Nothing — isLongTime()'s signature and every call site are unaffected by the internal change",
-      "Every call site that used isLongTime() must now handle an array instead of an optional",
-      "The code no longer compiles anywhere isLongTime() is called",
-      "isLongTime() must be renamed at every call site",
+      "Every call site that used isLongTime() must now handle an array instead of an optional, because the return type leaks the internal representation change to all consumers",
+      "The code no longer compiles anywhere isLongTime() is called, because Swift propagates internal struct changes transitively to all callers",
+      "isLongTime() must be renamed at every call site to reflect that it now searches multiple accounts rather than checking a single one",
     ],
     answer: 0,
     explanation:
@@ -88,9 +88,9 @@ const quiz: Question[] = [
     prompt: "Which of these is the strongest justification for NOT applying the Law of Demeter to a given chain?",
     options: [
       "The chain calls a value type's own method on a value you already directly hold (e.g. order.subtotal.formatted()), rather than reaching through a chain of separate domain objects",
-      "The chain is more than three dots long, so it must already be fine",
-      "The Law of Demeter never applies to Swift, only to older object-oriented languages",
-      "Any chain inside a private method is automatically exempt",
+      "The chain is more than three dots long, which the original Demeter paper explicitly classifies as acceptable because short chains couple more tightly than long ones in practice",
+      "The Law of Demeter never applies to Swift code because Swift's value-type semantics and copy-on-write guarantee that reaching through chains cannot introduce the mutable shared-state coupling the rule was designed to prevent",
+      "Any chain that appears inside a private method is automatically exempt from the Law of Demeter because private code is inaccessible from outside the enclosing type and therefore cannot propagate the coupling to callers",
     ],
     answer: 0,
     difficulty: "senior",
@@ -104,9 +104,9 @@ const quiz: Question[] = [
     code: `// five call sites, each independently reaching: order.customer.address.city`,
     options: [
       "All five call sites break simultaneously, because each one independently duplicated knowledge of Address's internal shape",
-      "Only the first call site written breaks — the others are unaffected",
-      "None break, since Swift infers the correct field automatically",
-      "Only Address itself needs updating; no external code is affected either way",
+      "Only the first call site written breaks — the others are unaffected because later callers use a cached copy of the Address type that still exposes the original city field",
+      "None break, since Swift infers the correct field automatically by matching the semantic intent of the old property name to the new cityLine field",
+      "Only Address itself needs updating; no external code is affected either way, because Swift modules re-export internal field renames transparently to consumers",
     ],
     answer: 0,
     difficulty: "senior",

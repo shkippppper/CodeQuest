@@ -7,9 +7,9 @@ const quiz: Question[] = [
     prompt: "What does conforming to `Sendable` assert about a type?",
     options: [
       "It can be safely shared across concurrency boundaries without data races",
-      "It can be serialized to JSON",
-      "It runs on the main thread",
-      "It is a reference type",
+      "It can be serialized to JSON using JSONEncoder without any additional configuration",
+      "It always executes its methods on the main thread, preventing concurrent access from background tasks",
+      "It must be a reference type, since value types cannot safely cross concurrency boundaries",
     ],
     answer: 0,
     explanation:
@@ -21,9 +21,9 @@ const quiz: Question[] = [
     prompt: "When is a `struct` automatically `Sendable`?",
     options: [
       "When all of its stored properties are themselves `Sendable`",
-      "Never — you must always write conformance by hand",
-      "Only if it's marked `@unchecked`",
-      "Only if it has no properties",
+      "Never — you must always write an explicit Sendable conformance declaration and verify each property yourself",
+      "Only if it's marked `@unchecked Sendable`, which disables compiler validation for the entire type",
+      "Only if it has no stored properties at all, since any property could introduce unsafe shared state",
     ],
     answer: 0,
     explanation:
@@ -36,9 +36,9 @@ const quiz: Question[] = [
     code: `class Box { var n = 0 }`,
     options: [
       "No — a mutable class can be mutated through a shared reference from multiple tasks",
-      "Yes — all classes are Sendable",
-      "Yes — because `n` is an Int",
-      "Only if it's `final`",
+      "Yes — all classes are implicitly Sendable because ARC guarantees their memory is always valid",
+      "Yes — because `n` is an Int, and Int is Sendable, so the class inherits Sendable from its stored properties",
+      "Only if it's `final`, because subclasses could add mutable state that breaks the Sendable guarantee",
     ],
     answer: 0,
     explanation:
@@ -59,9 +59,9 @@ const quiz: Question[] = [
     prompt: "Are actors `Sendable`?",
     options: [
       "Yes — actors are implicitly Sendable because their state is isolated",
-      "No — actors can never cross concurrency boundaries",
-      "Only if marked `@unchecked Sendable`",
-      "Only if they have no stored properties",
+      "No — actors can never cross concurrency boundaries because their isolated state must remain on their own executor",
+      "Only if explicitly marked `@unchecked Sendable`, since the compiler cannot prove actor isolation is sufficient",
+      "Only if they have no stored properties, since properties on an actor could still be accessed unsafely from nonisolated contexts",
     ],
     answer: 0,
     explanation:
@@ -87,9 +87,9 @@ const quiz: Question[] = [
     prompt: "You have a `final class Cache` that guards its dictionary with an internal `NSLock`. The compiler still won't accept it as Sendable. What's the correct tool?",
     options: [
       "`@unchecked Sendable` — you assert it's thread-safe and take responsibility",
-      "Remove the lock",
-      "Make it a struct",
-      "Mark every method `nonisolated`",
+      "Remove the internal lock so the compiler can see immutable storage and infer Sendable automatically",
+      "Make it a struct so the compiler synthesizes Sendable from its stored properties without any annotation",
+      "Mark every method `nonisolated` so the compiler treats each call site as free of concurrency restrictions",
     ],
     answer: 0,
     difficulty: "senior",
@@ -107,9 +107,9 @@ Task {
 }`,
     options: [
       "`Task`'s closure is @Sendable, but `box` is a non-Sendable mutable class captured across the boundary",
-      "You can't use Task at file scope",
-      "`n += 1` isn't allowed in a closure",
-      "Task closures can't capture anything",
+      "You can't use Task at file scope; Task initializers are only valid inside async function bodies or actor methods",
+      "`n += 1` isn't valid syntax inside a closure because compound assignment operators require an inout parameter",
+      "Task closures can't capture any variables from the enclosing scope; all values must be passed as arguments instead",
     ],
     answer: 0,
     difficulty: "senior",
@@ -122,9 +122,9 @@ Task {
     prompt: "What changes about Sendable violations in Swift 6 language mode (complete concurrency checking)?",
     options: [
       "They become hard compile errors rather than warnings",
-      "Sendable is removed",
-      "All types become Sendable automatically",
-      "Checking is disabled for performance",
+      "Sendable is removed and replaced by a new isolation-based system that doesn't require explicit protocol conformance",
+      "All types become Sendable automatically, since Swift 6 assumes value types are safe to share unless marked otherwise",
+      "Checking is disabled for performance, since complete concurrency checking proved too slow for large codebases",
     ],
     answer: 0,
     difficulty: "senior",

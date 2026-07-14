@@ -7,9 +7,9 @@ const quiz: Question[] = [
     prompt: "What is the delegate pattern, mechanically?",
     options: [
       "A protocol defines a contract; the delegating object holds a reference typed as that protocol and calls its methods for relevant events",
-      "A subclass overrides a superclass method",
-      "A global singleton that all objects call into",
-      "A closure stored in a dictionary keyed by event name",
+      "A subclass overrides a superclass method to inject extra behavior without modifying the parent class's original implementation code",
+      "A global singleton that all objects in the app call into directly to subscribe to or broadcast named system-wide events to every listener",
+      "A closure stored in a dictionary keyed by a string event name and invoked whenever the delegating object fires that named event",
     ],
     answer: 0,
     explanation:
@@ -21,9 +21,9 @@ const quiz: Question[] = [
     prompt: "Why is a delegate property almost always declared `weak`?",
     options: [
       "Because the object that owns the delegating instance is usually the same object being delegated to, so a strong reference would create a retain cycle",
-      "Because weak references are faster to call",
-      "Because protocols cannot be used with strong references",
-      "Because `weak` makes the delegate optional",
+      "Because weak references allow ARC to skip the retain and release overhead entirely, making every delegate method dispatch measurably faster",
+      "Because the Swift compiler enforces at the language level that all properties of protocol types used as delegate references must be declared weak",
+      "Because declaring a property weak is what causes its type to become Optional in Swift, and delegate properties must be Optional to allow no delegate to be set",
     ],
     answer: 0,
     explanation:
@@ -55,9 +55,9 @@ class DownloadViewController: UIViewController, FileDownloaderDelegate {
 }`,
     options: [
       "Neither object is deallocated — they keep each other alive, leaking memory",
-      "The app crashes immediately",
-      "Swift automatically breaks the cycle at dismissal",
-      "Only the downloader is deallocated",
+      "The app crashes immediately with an EXC_BAD_ACCESS because UIKit zeroes the view controller's memory on dismissal",
+      "Swift's ARC automatically detects the strong reference cycle at dismissal time and inserts a nil assignment to break it",
+      "Only the downloader is deallocated because UIKit holds a strong reference to the view controller separately through its window hierarchy",
     ],
     answer: 0,
     explanation:
@@ -83,9 +83,9 @@ class DownloadViewController: UIViewController, FileDownloaderDelegate {
     prompt: "Why does `UITableView` use separate `delegate` and `dataSource` protocols instead of one combined protocol?",
     options: [
       "They split pull-style questions (what to display) from push-style events (what the user did), so a read-only table can adopt just one",
-      "Apple did it for no technical reason",
-      "dataSource is deprecated in favor of delegate",
-      "Delegate methods run on a background queue while dataSource methods run on the main thread",
+      "Apple split them as a historical accident during the transition from NeXTSTEP, with no underlying technical motivation or design intent",
+      "The dataSource protocol is fully deprecated since iOS 13 in favor of diffable data sources, which are part of the delegate role",
+      "Delegate method callbacks are dispatched on a background queue for performance, while dataSource methods always run on the main thread for safety",
     ],
     answer: 0,
     explanation:
@@ -100,9 +100,9 @@ class DownloadViewController: UIViewController, FileDownloaderDelegate {
 }`,
     options: [
       "Switch to a multicast mechanism (a weak-referencing list of listeners) or NotificationCenter/Combine, since plain delegation is one-to-one",
-      "Add three separate `weak var delegate1/2/3` properties",
-      "Make the delegate property strong so it can hold multiple values",
-      "Have each screen poll the monitor on a timer instead",
+      "Add three separate weak var delegate1, delegate2, and delegate3 properties to the monitor class, one dedicated property for each listening screen",
+      "Make the delegate property a strong reference so ARC keeps all three screens alive in memory and iterates each one in turn on every connectivity change",
+      "Have each of the three screens independently poll the monitor's connectivity property on its own repeating timer rather than receiving any push notification",
     ],
     answer: 0,
     difficulty: "senior",

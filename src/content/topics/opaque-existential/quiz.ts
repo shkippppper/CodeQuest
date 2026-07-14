@@ -7,7 +7,7 @@ const quiz: Question[] = [
     prompt: "What is `any P` (an existential)?",
     options: [
       "A box that can hold any value conforming to P, hiding the concrete type behind dynamic dispatch",
-      "A compile-time-only type with no runtime cost",
+      "A compile-time-only constraint resolved entirely by the compiler, carrying no runtime boxing cost or dynamic dispatch overhead",
       "A generic type parameter",
       "The same as `some P`",
     ],
@@ -21,7 +21,7 @@ const quiz: Question[] = [
     prompt: "What does `some P` mean as a return type?",
     options: [
       "One specific concrete type conforming to P, hidden from the caller but known to the compiler",
-      "Any of several types, chosen at runtime",
+      "Any of several concrete types, chosen dynamically at runtime from a registered set of conformers",
       "A boxed existential",
       "A type the caller picks",
     ],
@@ -39,7 +39,7 @@ const quiz: Question[] = [
 }`,
     options: [
       "No — a `some` return must be the SAME concrete type on every path; use `any Shape` for different types",
-      "Yes — some allows different types per branch",
+      "Yes — some allows different concrete types per branch, treating each as an independent opaque return",
       "Yes, but only if Circle and Square are classes",
       "No — functions can't return protocols",
     ],
@@ -63,7 +63,7 @@ const quiz: Question[] = [
     prompt: "Why is `some P` called a 'reverse generic'?",
     options: [
       "A normal generic lets the caller pick the type; `some` lets the implementation pick and hide it",
-      "It reverses the order of type parameters",
+      "It reverses the order of type parameters in the generic angle-bracket syntax purely for call-site readability",
       "It runs generics backwards at runtime",
       "It's a deprecated form of generics",
     ],
@@ -91,7 +91,7 @@ const quiz: Question[] = [
     prompt: "In a performance-sensitive return type where only one concrete type is produced, which do you choose?",
     options: [
       "`some P` — no boxing, static/devirtualized dispatch, specializable",
-      "`any P` — flexibility is always worth it",
+      "`any P` — the flexibility of mixed types is always worth the dynamic-dispatch overhead",
       "It makes no difference",
       "Return `Any`",
     ],
@@ -106,7 +106,7 @@ const quiz: Question[] = [
     prompt: "What is `func f(_ x: some P)` shorthand for?",
     options: [
       "A generic function `func f<T: P>(_ x: T)` — the concrete type is known at the call site",
-      "A function taking a boxed existential",
+      "A function taking a boxed existential, erasing the concrete type behind a dynamic dispatch table",
       "A function that returns P",
       "An @escaping closure parameter",
     ],
@@ -121,7 +121,7 @@ const quiz: Question[] = [
     prompt: "Why did Swift 5.7 start requiring the explicit `any` keyword for existentials?",
     options: [
       "To make the boxing/dynamic-dispatch cost of existentials visible at the use site",
-      "To deprecate protocols",
+      "To deprecate protocols in favor of concrete types and generics across the entire language",
       "Because existentials were removed",
       "To speed up compilation only",
     ],

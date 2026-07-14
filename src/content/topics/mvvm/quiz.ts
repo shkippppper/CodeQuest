@@ -7,9 +7,9 @@ const quiz: Question[] = [
     prompt: "What is the ViewModel's job in MVVM?",
     options: [
       "Hold presentation state/logic and expose display-ready data — with no UI dependency",
-      "Render the views directly",
-      "Store the app's persisted data",
-      "Manage the navigation stack",
+      "Render the views directly by calling UIKit drawing APIs and updating outlet references on every state change",
+      "Store the app's persisted data in Core Data or another on-disk backing store so the view has access to it",
+      "Manage the navigation stack by pushing and popping view controllers in response to user actions routed through the binding layer",
     ],
     answer: 0,
     explanation:
@@ -21,9 +21,9 @@ const quiz: Question[] = [
     prompt: "Why is a ViewModel easier to unit test than a UIKit view controller?",
     options: [
       "It has no UI dependency — you feed input and assert on its output state",
-      "It runs on a background thread",
-      "It has fewer lines of code",
-      "XCTest only supports ViewModels",
+      "It always runs its update logic on a dedicated background thread so tests never block the main queue",
+      "It has fewer lines of code than a UIViewController so the test surface is proportionally smaller",
+      "XCTest only supports testing plain Swift objects like ViewModels, and cannot test UIViewController subclasses",
     ],
     answer: 0,
     explanation:
@@ -44,9 +44,9 @@ const quiz: Question[] = [
     prompt: "How does MVVM binding differ between SwiftUI and UIKit?",
     options: [
       "SwiftUI provides binding via ObservableObject/@Published; UIKit requires manual wiring",
-      "UIKit binds automatically; SwiftUI is manual",
-      "Neither supports binding",
-      "They are identical",
+      "UIKit binds to the ViewModel automatically through KVO on all properties; SwiftUI requires explicit @Published annotations to participate in the binding system",
+      "Neither SwiftUI nor UIKit supports any form of binding; all ViewModel-to-View synchronization must be done through explicit delegate callbacks",
+      "They are identical — both frameworks use @Published and sink to propagate ViewModel changes to the view layer without additional wiring",
     ],
     answer: 0,
     explanation:
@@ -58,9 +58,9 @@ const quiz: Question[] = [
     prompt: "What is the 'Massive View Model' anti-pattern?",
     options: [
       "Piling networking, business rules, and navigation into the ViewModel until it's the new dumping ground",
-      "A ViewModel with too few properties",
-      "Using more than one ViewModel per screen",
-      "A ViewModel written in SwiftUI",
+      "A ViewModel with too few properties to fully represent the screen state, forcing the view to compute derived values on its own",
+      "Using more than one ViewModel per screen, creating duplicate state that can diverge and cause consistency bugs across the two models",
+      "A ViewModel that is written as a SwiftUI View struct rather than a separate class, blurring the boundary between presentation and display layers",
     ],
     answer: 0,
     explanation:
@@ -90,9 +90,9 @@ final class VM {
 }`,
     options: [
       "Testability & separation — the ViewModel now depends on UIKit, defeating MVVM's core benefit",
-      "Nothing — ViewModels can use UIKit freely",
-      "Compilation — UIKit can't be imported",
-      "Performance only",
+      "Nothing — ViewModels can use UIKit freely as long as they do not subclass UIView or UIViewController directly",
+      "Compilation — UIKit cannot be imported into a file that also conforms to ObservableObject because of a Swift concurrency isolation conflict",
+      "Performance only — UIKit types in a ViewModel cause redundant retain cycles that slow down property access but do not affect testability",
     ],
     answer: 0,
     difficulty: "senior",
@@ -105,9 +105,9 @@ final class VM {
     prompt: "Where should navigation decisions ideally live in a well-structured MVVM app?",
     options: [
       "Outside the ViewModel — delegated to a coordinator/router",
-      "Inside the ViewModel, pushing view controllers directly",
-      "In the Model",
-      "In the AppDelegate",
+      "Inside the ViewModel, which should push view controllers directly onto the navigation stack when business logic determines a transition is needed",
+      "In the Model layer, since navigation decisions are a function of application state and belong alongside the data that drives them",
+      "In the AppDelegate, which acts as the single global coordinator for all scene transitions throughout the app lifecycle",
     ],
     answer: 0,
     difficulty: "senior",
@@ -120,9 +120,9 @@ final class VM {
     prompt: "What's a legitimate critique of always using a separate ViewModel class in SwiftUI?",
     options: [
       "A SwiftUI View is already a value-type description of UI with its own state, so a separate class can be redundant boilerplate for simple screens",
-      "SwiftUI can't use ViewModels at all",
-      "ViewModels break SwiftUI previews",
-      "SwiftUI forbids ObservableObject",
+      "SwiftUI cannot use ViewModels at all because its rendering pipeline only accepts value types and rejects class-based observable objects entirely",
+      "ViewModels break SwiftUI previews because Xcode cannot instantiate a class that conforms to ObservableObject without a running simulator",
+      "SwiftUI forbids ObservableObject conformance on any type that also declares @Published properties on stored class members",
     ],
     answer: 0,
     difficulty: "senior",

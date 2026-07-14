@@ -7,9 +7,9 @@ const quiz: Question[] = [
     prompt: "What's the main improvement of `@Observable` over `ObservableObject`?",
     options: [
       "Fine-grained tracking — a view re-renders only when a property it actually read changes",
-      "It runs on a background thread",
-      "It works with value types only",
-      "It removes the need for a body",
+      "It runs its observation callbacks on a dedicated background thread to avoid blocking the main run loop",
+      "It works exclusively with value types and cannot be applied to class-based models that require reference semantics",
+      "It removes the need for a body property by synthesizing the view hierarchy from the observable model's property names",
     ],
     answer: 0,
     explanation:
@@ -26,9 +26,9 @@ final class Model {
 }`,
     options: [
       "No — @Observable tracks plain stored properties automatically",
-      "Yes — every property still needs @Published",
-      "Only `name` needs it",
-      "It won't compile without ObservableObject",
+      "Yes — every stored property still needs @Published so SwiftUI knows which changes should trigger a view update",
+      "Only `name` needs @Published because String properties require explicit annotation while Int properties are tracked implicitly",
+      "It will not compile without also declaring ObservableObject conformance, since @Observable is just syntactic sugar over the existing protocol",
     ],
     answer: 0,
     explanation:
@@ -49,9 +49,9 @@ final class Model {
     prompt: "How does a read-only child view receive an `@Observable` model in iOS 17+?",
     options: [
       "As a plain `let` property — no @ObservedObject needed",
-      "As @ObservedObject",
-      "As @Binding",
-      "As @Published",
+      "As @ObservedObject, because SwiftUI still requires the explicit wrapper to register the view as a subscriber for property change notifications",
+      "As @Binding, so that the child view can write mutations back to the parent's copy of the model through a two-way reference",
+      "As @Published, applied to the property declaration inside the child view to opt that specific property into the observation system",
     ],
     answer: 0,
     explanation:
@@ -63,9 +63,9 @@ final class Model {
     prompt: "What is `@Bindable` used for?",
     options: [
       "To get `$` two-way bindings into an @Observable model's properties (e.g. for a TextField) when the model was passed in",
-      "To make a class observable",
-      "To persist state to disk",
-      "To run async work",
+      "To make a class observable by synthesizing the required tracking accessors and conforming it to the Observable protocol",
+      "To persist state to disk between app launches by serializing the annotated model to UserDefaults automatically",
+      "To run async work in a structured concurrency context that is scoped to the lifetime of the annotated SwiftUI view",
     ],
     answer: 0,
     explanation:
@@ -93,9 +93,9 @@ final class Model {
 // TotalView.body reads only cart.total`,
     options: [
       "No — it never read `items`, so fine-grained tracking skips the re-render (unlike ObservableObject, which would re-render it)",
-      "Yes — any change re-renders every observer",
-      "Only if items becomes empty",
-      "It crashes",
+      "Yes — any mutation to any property on the observed object triggers a full re-render of every view that holds a reference to that object",
+      "Only if items becomes empty, because @Observable treats an empty array as a structural change that invalidates all dependent views",
+      "It crashes with a Swift runtime error because modifying items while total is being observed by a view violates the Observation framework's mutation rules",
     ],
     answer: 0,
     difficulty: "senior",
@@ -108,9 +108,9 @@ final class Model {
     prompt: "Migrating ObservableObject → @Observable, what does `@EnvironmentObject` become?",
     options: [
       "`@Environment(Type.self)`, injected with `.environment(_:)`",
-      "It stays `@EnvironmentObject`",
-      "`@State`",
-      "`@Published`",
+      "It stays `@EnvironmentObject` because the Observation framework is backward compatible and reuses existing property wrappers without modification",
+      "`@State`, because migrating to @Observable means the environment model is now treated as locally owned value state in every view that reads it",
+      "`@Published`, applied directly to the property inside the view that needs access to the environment model",
     ],
     answer: 0,
     difficulty: "senior",
@@ -123,9 +123,9 @@ final class Model {
     prompt: "Can you adopt `@Observable` gradually in an existing app?",
     options: [
       "Yes — migrate model by model; pre-iOS-17 code stays on ObservableObject",
-      "No — it's all-or-nothing across the whole app",
-      "Only in a brand-new project",
-      "Only for value types",
+      "No — it is an all-or-nothing migration; mixing @Observable and ObservableObject in the same app causes SwiftUI to skip updates on the unconverted models",
+      "Only in a brand-new project, because existing ObservableObject conformances create a linker conflict with the Observation module's synthesized accessors",
+      "Only for value types, because @Observable cannot be applied to reference types that already inherit from a class with ObservableObject conformance",
     ],
     answer: 0,
     difficulty: "senior",

@@ -7,9 +7,9 @@ const quiz: Question[] = [
     prompt: "What does a custom `ViewModifier` let you do?",
     options: [
       "Package a reusable view transformation (via body(content:)) you can apply anywhere",
-      "Subclass a SwiftUI view",
-      "Run code on a background thread",
-      "Store global app state",
+      "Subclass an existing SwiftUI view to inherit and selectively override parts of its rendering behavior",
+      "Schedule background work and attach it to a lifecycle without coupling it to the view struct itself",
+      "Declare, store, and observe global application state that is shared across the entire view hierarchy tree",
     ],
     answer: 0,
     explanation:
@@ -21,9 +21,9 @@ const quiz: Question[] = [
     prompt: "Why wrap a custom modifier in a `View` extension (e.g. `func cardStyle()`)?",
     options: [
       "So it reads like a built-in modifier (`Text(...).cardStyle()`) — clean and discoverable",
-      "It's required for the modifier to compile",
-      "To make it run faster",
-      "To convert the view to a class",
+      "The View extension is a mandatory requirement by the Swift compiler for any ViewModifier to build successfully",
+      "Extensions eliminate a dynamic dispatch indirection layer, making the modifier execute measurably faster at runtime",
+      "Converting the call site to a class-backed View extension allows the modifier to retain and share reference semantics",
     ],
     answer: 0,
     explanation:
@@ -44,9 +44,9 @@ const quiz: Question[] = [
     prompt: "What problem does `PreferenceKey` solve?",
     options: [
       "Passing data UP the view tree, from children to an ancestor",
-      "Passing data down via the environment",
-      "Persisting data to disk",
-      "Animating a view",
+      "Passing data down from a parent to all its descendants, the same direction as the environment",
+      "Persisting key-value data to disk between app launches using a built-in coordinator",
+      "Triggering an implicit animation on a view whenever an observed value changes",
     ],
     answer: 0,
     explanation:
@@ -58,9 +58,9 @@ const quiz: Question[] = [
     prompt: "What is the `reduce` function of a `PreferenceKey` for?",
     options: [
       "Combining the values contributed by multiple children into one",
-      "Reducing memory usage",
-      "Removing duplicate views",
-      "Shrinking the view",
+      "Reducing memory usage by deduplicating identical preference values from sibling views",
+      "Removing child views that set a duplicate or conflicting preference key value",
+      "Shrinking the view so it takes less proposed space when a preference is active",
     ],
     answer: 0,
     explanation:
@@ -88,9 +88,9 @@ const quiz: Question[] = [
     .if(isHighlighted) { $0.background(.blue) }`,
     options: [
       "It can produce different branch types, changing the view's structural identity and resetting its @State",
-      "Nothing — it's always safe",
-      "It won't compile",
-      "It permanently caches the background",
+      "Absolutely nothing — conditional modifier helpers are always safe and unconditionally preserve @State in all circumstances",
+      "It fails at compile time because generic conditional view-modifier helpers are simply not expressible in Swift's type system",
+      "It permanently caches the very first background color that was applied and silently ignores all subsequent state-driven changes",
     ],
     answer: 0,
     difficulty: "senior",
@@ -103,9 +103,9 @@ const quiz: Question[] = [
     prompt: "Environment vs PreferenceKey — which direction does each carry data?",
     options: [
       "Environment flows down (ancestor → descendants); PreferenceKey flows up (descendants → ancestor)",
-      "Both flow down",
-      "Both flow up",
-      "Environment flows up; PreferenceKey flows down",
+      "Both Environment and PreferenceKey flow strictly downward from ancestor to descendant, just via different APIs",
+      "Both Environment and PreferenceKey flow strictly upward from descendant to ancestor, collecting values at the root",
+      "Environment flows upward from child views to the root; PreferenceKey flows downward from the root to leaf nodes",
     ],
     answer: 0,
     difficulty: "senior",
@@ -118,9 +118,9 @@ const quiz: Question[] = [
     prompt: "How is `.navigationTitle(\"X\")`, set deep inside a child, able to affect the navigation bar owned by an ancestor?",
     options: [
       "It's implemented with the preference system — the child sets a title preference the NavigationStack reads",
-      "It uses a global variable",
-      "It reaches up and mutates the parent directly",
-      "It posts a Notification",
+      "It writes the title string into a process-wide global variable that the NavigationStack container observes via KVO",
+      "It traverses the UIKit responder chain upward and directly mutates the NavigationStack's private internal title property",
+      "It broadcasts a Notification containing the title string that the NavigationStack intercepts via a NotificationCenter observer",
     ],
     answer: 0,
     difficulty: "senior",

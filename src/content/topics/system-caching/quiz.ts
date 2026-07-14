@@ -7,9 +7,9 @@ const quiz: Question[] = [
     prompt: "What is a cache, in the system-design sense used in this lesson?",
     options: [
       "A faster, closer copy of data whose real, authoritative version lives somewhere else",
-      "Any dictionary stored in memory",
-      "The database that owns the data permanently",
-      "A compressed version of a file",
+      "Any dictionary or key-value store held in RAM regardless of its relationship to a backing source",
+      "The persistent database that owns the data permanently and is the authoritative source of record",
+      "A compressed, deduplicated archive of a file stored to save disk space on the device",
     ],
     answer: 0,
     explanation:
@@ -32,9 +32,9 @@ const quiz: Question[] = [
 }`,
     options: [
       "Memory miss, disk miss, network fetch — then both memory and disk are backfilled",
-      "Memory miss only, then it throws because disk has nothing",
-      "It goes straight to the network without checking memory or disk",
-      "Disk is checked first, then memory",
+      "Memory miss only — then it throws immediately because disk has nothing for an unseen key",
+      "It bypasses all local layers and goes straight to the network call without checking memory or disk",
+      "Disk is always checked first before memory, regardless of relative access speed or recency",
     ],
     answer: 0,
     explanation:
@@ -55,9 +55,9 @@ const quiz: Question[] = [
     prompt: "Why does a well-designed cache-aside write typically delete the cached entry instead of overwriting it with the new value?",
     options: [
       "Overwriting risks writing a subtly wrong shape (server-computed fields might differ); deleting is safe because the next read just re-fetches the real thing",
-      "Deleting is faster than writing",
-      "Cache-aside doesn't support writes at all",
-      "It's required by NSCache's API",
+      "Deleting the cache entry is consistently measurably faster than overwriting it because the deletion path fully skips the serialization and encoding steps entirely",
+      "Cache-aside is strictly a read-path optimization pattern by definition and specifies absolutely no write-path update behavior or invalidation semantics whatsoever",
+      "NSCache's internal write API formally enforces deletion semantics on every write operation and will raise an NSException if the caller attempts to overwrite an existing key",
     ],
     answer: 0,
     explanation:
@@ -98,9 +98,9 @@ const quiz: Question[] = [
     prompt: "An offline-first app queues local writes on disk before syncing them to the server. If deleting that local disk store would permanently lose data the server never received, what does that tell you about the disk store?",
     options: [
       "It isn't a cache — it's acting as a source of truth, and deleting it needs sync-engine-level safety, not cache-eviction logic",
-      "It's a perfectly normal cache and can be evicted like any other layer",
-      "It should be moved into NSCache",
-      "It means the TTL is set too high",
+      "It is still a perfectly normal disposable cache layer that can be freely evicted at any time like any other cache tier",
+      "The unsynced pending writes should be moved into NSCache, which provides stronger durability guarantees than any custom disk store",
+      "It reveals the TTL is configured too high, causing write entries to expire from the store before they have a chance to sync upstream",
     ],
     answer: 0,
     difficulty: "senior",
@@ -115,9 +115,9 @@ const quiz: Question[] = [
 // followerCount: shown on every profile view, changes constantly in the background`,
     options: [
       "No — the bio needs near-zero staleness (the user will notice their own edit not reflecting), while the follower count can tolerate minutes of staleness",
-      "Yes — always use one global TTL across the app for simplicity",
-      "No — the follower count needs zero staleness and the bio can be stale for hours",
-      "TTLs only apply to network responses, never to individual fields",
+      "Yes — always use a single unified global TTL value that is applied uniformly to every cached field across the entire app for simplicity and operational consistency",
+      "No — the follower count is actually the far more write-sensitive field that genuinely requires near-zero staleness, while the bio can safely remain stale for several hours",
+      "TTLs are a concept that applies only to raw HTTP network-layer response caching and can never meaningfully be applied to individual model fields that are stored in local memory",
     ],
     answer: 0,
     explanation:
@@ -129,9 +129,9 @@ const quiz: Question[] = [
     prompt: "How does this lesson's scope relate to the separate 'Caching Strategies' (NSCache/URLCache/LRU) lesson?",
     options: [
       "This lesson is the architecture layer above it — cache-aside/write-through, invalidation, and freshness policy — assuming you already know the on-device containers",
-      "They cover completely unrelated topics with no connection",
-      "This lesson replaces NSCache and URLCache entirely",
-      "URLCache is a system-design pattern discussed in depth here",
+      "The two lessons cover entirely separate and completely unrelated topics with absolutely no meaningful conceptual connection or shared vocabulary between them at all",
+      "This system-design architecture lesson fully renders both NSCache and URLCache obsolete by introducing clearly superior design-level architectural replacements for each of them",
+      "URLCache is completely reframed throughout this lesson as a pure system-design architectural pattern rather than a concrete Foundation framework API, and it is discussed in substantial depth",
     ],
     answer: 0,
     explanation:

@@ -7,9 +7,9 @@ const quiz: Question[] = [
     prompt: "What does a linter like SwiftLint fundamentally do?",
     options: [
       "Reads source code without executing it and flags style or likely-bug patterns",
-      "Compiles the code faster by skipping type checking",
-      "Runs your unit tests automatically",
-      "Rewrites your code into a binary",
+      "Compiles the code faster by skipping type checking, caching resolved symbol types across incremental builds to avoid redundant analysis",
+      "Runs your unit tests automatically and reports which test cases failed along with the line numbers of the assertions",
+      "Rewrites your code into a binary by running the full compiler pipeline and optimizing the output for the target architecture",
     ],
     answer: 0,
     explanation:
@@ -21,9 +21,9 @@ const quiz: Question[] = [
     prompt: "What's the core difference between SwiftLint and SwiftFormat?",
     options: [
       "SwiftLint primarily reports violations; SwiftFormat rewrites source into a consistent shape",
-      "They are two names for the exact same tool",
-      "SwiftFormat only works on Objective-C",
-      "SwiftLint compiles code and SwiftFormat lints it",
+      "They are two names for the exact same tool — both read a shared .swiftlint.yml config and report or auto-fix the same set of style rules",
+      "SwiftFormat only works on Objective-C files because its underlying parser targets the Clang AST rather than the Swift compiler's syntax tree",
+      "SwiftLint compiles code to detect type-level bugs and SwiftFormat lints it for style violations using static analysis without building",
     ],
     answer: 0,
     explanation:
@@ -36,9 +36,9 @@ const quiz: Question[] = [
     code: `line_length:\n  warning: 120\n  error: 160`,
     options: [
       "It's reported as an error (which can fail the build), since 170 exceeds the error threshold",
-      "Nothing — line_length only warns, never errors",
-      "SwiftLint automatically truncates the line",
-      "It's ignored because no severity was set to 'ignore'",
+      "Nothing — line_length only warns, never errors, regardless of the value specified under the error key in the config",
+      "SwiftLint automatically truncates the line to the error threshold and rewrites the source file in place without prompting",
+      "It's ignored because no severity was set to 'ignore', and SwiftLint requires an explicit ignore entry before it can apply either warning or error thresholds",
     ],
     answer: 0,
     explanation:
@@ -82,9 +82,9 @@ const quiz: Question[] = [
     prompt: "What are SwiftLint custom_rules for?",
     options: [
       "Defining project-specific checks (e.g. via regex) that general Swift style rules don't cover",
-      "Disabling SwiftLint entirely for a file",
-      "Replacing SwiftFormat",
-      "Speeding up compilation",
+      "Disabling SwiftLint entirely for a file so that none of the built-in or custom rules are applied during CI or pre-commit validation",
+      "Replacing SwiftFormat by providing auto-correct rewrites for every rule defined under the custom_rules key in the config file",
+      "Speeding up compilation by caching parsed syntax trees so repeated linting passes can skip re-parsing unchanged source files",
     ],
     answer: 0,
     explanation:
@@ -97,9 +97,9 @@ const quiz: Question[] = [
     code: `# .git/hooks/pre-commit\nswiftlint lint --strict`,
     options: [
       "Every single commit fails immediately, because --strict treats existing warnings as blocking errors",
-      "Only new violations block the commit",
-      "SwiftLint automatically ignores legacy files",
-      "Nothing changes — --strict has no effect on pre-commit hooks",
+      "Only new violations introduced since the last passing commit block the commit, because --strict compares the current diff against the baseline stored in .swiftlint-baseline.json",
+      "SwiftLint automatically ignores legacy files by reading the file creation date from git history and applying a grace period to files older than one year",
+      "Nothing changes — --strict has no effect on pre-commit hooks because hook scripts run outside the SwiftLint process that reads the severity configuration",
     ],
     answer: 0,
     difficulty: "senior",

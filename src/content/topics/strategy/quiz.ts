@@ -7,9 +7,9 @@ const quiz: Question[] = [
     prompt: "What is the core intent of the strategy pattern?",
     options: [
       "Split an algorithm into a fixed skeleton and a swappable piece behind a shared interface, so new behavior is added without editing existing code",
-      "Ensure only one instance of a class ever exists",
-      "Notify a list of listeners whenever a subject changes",
-      "Wrap an incompatible interface so it matches what a client expects",
+      "Ensure only one instance of a class ever exists, so every caller in the app shares the same mutable global state throughout the entire app lifetime",
+      "Notify a registered list of listeners whenever a subject's state changes, broadcasting each event to every observer in the order they subscribed",
+      "Wrap an incompatible legacy interface behind one that matches what a client expects, translating old method signatures without altering the underlying implementation",
     ],
     answer: 0,
     explanation:
@@ -52,9 +52,9 @@ print(cart.total())`,
     prompt: "When should you prefer a protocol-based strategy over a closure-based one?",
     options: [
       "When the strategy needs its own stored properties or more than one related method",
-      "Always — protocols are strictly better than closures",
-      "Never — closures are always sufficient for strategy",
-      "Only when the strategy needs to be Codable",
+      "Always — protocols are strictly better than closures because they provide stronger type constraints and better compiler diagnostics",
+      "Never — closures are always sufficient for strategy, and protocols just add unnecessary conformance boilerplate around a single function",
+      "Only when the strategy needs to be Codable, because closures cannot conform to Codable and serializing them requires a named type",
     ],
     answer: 0,
     explanation:
@@ -71,9 +71,9 @@ print(cart.total())`,
 }`,
     options: [
       "Zero — add a new struct conforming to DiscountStrategy and assign it",
-      "One line, to add a new case to a switch inside total()",
-      "Two lines, to add both the case and the calculation",
-      "total() needs a full rewrite"
+      "One line, to add a new case to a switch inside total() mapping the new tier to its discount logic",
+      "Two lines, to add both the new case to the switch and the arithmetic calculation beneath it",
+      "total() needs a full rewrite because the discount logic is entangled with Cart's subtotal property"
     ],
     answer: 0,
     explanation:
@@ -99,9 +99,9 @@ print(cart.total())`,
     prompt: "How does strategy differ from observer in what problem it solves?",
     options: [
       "Strategy swaps which algorithm runs for a single call; observer broadcasts an event to many listeners after something happens",
-      "They solve the same problem with different syntax",
-      "Strategy is always implemented with NotificationCenter",
-      "Observer requires a protocol; strategy never does",
+      "They solve the same problem with different syntax — both let you vary behavior at runtime, just naming the participants differently",
+      "Strategy is always implemented with NotificationCenter, while observer uses a direct protocol-delegation approach instead",
+      "Observer requires a protocol; strategy never does and always relies on a closure or enum switch inside the host type",
     ],
     answer: 0,
     difficulty: "senior",
@@ -126,9 +126,9 @@ print(cart.total())`,
 }`,
     options: [
       "It brings the branching logic back inside Cart, defeating the point of extracting strategies — every new tier now requires editing total() again",
-      "Nothing — this is equivalent to the strategy version",
-      "It's a compile error",
-      "It only affects performance, not design"
+      "Nothing — this is fully equivalent to the strategy version because a switch and a protocol dispatch compile down to the same machine instructions",
+      "It's a compile error because CustomerTier hasn't been defined as a protocol-backed type that Cart can switch over",
+      "It only affects performance, not design, since the switch is marginally faster than a dynamic protocol dispatch through a stored property"
     ],
     answer: 0,
     difficulty: "senior",

@@ -21,9 +21,9 @@ const quiz: Question[] = [
     prompt: "Why does the ImageLoader API include cancelLoad(url:for:) as a separate method rather than relying on loadImage's async task simply finishing?",
     options: [
       "Because a cell gets reused for a different row before its in-flight image request finishes, and it needs to say it no longer cares about the result",
-      "Because async/await cannot represent failure",
-      "Because URLSession requests can never be cancelled",
-      "Because prefetch requires it to compile",
+      "Because async/await in Swift cannot represent failure and throws no errors, so cancellation must be handled through a separate explicit signal",
+      "Because URLSession HTTP requests cannot be cancelled once the TCP connection has been established and data is already flowing from the server",
+      "Because the prefetch function in the ImageLoader protocol requires cancelLoad to be present or the file fails to compile due to a protocol dependency",
     ],
     answer: 0,
     explanation:
@@ -35,9 +35,9 @@ const quiz: Question[] = [
     prompt: "What's the key difference between the memory cache and the disk cache in a two-layer image cache design?",
     options: [
       "Memory holds fully decoded images (fast, RAM-bounded); disk holds compressed bytes (slower, needs a decode step, but can hold far more)",
-      "They store identical data and exist only for redundancy",
-      "Disk cache is always faster to read from than memory",
-      "Memory cache has no size limit since RAM is cheap",
+      "Both layers store fully decoded UIImage objects so reads are equally fast; the only difference is that the disk layer survives an app relaunch",
+      "Disk cache is always faster to read from than memory cache because NVMe flash storage bypasses the CPU caches that slow DRAM reads down",
+      "The memory cache has no practical size limit since modern iPhones have several gigabytes of available RAM that the OS never reclaims from foreground apps",
     ],
     answer: 0,
     explanation:
@@ -60,9 +60,9 @@ const quiz: Question[] = [
 // second call for the same url arrives while the first is still running`,
     options: [
       "The second caller awaits the same in-flight Task instead of starting a duplicate download",
-      "A second, independent download starts in parallel",
-      "The second request is silently dropped with no image ever returned",
-      "The first request is cancelled to make room for the second",
+      "A second, fully independent download starts in parallel, wasting bandwidth on a redundant fetch",
+      "The second request is silently dropped with no image ever returned to the caller",
+      "The first in-flight request is cancelled to make room for the newer, higher-priority second request",
     ],
     answer: 0,
     explanation:
@@ -74,9 +74,9 @@ const quiz: Question[] = [
     prompt: "Why does downsampling (decoding directly at the target display size) save more memory than decoding full-size and then shrinking with a resize step afterward?",
     options: [
       "It avoids ever allocating the full-size decoded bitmap in the first place, rather than allocating it and then discarding most of it",
-      "It compresses the image file on disk before download",
-      "It skips the network request entirely",
-      "It only affects CPU time, not memory",
+      "It compresses the image file on disk before any download occurs, reducing both the bandwidth consumed and the on-disk storage footprint of the cached asset",
+      "It skips the network request entirely by reusing a locally generated thumbnail that was computed from a previously downloaded lower-resolution version",
+      "It only affects the CPU time spent on the decode step, not the peak amount of memory allocated for the decoded pixel data buffer",
     ],
     answer: 0,
     explanation:
@@ -92,9 +92,9 @@ const quiz: Question[] = [
 // decode was already running when cancel() was called`,
     options: [
       "Cancellation is cooperative — the in-progress decode may still finish and the task may complete before it observes cancellation, so a receiving guard (like a per-request token check) is still needed",
-      "The decode is forcibly and instantly killed with no further code executing",
-      "cancel() has no effect on Task at all",
-      "The app crashes because you cannot cancel a Task mid-decode",
+      "The decode is forcibly and instantly killed at the CPU level with no further Swift code executing, no CancellationError thrown, and no partial result ever produced or delivered",
+      "cancel() sets a cancellation flag that Swift Concurrency checks automatically at every await suspension point, so the decode stops at the very next await without any additional guard or token check being required on the caller's side",
+      "The app crashes with a CancellationError propagated up from within the CGImageSource decode call, because image decoding tasks do not support cooperative mid-operation cancellation in Swift Concurrency",
     ],
     answer: 0,
     difficulty: "senior",
@@ -107,9 +107,9 @@ const quiz: Question[] = [
     prompt: "Why bound the number of concurrent downloads with something like a semaphore instead of letting every visible-plus-prefetched image download at once?",
     options: [
       "Unbounded concurrent downloads during a fast scroll can saturate the network and starve the requests the user can actually see, so a cap keeps the pipe busy without overwhelming it",
-      "URLSession physically cannot run more than one request at a time",
-      "A semaphore makes each individual download faster",
-      "It removes the need for a memory cache",
+      "URLSession physically cannot run more than one HTTP request at a time across all sessions, so additional download tasks always queue sequentially behind the single active connection regardless of semaphore use",
+      "A semaphore removes per-request scheduling overhead at the OS level, making each individual image download complete measurably faster compared to running without any concurrency limit",
+      "Bounding concurrency to a fixed cap eliminates the need for a memory cache entirely, since limiting simultaneous downloads means fewer decoded images need to be retained in RAM between requests",
     ],
     answer: 0,
     difficulty: "senior",

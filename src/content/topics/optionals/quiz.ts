@@ -33,7 +33,7 @@ print(pet?.name ?? "none")`,
     prompt: "What happens when this runs?",
     code: `let scores: [String: Int] = ["a": 1]
 print(scores["b"]!)`,
-    options: ["0", "nil", "A runtime crash", "An empty line"],
+    options: ["0", "nil — the dictionary returns Optional.none and the force-unwrap coerces it silently", "A runtime crash with 'unexpectedly found nil while unwrapping an Optional value'", "An empty line"],
     answer: 2,
     explanation:
       "A dictionary subscript returns an optional. The key `\"b\"` is missing, so the lookup is `nil`, and force-unwrapping `nil` with `!` traps at runtime: *unexpectedly found nil while unwrapping*. Use `??` or `if let` instead.",
@@ -61,7 +61,7 @@ print(scores["b"]!)`,
     type: "mcq",
     prompt: "Which statement about `if let` versus `guard let` is correct?",
     options: [
-      "They are identical; `guard` is just older syntax",
+      "They are identical; `guard` is just older syntax that the compiler rewrites to `if let` during type-checking",
       "`if let` exits the function on failure; `guard let` does not",
       "`guard let` keeps the unwrapped value in scope after the statement; `if let` confines it to its block",
       "Only `if let` can unwrap multiple optionals at once",
@@ -132,7 +132,7 @@ let b = raw.flatMap { Int($0) }`,
     prompt: "Which statement about the in-memory **size** of optionals is correct?",
     options: [
       "`Optional<SomeClass>` is the same size as the class reference; `Optional<Int>` is one byte larger than `Int`",
-      "Every optional adds 8 bytes of overhead",
+      "Every optional unconditionally adds exactly 8 bytes of metadata overhead on top of the size of the wrapped type",
       "Optionals are a compile-time fiction with no runtime size",
       "`Optional<Int>` and `Int` are always identical in size",
     ],
@@ -149,7 +149,7 @@ let b = raw.flatMap { Int($0) }`,
 for case let n? in items {
     print(n)
 }`,
-    options: ["1 and 3, on separate lines", "1, nil, 3", "1 3 nil", "A compile error"],
+    options: ["1 and 3, on separate lines", "1, nil, 3 (all three elements including the nil)", "1 3 nil", "A compile error"],
     answer: 0,
     difficulty: "senior",
     explanation:

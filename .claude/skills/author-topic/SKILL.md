@@ -134,6 +134,10 @@ Every question needs a unique `id` (within the file), a `prompt` (Markdown), and
 }
 ```
 
+### Writing options — avoid the length tell
+
+For `mcq`, `predict`, and `multi`, **do not let the correct answer be the longest option.** A learner who spots that the longest choice is always right stops reading the Swift and just picks by length. Write each distractor to be **as long as or longer than the correct answer** — some can be short, but the correct one must never be the systematically longest. Make wrong options plausible and specific (a real-sounding but incorrect reason), not obviously-throwaway stubs like "It throws" next to a full sentence. The `answer` index can sit anywhere; a render-time shuffle varies the on-screen position, so balance by *length*, not by slot.
+
 ### Swift code in quiz strings — gotcha
 
 `code`, `prompt`, etc. are usually written as template literals (backtick strings) so newlines are easy. Swift string interpolation `\(...)` and JS template `${...}` both use braces — **a literal `${` or a backtick inside the Swift code will break the JS template literal.** If your snippet contains those, use `\n`-joined regular `"..."` strings or escape carefully. The existing quizzes avoid backticks/`${` inside snippets for this reason.

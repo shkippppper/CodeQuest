@@ -7,9 +7,9 @@ const quiz: Question[] = [
     prompt: "In TCA, what is a Reducer?",
     options: [
       "A pure function that mutates State for a given Action and returns any side effects to run",
-      "The object that holds and observes state",
-      "A SwiftUI view",
-      "A networking client",
+      "The runtime object that holds state, observes published changes, and owns the feature's lifecycle",
+      "A SwiftUI view struct that renders the current state and dispatches actions on user interaction",
+      "A type-safe networking client that handles all async API requests for a given feature module",
     ],
     answer: 0,
     explanation:
@@ -21,9 +21,9 @@ const quiz: Question[] = [
     prompt: "What is the Store's role in TCA?",
     options: [
       "It holds the state, receives actions, runs the reducer, executes effects, and drives the view",
-      "It performs the network requests directly inside the reducer",
-      "It defines the Action enum",
-      "It replaces SwiftUI",
+      "It performs network requests directly inside the reducer as part of the pure state transformation",
+      "It is where you declare the Action enum and all associated value types the feature can dispatch",
+      "It replaces SwiftUI by providing its own layout and rendering engine for TCA-managed views",
     ],
     answer: 0,
     explanation:
@@ -35,9 +35,9 @@ const quiz: Question[] = [
     prompt: "Why can't a reducer perform a network call inline?",
     options: [
       "Reducers must be pure; side effects are returned as Effect values the store runs, with results fed back as actions",
-      "Reducers run on the GPU",
-      "Networking is banned in Swift",
-      "The store forbids async code",
+      "TCA compiles all reducer logic to run on the GPU in a compute shader to enable fully parallel state updates across features",
+      "Swift's own type system statically bans all networking API calls from any function that is annotated as a TCA reducer method",
+      "The Store module forbids async code anywhere in the entire feature module in order to guarantee strictly synchronous state transitions",
     ],
     answer: 0,
     explanation:
@@ -58,9 +58,9 @@ const quiz: Question[] = [
     prompt: "How does TCA keep side effects testable?",
     options: [
       "External systems (API, clock, UUID) are injected via `@Dependency`, so tests substitute controlled versions",
-      "It disables all effects in tests",
-      "It uses global singletons",
-      "Effects are ignored during testing",
+      "TestStore automatically intercepts and no-ops every effect closure declared in the reducer so none actually execute",
+      "TCA relies entirely on process-wide global singleton instances so that any test file can reach in and replace live implementations",
+      "Every single effect closure is silently dropped and never executed at all when the TCA feature module runs inside any test target",
     ],
     answer: 0,
     explanation:
@@ -87,9 +87,9 @@ const quiz: Question[] = [
     code: `await store.send(.increment) { /* forgot: $0.count = 1 */ }`,
     options: [
       "The test fails — exhaustive testing requires you to describe every state mutation",
-      "The test passes silently",
-      "It crashes the app",
-      "The action is ignored",
+      "The test passes silently because undescribed state changes are treated as acceptable noise",
+      "It crashes the running app process with an unhandled exception from the assertion framework",
+      "The action is silently dropped and never forwarded to the reducer in test mode",
     ],
     answer: 0,
     difficulty: "senior",
@@ -102,9 +102,9 @@ const quiz: Question[] = [
     prompt: "How does TCA compose a parent feature from child features?",
     options: [
       "The parent embeds child State, wraps child Actions, and glues child reducers with Scope/ifLet/forEach",
-      "By subclassing the child reducer",
-      "By copying the child's code into the parent",
-      "Children can't be composed",
+      "By subclassing the child reducer class and selectively overriding only the action-handling methods that differ in the parent",
+      "By manually copying the entire child feature's reducer body verbatim into the matching action cases of the parent reducer",
+      "Child features fundamentally cannot be composed into a parent in TCA — every feature must be written and tested in full isolation",
     ],
     answer: 0,
     difficulty: "senior",
@@ -117,9 +117,9 @@ const quiz: Question[] = [
     prompt: "What's the most honest downside of adopting TCA?",
     options: [
       "You couple your architecture to a third-party library with a steep learning curve and boilerplate — heavy for small apps",
-      "It makes state changes unpredictable",
-      "It can't handle side effects",
-      "It has no testing story",
+      "It makes every single state change unpredictable because TCA reducers execute asynchronously on an unspecified background scheduler",
+      "TCA has no mechanism whatsoever to model or represent side effects — all I/O must be handled entirely outside the architecture",
+      "TCA ships with absolutely no built-in testing story and requires integrating a completely separate third-party framework to verify reducer behavior",
     ],
     answer: 0,
     difficulty: "senior",

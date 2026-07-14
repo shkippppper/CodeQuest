@@ -7,7 +7,7 @@ const quiz: Question[] = [
     prompt: "What is an autorelease pool?",
     options: [
       "A collection of deferred releases — objects whose `release` fires when the pool drains, not immediately",
-      "A pool of reusable threads",
+      "A pool of reusable worker threads the runtime hands out to autoreleased objects so their cleanup runs concurrently in the background",
       "A cache of decoded images",
       "A garbage collector",
     ],
@@ -40,7 +40,7 @@ const quiz: Question[] = [
     options: [
       "Wrap the loop body in `@autoreleasepool { }` so each iteration's temporaries are freed immediately",
       "Add more RAM",
-      "Use a Set instead of an Array",
+      "Switch the temporary storage from an Array to a Set, since a Set deduplicates the loaded file contents and keeps the total footprint bounded",
       "Nothing can be done",
     ],
     answer: 0,
@@ -64,7 +64,7 @@ const quiz: Question[] = [
     options: [
       "No — the object is still strongly referenced; autorelease affects release timing, not ownership",
       "Yes — pools break cycles",
-      "Yes, but only on the main thread",
+      "Yes, but only on the main thread, where each run-loop drain is powerful enough to also tear down objects trapped in a retain cycle",
       "Only if it's an NSObject",
     ],
     answer: 0,
@@ -93,7 +93,7 @@ const quiz: Question[] = [
       "Often no — ARC releases them promptly; the autorelease behavior comes mainly from Objective-C/Cocoa APIs",
       "Yes, always",
       "Only for structs",
-      "Only if the loop runs more than 10 times",
+      "Only if the loop runs more than a handful of times, since ARC batches releases and needs an explicit pool once the iteration count grows",
     ],
     answer: 0,
     difficulty: "senior",
@@ -106,7 +106,7 @@ const quiz: Question[] = [
     prompt: "Why might background work off the main thread need an explicit `@autoreleasepool`?",
     options: [
       "There's no run loop draining a pool for you, so autoreleased temporaries can accumulate until the work finishes",
-      "Background threads can't use ARC",
+      "Background threads can't use ARC on their own, so an explicit autorelease pool is the only thing that inserts the retain and release calls there",
       "The main thread blocks otherwise",
       "It speeds up the CPU",
     ],
@@ -121,7 +121,7 @@ const quiz: Question[] = [
     prompt: "What does autorelease control, fundamentally?",
     options: [
       "The TIMING of releases (deferred to a pool drain), not object ownership or strong/weak semantics",
-      "Whether an object is strong or weak",
+      "Whether an object reference is treated as strong or weak, by promoting each deferred release into the right ownership qualifier at pool-drain time",
       "The order objects are allocated",
       "Thread affinity",
     ],

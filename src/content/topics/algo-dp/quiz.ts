@@ -7,9 +7,9 @@ const quiz: Question[] = [
     prompt: "The naive recursive climbStairs(n) = climbStairs(n-1) + climbStairs(n-2) runs in what time?",
     options: [
       "O(2ⁿ) — the call tree branches into two calls at every level, with massive repeated work",
-      "O(n) — each call only does constant work",
-      "O(n²) — nested iteration",
-      "O(log n) — the problem halves each time",
+      "O(n) — each call only does constant work, so the total is proportional to the depth of recursion",
+      "O(n²) — nested iteration, because each call triggers a second loop through previously computed values",
+      "O(log n) — the problem halves each time, similar to binary search on the remaining steps to climb",
     ],
     answer: 0,
     explanation:
@@ -31,9 +31,9 @@ const quiz: Question[] = [
     code: `func climbStairs(_ n: Int, _ memo: inout [Int: Int]) -> Int {\n    if n <= 2 { return n }\n    let result = climbStairs(n - 1, &memo) + climbStairs(n - 2, &memo)\n    if let cached = memo[n] { return cached }\n    memo[n] = result\n    return result\n}`,
     options: [
       "The cache check happens after the recursive calls already ran, so it never prevents the expensive recursion — only the second visit's own subtree, not this call's work",
-      "There's no bug, this is a correct and efficient memoized version",
-      "memo should be an array, not a dictionary",
-      "The base case is wrong",
+      "There's no bug — checking the cache after computing and then storing is an accepted and efficient memoization pattern",
+      "memo should be a pre-sized contiguous array rather than a dictionary, because hashing keys and resolving dictionary collisions adds overhead on every single lookup that quietly defeats caching",
+      "The base case n <= 2 is wrong; it should be n == 0 and n == 1 separately to correctly handle single-step climbs",
     ],
     answer: 0,
     explanation:
@@ -74,9 +74,9 @@ const quiz: Question[] = [
     code: `for i in 3...n {\n    table[i] = table[i - 1] + table[i - 2]\n}`,
     options: [
       "table[i] only ever depends on the two immediately preceding entries, never anything further back",
-      "Swift arrays automatically compress repeated values",
-      "It can't actually be reduced — that would change the answer",
-      "Because n is always small in practice",
+      "Swift arrays automatically compress runs of repeated values, so the compiler shrinks the table at build time",
+      "It can't actually be reduced to O(1) space — doing so would overwrite values still needed for later indices",
+      "Because n is always small in practice, so the apparent O(n) table is really just a bounded constant overhead",
     ],
     answer: 0,
     explanation:
@@ -102,9 +102,9 @@ const quiz: Question[] = [
     prompt: "In the longest common subsequence table, why does table[i][j] pull from table[i-1][j-1] when a[i-1] == b[j-1]?",
     options: [
       "A matching character extends the best subsequence found using one fewer character from each string, so add 1 to the diagonal neighbor's answer",
-      "It's an arbitrary convention with no deeper reason",
-      "table[i-1][j-1] always holds the global maximum for the whole table",
-      "Matching characters should be ignored entirely",
+      "It's an arbitrary indexing convention — any of the adjacent cells would give exactly the same result here, because the whole table is symmetric around its main diagonal",
+      "table[i-1][j-1] always holds the global maximum for the whole table, so using it guarantees the optimal overall answer at every step",
+      "Matching characters should be ignored entirely, and the algorithm should instead take the max of adjacent non-diagonal cells",
     ],
     answer: 0,
     difficulty: "senior",

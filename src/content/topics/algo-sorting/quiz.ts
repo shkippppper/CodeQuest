@@ -7,9 +7,9 @@ const quiz: Question[] = [
     prompt: "What's the best possible worst-case time for any comparison-based sort?",
     options: [
       "O(n log n) — a combinatorial floor from needing log2(n!) comparisons to distinguish all orderings",
-      "O(n) — any sort can be made linear with enough cleverness",
-      "O(n²) — comparison sorts can't beat quadratic",
-      "O(log n) — comparisons themselves are the bottleneck",
+      "O(n) — any comparison sort can be made linear given enough cleverness in how comparisons are sequenced",
+      "O(n²) — comparison sorts are bounded by the quadratic cost of the worst-case partitioning step",
+      "O(log n) — comparisons themselves are the bottleneck and each one halves the possible remaining orderings",
     ],
     answer: 0,
     explanation:
@@ -40,9 +40,9 @@ const quiz: Question[] = [
     prompt: "A sort is 'stable' when...",
     options: [
       "Elements that compare as equal keep their original relative order after sorting",
-      "It always runs in O(n log n)",
-      "It never uses extra memory",
-      "It works correctly on already-sorted input",
+      "It always runs in O(n log n) worst-case time, with no degenerate pivot or partitioning behavior possible",
+      "It never allocates extra memory beyond the input array and a fixed number of temporary variables",
+      "It works correctly on already-sorted input without degrading to the worst-case path that plagues naive implementations",
     ],
     answer: 0,
     explanation:
@@ -78,9 +78,9 @@ const quiz: Question[] = [
     prompt: "What sorting strategy does Swift's standard library `sort()` actually use?",
     options: [
       "Introsort: quicksort by default, falling back to heap sort if recursion goes too deep, with insertion sort for small subarrays",
-      "Pure merge sort, always O(n) extra space",
-      "Pure quicksort with no worst-case protection",
-      "Bubble sort for small arrays, quicksort for large ones",
+      "Pure merge sort in every case, always requiring O(n) extra space for the merge buffers regardless of input size",
+      "Pure quicksort with a randomized pivot and no other worst-case protection beyond the sheer statistical unlikelihood of repeatedly picking a bad pivot",
+      "Bubble sort for arrays smaller than a threshold, switching to pure quicksort once the subarray grows past that size",
     ],
     answer: 0,
     difficulty: "senior",
@@ -93,9 +93,9 @@ const quiz: Question[] = [
     prompt: "You need to sort a huge dataset with a hard memory ceiling and cannot risk a worst-case slowdown. Which sort fits best?",
     options: [
       "Heap sort — O(n log n) guaranteed in every case, O(1) extra space",
-      "Quicksort with a fixed last-element pivot — fastest on average",
-      "Merge sort — O(n log n) guaranteed but needs O(n) extra space",
-      "Insertion sort — simplest to implement correctly",
+      "Quicksort with a fixed last-element pivot — fastest on average, though it risks O(n²) on adversarial inputs",
+      "Merge sort — O(n log n) guaranteed in every case but requires O(n) extra space for the merge buffers",
+      "Insertion sort — simplest to implement and verify correctly, though its O(n²) worst case violates the time ceiling",
     ],
     answer: 0,
     difficulty: "senior",

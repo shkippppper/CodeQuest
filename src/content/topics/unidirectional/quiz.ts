@@ -7,9 +7,9 @@ const quiz: Question[] = [
     prompt: "What is the data-flow cycle in a unidirectional architecture?",
     options: [
       "State → View → Action → Reducer → new State",
-      "View ↔ Model (two-way binding)",
-      "Action → View → State → Action",
-      "Model → Controller → Model",
+      "View ↔ Model with two-way binding, where either side can push updates to the other at any time",
+      "Action dispatches directly to the View, which computes the new State and re-dispatches an updated Action",
+      "Model mutates itself and notifies a Controller, which writes back into the same Model object in a shared loop",
     ],
     answer: 0,
     explanation:
@@ -30,9 +30,9 @@ const quiz: Question[] = [
     prompt: "Why must reducers be pure functions in UDF?",
     options: [
       "Determinism — same state + action always yields the same new state, enabling replay and easy testing",
-      "Purity makes them run faster on the GPU",
-      "So they can perform network calls inline",
-      "It's a Swift compiler requirement",
+      "Purity allows the Swift compiler to offload reducer execution to the GPU, where data-parallel instruction pipelines dramatically speed up large state transformations",
+      "Reducers need to be pure functions so that they can perform network calls and async side effects in a controlled, isolated way directly inline",
+      "It is a hard requirement of the Swift compiler: any function accepting a State value and returning a new State must be declared pure or the build fails",
     ],
     answer: 0,
     explanation:
@@ -44,9 +44,9 @@ const quiz: Question[] = [
     prompt: "Where do side effects (networking, timers) run in a unidirectional architecture?",
     options: [
       "Outside the reducer — in middleware or as Effect values — with results dispatched back as new actions",
-      "Inside the reducer, synchronously",
-      "In the View's body",
-      "They aren't allowed at all",
+      "Directly inside the reducer function, executed synchronously before the reducer returns the new state to ensure ordering",
+      "In the View's body computed property, since SwiftUI views are the only async-capable context in a UDF architecture",
+      "Side effects are prohibited entirely in UDF — the pattern only works when every operation is synchronous and deterministic",
     ],
     answer: 0,
     explanation:
@@ -58,9 +58,9 @@ const quiz: Question[] = [
     prompt: "What does an Action represent?",
     options: [
       "A description of what happened (an event), not how to change state",
-      "A direct mutation of state",
-      "A view to render",
-      "A network request object",
+      "A direct in-place mutation of the state object, applied immediately before the reducer gets a chance to validate the change",
+      "A view struct to render, selected by the store from a registered view registry based on the current state type",
+      "A URLRequest-backed network request object that the store dispatches to the networking middleware for execution",
     ],
     answer: 0,
     explanation:
@@ -86,9 +86,9 @@ const quiz: Question[] = [
     prompt: "How does unidirectional data flow chiefly differ from typical MVVM?",
     options: [
       "UDF centralizes state and mutates only via actions→reducer; MVVM keeps per-screen state and lets view models mutate directly (often two-way binding)",
-      "MVVM has no state",
-      "UDF forbids SwiftUI",
-      "They are identical",
+      "MVVM carries zero application state — it is a pure presentation pattern that delegates all state ownership exclusively to the underlying model layer",
+      "UDF explicitly forbids SwiftUI integration because @State and @Binding directly violate the single-source-of-truth ownership contract",
+      "They are functionally identical in every meaningful way — both centralize state in one object and derive new state through pure transformation functions",
     ],
     answer: 0,
     difficulty: "senior",
@@ -102,9 +102,9 @@ const quiz: Question[] = [
     code: `// initialState + [action0, action1, ..., actionN] were logged`,
     options: [
       "Replay the logged actions through the pure reducers from the initial state — you get the identical state",
-      "You can't reproduce it without the original device",
-      "Re-run the network requests and hope",
-      "Restart the app and guess",
+      "Reproduction is impossible without the original device, because the exact memory addresses and scheduler decisions cannot be reconstructed from an action log alone",
+      "Re-run every network request that fired during that session and cross-reference the responses to reconstruct the approximate state as accurately as possible",
+      "Restart the app fresh and manually navigate through the same screens while estimating which user inputs occurred based on the timestamp log",
     ],
     answer: 0,
     difficulty: "senior",
@@ -117,9 +117,9 @@ const quiz: Question[] = [
     prompt: "What's the main cost of adopting strict unidirectional data flow?",
     options: [
       "Boilerplate (actions/reducers for everything) and a mindset shift — heavy for simple screens",
-      "It makes state unpredictable",
-      "It can't handle asynchronous work",
-      "It only works on the web",
+      "It makes state unpredictable by funneling all mutations through a single sequential queue that can block the main thread under load",
+      "The pattern fundamentally cannot handle asynchronous work because effects that complete later break the strictly synchronous reducer contract",
+      "It is a pattern that originated on the web and only works in JavaScript environments, with no viable implementation in Swift or Objective-C",
     ],
     answer: 0,
     difficulty: "senior",

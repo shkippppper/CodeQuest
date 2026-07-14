@@ -7,9 +7,9 @@ const quiz: Question[] = [
     prompt: "Which variable name follows good naming practice?",
     options: [
       "isEmailVerified: Bool",
-      "flag: Bool",
-      "d: Double",
-      "temp: [Item]",
+      "flag: Bool — a generic word that forces callers to read the implementation to understand its meaning",
+      "d: Double — a single-letter name that reveals nothing about the value's domain or purpose",
+      "temp: [Item] — a placeholder name that says the array is temporary but not what it actually holds",
     ],
     answer: 0,
     explanation:
@@ -27,9 +27,9 @@ const quiz: Question[] = [
 }`,
     options: [
       "The name is lying about what the function does — either rename it or remove the side effect",
-      "Nothing — side effects in query-shaped functions are normal in Swift",
-      "The function should be renamed to canBeEditedAndSaved",
-      "This is a compiler error waiting to happen",
+      "Nothing — side effects in query-shaped functions are idiomatic Swift and expected by callers at the call site",
+      "The function should be renamed to canBeEditedAndSaved to reflect both actions it performs",
+      "This is a compiler error waiting to happen because mutating methods must be marked mutating on value types",
     ],
     answer: 0,
     explanation:
@@ -63,9 +63,9 @@ if user.email.contains("@") {
 } else { return .failure(.invalidEmail) }`,
     options: [
       "Version A — add one more guard line at the top; the success path doesn't move",
-      "Version B — nested ifs make it clearer where the new check belongs",
-      "Both require the same amount of restructuring",
-      "Neither can be extended without a full rewrite",
+      "Version B — nested ifs make it clearer exactly which branch to extend without touching the success path",
+      "Both require the same amount of restructuring since each adds one branch regardless of style",
+      "Neither can be extended cleanly without a full rewrite into a validation pipeline or strategy pattern",
     ],
     answer: 0,
     explanation:
@@ -77,9 +77,9 @@ if user.email.contains("@") {
     prompt: "What's the actual test for whether a function is 'small enough,' per this lesson?",
     options: [
       "Whether it does one thing you could describe without the word 'and'",
-      "Whether it is under 5 lines long",
-      "Whether it has zero parameters",
-      "Whether it avoids using loops",
+      "Whether it is under 5 lines long, since longer functions necessarily mix concerns and should be split",
+      "Whether it has zero parameters, because parameters introduce coupling between the caller and callee",
+      "Whether it avoids using loops, which always signal that a function should delegate to a helper method",
     ],
     answer: 0,
     explanation:
@@ -121,9 +121,9 @@ if user.email.contains("@") {
 }`,
     options: [
       "The loop mixes 'what is being computed' (a total) with 'how one item's contribution is decided' (the doubling rule) in a single block instead of splitting them into named functions",
-      "The function uses a for loop instead of map/reduce, which is always wrong in Swift",
-      "The function is too short to be reviewed meaningfully",
-      "There is no issue — this is already minimal and clean",
+      "The function uses a for loop instead of map or reduce, which is always the wrong choice in Swift regardless of context or readability",
+      "The function is far too short and self-contained to ever warrant a senior review comment about mixed abstraction levels",
+      "There is no real issue at all — the ternary operator is purely a style preference, the logic is correct, and the function is already as minimal and focused as it could possibly be written",
     ],
     answer: 0,
     difficulty: "senior",

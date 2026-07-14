@@ -7,9 +7,9 @@ const quiz: Question[] = [
     prompt: "What is the fundamental shape difference between a plain async function and a Combine Publisher?",
     options: [
       "An async function returns exactly one value (or throws) once; a Publisher can emit zero or more values over time before completing",
-      "A Publisher can only ever emit one value, same as async/await",
-      "async functions can be cancelled but Publishers cannot",
-      "There is no real difference; they're interchangeable in every situation",
+      "A Publisher can only ever emit one value just like async/await, since the Combine framework always closes a stream immediately after the first emission",
+      "async functions support structured cancellation through the Task hierarchy, but Publishers have no cancellation API at all",
+      "There is no meaningful difference; they compile to the same SIL and are fully interchangeable in every situation",
     ],
     answer: 0,
     explanation:
@@ -21,9 +21,9 @@ const quiz: Question[] = [
     prompt: "Which framing is more accurate for this topic?",
     options: [
       "It's really Publisher vs AsyncSequence for streams — plain async/await covers the single-value case neither is needed for",
-      "Combine and async/await solve completely unrelated problems with no overlap",
-      "AsyncSequence replaces async/await entirely",
-      "Publisher and async/await are the same abstraction with different syntax",
+      "Combine and async/await solve completely different problems and there is no meaningful overlap or shared bridging surface between them",
+      "AsyncSequence is a superset that replaces async/await entirely, since every async function is just a sequence of one",
+      "Publisher and async/await are functionally the same abstraction compiled differently, sharing the same runtime model",
     ],
     answer: 0,
     explanation:
@@ -47,9 +47,9 @@ const quiz: Question[] = [
 }`,
     options: [
       "The loop exits by throwing the error carried in the .failure completion",
-      "The loop silently stops with no error",
-      "It's a compile error to use .values with a failable publisher",
-      "The loop retries automatically",
+      "The loop silently stops without propagating the error, identical to using try? around the entire loop body",
+      "It's a compile error to call .values on a publisher whose Failure is not Never, preventing unsafe bridging",
+      "The loop automatically retries the entire iteration from the top when it encounters a failure completion",
     ],
     answer: 0,
     explanation:
@@ -61,9 +61,9 @@ const quiz: Question[] = [
     prompt: "How does cancelling the surrounding Task affect a for await loop over publisher.values?",
     options: [
       "It cancels the underlying Combine subscription too, the same as calling .cancel() on its AnyCancellable would",
-      "It has no effect — the publisher keeps running independently",
-      "It only pauses the loop; the publisher buffers values until resumed",
-      "It causes a crash because Combine subscriptions can't be cancelled this way",
+      "It has no effect on the Combine subscription, which keeps running and delivering emitted values into an internal buffer indefinitely",
+      "It only pauses the loop; the publisher buffers all emitted values until the Task is resumed by the caller later",
+      "It causes a crash because the .values bridge holds a strong reference back to the enclosing Task and cannot be cancelled",
     ],
     answer: 0,
     difficulty: "senior",
@@ -87,9 +87,9 @@ const quiz: Question[] = [
 }`,
     options: [
       "Future runs eagerly at creation and caches one result for everyone; Deferred makes the async call happen fresh, per subscriber",
-      "Deferred is required syntactically to use Future at all",
-      "Deferred makes the publisher run synchronously instead of asynchronously",
-      "There is no reason; it could be removed with no behavior change",
+      "Deferred is syntactically required by the Swift compiler to wrap any publisher that closes over an async context inside a Task",
+      "Deferred makes the publisher execute synchronously on the calling thread instead of dispatching the async work asynchronously",
+      "There is no reason for Deferred here — a bare Future would produce identical behavior for every subscriber",
     ],
     answer: 0,
     explanation:
@@ -115,9 +115,9 @@ const quiz: Question[] = [
     prompt: "What's the recommended incremental migration strategy from Combine to async/await in a large codebase?",
     options: [
       "Convert single-value producers to async throws first; bridge genuine streams at call sites with .values; only rewrite a stream's producer once nothing downstream needs Combine-specific operators",
-      "Rewrite the entire codebase to async/await in one pass before shipping anything else",
-      "Leave all Combine code untouched forever since migration is never worth it",
-      "Delete all Publisher-returning functions immediately and let call sites fail to compile until fixed",
+      "Rewrite the entire codebase to async/await in one large PR so all Combine dependencies are removed in a single atomic change before the next release ships",
+      "Leave all existing Combine code permanently untouched since any incremental migration across module or layer boundaries always introduces hard-to-diagnose regressions into otherwise-stable production code",
+      "Delete all Publisher-returning functions up front immediately and then let every call site fail to compile until each consumer is individually located and manually rewritten",
     ],
     answer: 0,
     difficulty: "senior",

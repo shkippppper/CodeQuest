@@ -7,9 +7,9 @@ const quiz: Question[] = [
     prompt: "What is LLDB?",
     options: [
       "The debugger that pauses a running app at an exact line and lets you inspect/change state interactively",
-      "A linter for Swift",
-      "A build system replacement for xcodebuild",
-      "A unit testing framework",
+      "A static analysis linter for Swift that enforces code style rules and catches common bugs without ever running the program at all",
+      "A build system designed to replace xcodebuild with a faster incremental compilation pipeline and parallel target scheduling",
+      "A unit testing framework that integrates deeply with XCTest to provide richer assertion failure diagnostics and custom matchers",
     ],
     answer: 0,
     explanation:
@@ -45,9 +45,9 @@ const quiz: Question[] = [
     code: `(lldb) po price\n99.99\n(lldb) expr price = 50.0\n(lldb) continue`,
     options: [
       "50.0 — expr mutated the real variable in the running process",
-      "99.99 — expr can only read values, not change them",
-      "The app crashes because expr is read-only",
-      "Neither — the value resets when you resume",
+      "99.99 — because expr evaluates expressions in a sandboxed context and any assignments it makes are discarded on resume",
+      "The app crashes because LLDB's expr command is strictly read-only and raises a signal when an assignment is attempted",
+      "Neither value — the variable is reset to its original declared value automatically when the debugger resumes execution",
     ],
     answer: 0,
     explanation:
@@ -59,9 +59,9 @@ const quiz: Question[] = [
     prompt: "What is the relationship between `po` and `expr`?",
     options: [
       "po is shorthand for expr -O -- ; they share the same underlying evaluator",
-      "po only works on structs, expr only works on classes",
-      "po is a separate, unrelated debugger command",
-      "expr is deprecated in favor of po",
+      "po only works on struct values and calls their description property, while expr is reserved for class instances and raw expressions",
+      "po is a completely separate debugger command implemented in a different LLDB plugin with its own evaluation engine",
+      "expr has been deprecated since Xcode 14 in favor of po, which now handles both printing and arbitrary code execution",
     ],
     answer: 0,
     explanation:
@@ -111,9 +111,9 @@ const quiz: Question[] = [
     code: `// self.balance changes to an unexpected value somewhere, from an unknown thread`,
     options: [
       "A watchpoint — it stops the instant the memory changes, regardless of which thread or line wrote it",
-      "A symbolic breakpoint on the property's getter",
-      "A conditional breakpoint checking the thread name",
-      "Nothing in LLDB can detect this — you'd need to add logging everywhere",
+      "A symbolic breakpoint set on the property's synthesized getter, which fires on every read and lets you inspect the calling thread",
+      "A conditional breakpoint placed on the most likely write site with a thread-name expression filter to catch the background thread",
+      "Nothing in LLDB can detect a cross-thread memory corruption — you would need to add manual logging statements across all suspected write locations",
     ],
     answer: 0,
     difficulty: "senior",

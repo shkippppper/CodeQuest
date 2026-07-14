@@ -7,9 +7,9 @@ const quiz: Question[] = [
     prompt: "What is an IteratorProtocol conforming type responsible for?",
     options: [
       "Handing back one element per call to next(), returning nil once there's nothing left",
-      "Storing all elements in a contiguous array",
-      "Sorting elements before they're returned",
-      "Converting elements to a common base type",
+      "Storing all elements in a contiguous array so they can be accessed by index in O(1) time",
+      "Sorting elements before they are returned so callers always receive them in ascending order",
+      "Converting each element to a common base type so heterogeneous sequences have a uniform Element type",
     ],
     answer: 0,
     explanation:
@@ -57,9 +57,9 @@ print(it.next())`,
     prompt: "What does conforming a type to Sequence add on top of IteratorProtocol?",
     options: [
       "A makeIterator() method, which is what lets the type be used directly in a for-in loop and unlocks map/filter/reduce for free",
-      "Automatic sorting of all elements",
-      "Thread safety for concurrent iteration",
-      "The ability to store elements out of order",
+      "Automatic stable sorting of all elements before the first for-in call so consumers always receive them in their natural comparison order",
+      "Thread-safe concurrent iteration that allows multiple threads to call next() simultaneously on the same iterator without introducing data races or requiring external locking",
+      "The ability to store elements out of order internally and retrieve them in any insertion-independent sequence of positions the caller specifies at runtime",
     ],
     answer: 0,
     explanation:
@@ -81,9 +81,9 @@ for n in Fibonacci() {
 }`,
     options: [
       "It loops forever — next() always returns a value, so there's no natural stopping point",
-      "It prints 0, 1, 1, 2, 3, 5 and stops automatically",
-      "It's a compile error because Sequence requires a finite count",
-      "It prints only the first element, 0",
+      "It prints 0, 1, 1, 2, 3, 5 and stops automatically when the values exceed Int.max",
+      "It is a compile error because Sequence requires a finite, non-nil-terminating count property",
+      "It prints only the first element, 0, because for-in calls next() exactly once on a self-conforming iterator",
     ],
     answer: 0,
     explanation:
@@ -100,9 +100,9 @@ for n in Fibonacci() {
     .first!`,
     options: [
       "map 1, filter 2, map 2, filter 4, map 3, filter 6 — stops as soon as first finds a match",
-      "map 1, map 2, map 3, map 4, map 5, then all five filter calls",
-      "filter runs before map for every element",
-      "Nothing prints because .lazy suppresses side effects",
+      "map 1, map 2, map 3, map 4, map 5, then all five filter calls happen in a second pass",
+      "filter runs before map for every element because filter is declared after map in the chain",
+      "Nothing prints because .lazy suppresses side effects inside closures passed to map and filter",
     ],
     answer: 0,
     explanation:
@@ -128,9 +128,9 @@ for n in Fibonacci() {
     prompt: "Why can iterating the same Sequence value a second time sometimes fail to restart from the beginning?",
     options: [
       "Sequence is a single-pass abstraction by convention; some iterators (e.g. reading a file) carry state that isn't reset, so makeIterator() must explicitly restart it if a fresh pass is required",
-      "Swift automatically caches the first pass's results and replays them",
-      "Sequence types are always classes, so mutation persists across calls",
-      "for-in silently converts every Sequence into an Array on first use",
+      "Swift automatically caches the full result of the first pass and transparently replays those cached elements on every subsequent for-in call made to the same sequence value",
+      "Sequence types are always reference-semantic classes under the hood, so any mutation made to the iterator during the first pass persists and corrupts the starting position for subsequent passes",
+      "for-in silently converts every Sequence into a materialized Array before starting the first iteration, which fully consumes the original source sequence and makes a second pass over it impossible",
     ],
     answer: 0,
     difficulty: "senior",

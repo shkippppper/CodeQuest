@@ -7,9 +7,9 @@ const quiz: Question[] = [
     prompt: "What is a Combine scheduler?",
     options: [
       "An object conforming to the Scheduler protocol that runs work at a given time on a given thread or queue",
-      "A type that guarantees a publisher never fails",
-      "A background timer that fires operators automatically",
-      "A replacement for AnyCancellable",
+      "A type that guarantees a publisher never fails by converting all upstream errors to a default fallback value",
+      "A background timer that fires time-based operators automatically without any explicit scheduler configuration",
+      "A replacement for AnyCancellable that manages the subscription lifetime with automatic thread-safety guarantees",
     ],
     answer: 0,
     explanation:
@@ -21,9 +21,9 @@ const quiz: Question[] = [
     prompt: "What does `receive(on:)` control?",
     options: [
       "Where everything downstream of it — later operators and the subscriber — receives values",
-      "Where the publisher's own upstream work happens, regardless of position",
-      "Whether the publisher can fail",
-      "How many values the subscriber requests",
+      "Where the publisher's upstream source work happens, regardless of where in the chain it is placed",
+      "Whether the publisher can fail, acting as a thread-safety gate that validates work on safe queues",
+      "How many values the subscriber requests at once, effectively setting the demand batch size per hop",
     ],
     answer: 0,
     explanation:
@@ -35,9 +35,9 @@ const quiz: Question[] = [
     prompt: "What does `subscribe(on:)` control, and how does its position in the chain matter?",
     options: [
       "Where the subscription and upstream work happen — and position doesn't matter, it always affects the source side",
-      "Where downstream operators run — and only what's after it in the chain",
-      "It has no effect on threading, only on cancellation",
-      "It moves the subscriber's closure to the given queue, same as receive(on:)",
+      "Where all downstream operators and the subscriber run — and it only takes effect for operators that appear after it in the chain",
+      "It has absolutely no effect on threading at all and only controls which scheduler object handles automatic subscription cancellation cleanup",
+      "It moves the subscriber\\'s receive closure to the specified queue, producing behavior that is fully identical to placing receive(on:) at the end",
     ],
     answer: 0,
     explanation:
@@ -110,9 +110,9 @@ const quiz: Question[] = [
     prompt: "Why do naive tests of `debounce`/`delay` pipelines tend to be slow or flaky?",
     options: [
       "They depend on a real scheduler's wall-clock time, so the test either sleeps for real or races the async work",
-      "Combine operators can't be tested at all",
-      "debounce and delay always run synchronously in tests",
-      "XCTest doesn't support asynchronous expectations",
+      "Combine operators can't be tested in isolation because they require a live subscriber attached to the pipeline",
+      "debounce and delay always run synchronously during unit tests because XCTest overrides the default scheduler",
+      "XCTest doesn't support asynchronous expectations, so time-based operators simply can't be verified in any test",
     ],
     answer: 0,
     difficulty: "senior",

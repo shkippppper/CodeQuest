@@ -7,9 +7,9 @@ const quiz: Question[] = [
     prompt: "What is a race condition?",
     options: [
       "The final result of concurrent code depends on unpredictable thread timing instead of program logic",
-      "A crash caused by calling an unavailable API",
-      "A compiler error from writing to a `let` constant",
-      "A deliberate performance benchmark between two algorithms",
+      "A crash caused by calling an API that is unavailable on the current OS version or device type",
+      "A compiler error produced when the code attempts to write to a `let` constant that was already initialized",
+      "A deliberate performance benchmark comparing two competing algorithms to find the faster implementation",
     ],
     answer: 0,
     explanation:
@@ -22,9 +22,9 @@ const quiz: Question[] = [
     code: `var counter = 0\n\n// Thread A: counter += 1\n// Thread B: counter += 1 (same instant)`,
     options: [
       "It could be 1 or 2 — the read-modify-write isn't atomic, so an update can be lost",
-      "Always 2 — Swift guarantees atomic Int updates",
-      "Always 1 — the second write is blocked automatically",
-      "A crash — Swift traps on concurrent writes",
+      "Always exactly 2 — the Swift runtime guarantees that integer increment operations are atomic at the hardware level",
+      "Always exactly 1 — the second thread detects the in-progress write and blocks until it can safely apply its own",
+      "A guaranteed crash — Swift inserts a runtime trap whenever two threads touch the same mutable variable simultaneously",
     ],
     answer: 0,
     explanation:
@@ -45,9 +45,9 @@ const quiz: Question[] = [
     prompt: "What's the key structural difference between a mutex and a semaphore?",
     options: [
       "A mutex admits exactly one thread and is typically owner-locked; a semaphore is a counter that can admit N threads and has no owner",
-      "A semaphore always admits exactly one thread; a mutex can admit N",
-      "They are identical — 'semaphore' is just another name for a mutex",
-      "A mutex works across processes; a semaphore only works within one thread",
+      "A semaphore always admits exactly one thread at a time, while a mutex can be configured to admit N threads concurrently",
+      "They are functionally identical under the hood — 'semaphore' is simply the POSIX name for the same mechanism as a mutex",
+      "A mutex is process-wide and works across different processes sharing memory, while a semaphore only synchronizes threads inside a single process",
     ],
     answer: 0,
     explanation:
@@ -82,9 +82,9 @@ const quiz: Question[] = [
     prompt: "Two functions each lock two shared locks in a different order, causing an occasional deadlock. What's the standard fix?",
     options: [
       "Always acquire the locks in the same global order everywhere they're used together",
-      "Add a `sleep()` before every `lock()` call",
-      "Switch from `NSLock` to `DispatchSemaphore` — semaphores can't deadlock",
-      "Retry the whole operation on a background thread until it succeeds",
+      "Add a short `sleep()` call before every `lock()` so threads stagger their attempts and avoid contention",
+      "Switch from `NSLock` to `DispatchSemaphore`, because semaphores use a different internal queue and are architecturally immune to deadlock",
+      "Retry the whole operation on a fresh background thread until it succeeds, relying on scheduling variance to break the cycle",
     ],
     answer: 0,
     difficulty: "senior",
@@ -98,9 +98,9 @@ const quiz: Question[] = [
     code: `func consume() -> Int {\n    filledSlots.wait()\n    mutex.wait()\n    let item = buffer.removeFirst()\n    mutex.signal()\n    emptySlots.signal()\n    return item\n}`,
     options: [
       "It blocks on `filledSlots.wait()` until a producer calls `filledSlots.signal()`",
-      "It crashes calling `removeFirst()` on an empty array",
-      "It spins in a busy-wait loop burning CPU",
-      "It blocks on `mutex.wait()` forever because the buffer is empty",
+      "It crashes with an index-out-of-range error when `removeFirst()` is called on an empty array before any guard runs",
+      "It spins in a tight busy-wait loop that burns CPU while repeatedly checking whether the buffer has items",
+      "It blocks on `mutex.wait()` and holds the mutex indefinitely, preventing any producer from ever acquiring it",
     ],
     answer: 0,
     difficulty: "senior",

@@ -7,9 +7,9 @@ const quiz: Question[] = [
     prompt: "What is a factory method's defining job?",
     options: [
       "Deciding which concrete type to construct and returning it through a protocol, so callers depend on the protocol",
-      "Compressing multiple objects into one",
-      "Guaranteeing only one instance of a type ever exists",
-      "Replacing all initializers in an app",
+      "Compressing multiple objects into one combined object that merges their interfaces and forwards calls to each internal component as appropriate",
+      "Guaranteeing only one instance of a type ever exists by checking a static property before allocating and returning the existing instance if found",
+      "Replacing all initializers in an app so no type can be constructed directly, forcing every creation to pass through a centrally managed allocation registry",
     ],
     answer: 0,
     explanation:
@@ -22,9 +22,9 @@ const quiz: Question[] = [
     code: `func makeProcessor(for method: String) -> StripeProcessor {\n    return StripeProcessor()\n}`,
     options: [
       "The return type is the concrete `StripeProcessor`, not a protocol, so callers can still see and depend on the concrete type",
-      "Swift doesn't allow returning structs from functions",
-      "The function is missing a `switch` statement",
-      "It needs to be marked `static`",
+      "Swift doesn't allow returning structs from functions — only classes can be returned from a factory because protocols require a reference type to dispatch dynamically",
+      "The function is missing a `switch` statement, which is required by the factory pattern so the compiler can verify every possible case is handled and returns a value",
+      "It needs to be marked `static` so callers can invoke it without instantiating the enclosing type, which is a prerequisite for factory functions in Swift",
     ],
     answer: 0,
     explanation:
@@ -45,9 +45,9 @@ const quiz: Question[] = [
     prompt: "What can a static factory method do that a plain `init` cannot?",
     options: [
       "Return an existing cached or shared instance instead of always allocating a new one",
-      "Take zero arguments",
-      "Be called without importing the module",
-      "Run faster than any initializer at compile time",
+      "Take zero arguments, since Swift requires all initializers to have at least a type label but a static factory can be a completely argument-free call",
+      "Be called without importing the module, because static factory functions are automatically re-exported at the top-level namespace unlike designated initializers",
+      "Run faster than any initializer at compile time, because the compiler inlines static factory calls and eliminates the allocation overhead that init always incurs",
     ],
     answer: 0,
     explanation:
@@ -97,9 +97,9 @@ const quiz: Question[] = [
     prompt: "A teammate's factory method has grown to contain the app's core discount-calculation logic inside its `switch` statement, alongside deciding which `PaymentProcessor` to build. What's the concern?",
     options: [
       "The factory is doing more than deciding which type to construct — business logic like discount calculation belongs in the objects it builds, not the factory itself",
-      "Nothing — factories are meant to hold all app logic",
-      "Factories can only contain a single `case`",
-      "The factory should be renamed to a builder",
+      "Nothing — factories are explicitly meant to hold all the app's core domain logic so it is centralized in one place and the individual objects stay simple data containers",
+      "Factories can only contain a single `case` in their switch statement; adding extra cases for different business rules requires splitting into multiple separate factory types",
+      "The factory should be renamed to a builder, since a type that mixes construction decisions with configuration logic meets the formal definition of the Builder pattern instead",
     ],
     answer: 0,
     difficulty: "senior",

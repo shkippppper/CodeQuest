@@ -14,9 +14,9 @@ const quiz: Question[] = [
 }`,
     options: [
       "It fails — the synchronous test method returns and asserts before the completion handler has run",
-      "It passes reliably every time",
-      "It throws a compile error because `fetchUser` is async",
-      "It hangs forever waiting for the callback",
+      "It passes reliably every time, because XCTest's run loop keeps the process alive until all pending callbacks complete",
+      "It throws a compile error because a function returning void cannot accept a trailing completion-handler closure that takes a User argument",
+      "It hangs indefinitely waiting for the callback because the run loop spins without ever scheduling the completion handler",
     ],
     answer: 0,
     explanation:
@@ -60,9 +60,9 @@ const quiz: Question[] = [
 // then asserts counter.current == 100`,
     options: [
       "It would become flaky, occasionally reporting a count below 100 due to a data race on unsynchronized state",
-      "It would fail to compile",
-      "It would still always pass, since Swift protects all class properties automatically",
-      "It would deadlock every run",
+      "It would fail to compile, because the compiler requires actor isolation to be declared on any type receiving concurrent await calls",
+      "It would still always pass, since Swift's ARC automatically serializes access to class-stored properties when they are mutated concurrently",
+      "It would deadlock every single run because multiple tasks awaiting the same class method acquire an implicit lock that never releases",
     ],
     answer: 0,
     explanation:
@@ -88,9 +88,9 @@ const quiz: Question[] = [
     prompt: "In the context of testing async code, what does 'determinism' mean?",
     options: [
       "The test produces the same result every run, regardless of machine speed or scheduling",
-      "The test always completes in under one second",
-      "The code under test never uses concurrency",
-      "The test uses only synchronous XCTest APIs",
+      "The test always finishes in under one second, since only fast tests with sub-second run times qualify as deterministic",
+      "The code under test is written without any async or concurrent constructs, so timing can never affect its output",
+      "The test exclusively uses synchronous XCTest APIs and avoids all async/await keywords in both the test body and the code under test",
     ],
     answer: 0,
     explanation:
@@ -107,9 +107,9 @@ const quiz: Question[] = [
 }`,
     options: [
       "`uploadPhoto()` fires an un-awaited detached Task; the test can finish and assert before that task — and any assertion failure inside it — has run",
-      "XCTAssertTrue can't be used inside async tests",
-      "sut.isComplete is a computed property and can't be asserted on",
-      "Task { } always runs synchronously so this can't be the cause",
+      "XCTAssertTrue cannot be used inside an async test function and always produces a warning that is silently treated as a pass instead of a failure",
+      "sut.isComplete is a computed property, and XCTAssertTrue is not permitted to assert on computed properties — only stored properties are valid targets",
+      "Task { } always runs synchronously on the calling thread before returning, so isComplete is guaranteed to be set before XCTAssertTrue executes",
     ],
     answer: 0,
     difficulty: "senior",

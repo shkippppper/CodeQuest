@@ -7,9 +7,9 @@ const quiz: Question[] = [
     prompt: "What does CI/CD provide that a single developer's local Fastlane setup doesn't?",
     options: [
       "A server that runs the same build/test/sign/upload steps identically on every change, independent of any one machine",
-      "Faster Swift compilation than a local Mac",
-      "Automatic bug fixing",
-      "A replacement for writing tests",
+      "Faster Swift compilation, because dedicated CI servers always have more CPU cores and RAM than any developer\\'s Mac",
+      "Automatic bug detection and auto-fixing by static analysis, since the server continuously monitors every code pattern",
+      "A complete replacement for writing tests, because the pipeline replays cached results from successful previous runs",
     ],
     answer: 0,
     explanation:
@@ -21,9 +21,9 @@ const quiz: Question[] = [
     prompt: "Why does linting typically run before the build stage in an iOS pipeline?",
     options: [
       "Linting is cheap and fast, so it fails fast before spending time on a slower build",
-      "SwiftLint requires a successful build to run",
-      "Order doesn't matter, it's arbitrary",
-      "Apple requires linting before compilation",
+      "SwiftLint requires a successful build to analyze symbol types and inferred return values",
+      "Order doesn't matter — the pipeline scheduler picks the fastest arrangement automatically",
+      "Apple requires linting before compilation in the App Store submission guidelines",
     ],
     answer: 0,
     explanation:
@@ -52,9 +52,9 @@ const quiz: Question[] = [
     steps: [...]`,
     options: [
       "No — needs: test means release only runs if test succeeds",
-      "Yes, jobs run independently unless explicitly blocked",
-      "Only if release also has an on: pull_request trigger",
-      "It depends on which job is listed first in the file",
+      "Yes, jobs run independently unless explicitly blocked with an if: condition expression",
+      "Only if release also has an on: pull_request trigger or a matching workflow_run event",
+      "It depends on which job is listed first in the file, since YAML order controls precedence",
     ],
     answer: 0,
     explanation:
@@ -66,9 +66,9 @@ const quiz: Question[] = [
     prompt: "Why must an iOS CI pipeline use a macOS runner (e.g. `runs-on: macos-14`) rather than a Linux one?",
     options: [
       "xcodebuild and Apple's code signing tools only exist on macOS",
-      "GitHub Actions doesn't support Linux for any project",
-      "macOS runners are always faster",
-      "Fastlane only installs on macOS",
+      "GitHub Actions doesn't support Linux runners for any Apple-platform project type at all",
+      "macOS runners are always faster because Apple Silicon is used exclusively for CI fleets",
+      "Fastlane only installs correctly on macOS due to its gem dependencies on native extensions",
     ],
     answer: 0,
     explanation:
@@ -96,9 +96,9 @@ const quiz: Question[] = [
 upload_to_testflight`,
     options: [
       "The headless runner has no way to answer the 2FA prompt, so the upload step hangs or fails",
-      "Nothing — Fastlane bypasses 2FA automatically",
-      "It works but is rate-limited to one upload per day",
-      "2FA only applies to App Store submissions, not TestFlight",
+      "Nothing — Fastlane bypasses 2FA automatically by caching the session token from the first login",
+      "It works but is rate-limited to one upload per day because Apple throttles unattended sessions",
+      "2FA only applies to App Store submissions and not to TestFlight distributions at all",
     ],
     answer: 0,
     difficulty: "senior",
@@ -111,9 +111,9 @@ upload_to_testflight`,
     prompt: "In `upload_to_app_store(submit_for_review: true, automatic_release: false, ...)`, what does `automatic_release: false` accomplish?",
     options: [
       "Submission is automated, but a human still manually triggers the final release after App Review approval",
-      "It prevents the build from ever being submitted for review",
-      "It disables all future automation for this app",
-      "It automatically rejects the build",
+      "It prevents the build from ever being submitted for App Review, keeping it permanently in a ready-to-submit draft state",
+      "It permanently disables all CI/CD automation for this app in App Store Connect until a developer manually re-enables it",
+      "It causes App Store Connect to automatically reject the build after review and notify the developer to resubmit with corrections",
     ],
     answer: 0,
     difficulty: "senior",

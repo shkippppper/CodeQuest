@@ -7,9 +7,9 @@ const quiz: Question[] = [
     prompt: "What does a UIGestureRecognizer do for you?",
     options: [
       "Analyzes the raw touch stream and fires an action when a named gesture (tap, pan, pinch…) is detected",
-      "Renders the view",
-      "Manages Auto Layout",
-      "Handles networking",
+      "Renders the attached view by overriding the draw(_:) method and painting the gesture's visual feedback directly into the layer",
+      "Manages the Auto Layout constraints of its attached view, updating them in response to touch events to animate position changes",
+      "Handles background networking triggered by multi-finger gestures, such as prefetching content when a pinch-to-zoom is detected",
     ],
     answer: 0,
     explanation:
@@ -21,9 +21,9 @@ const quiz: Question[] = [
     prompt: "What's required to make `view.addGestureRecognizer(tap)` work?",
     options: [
       "The view must have `isUserInteractionEnabled = true`",
-      "The view must be a UIButton",
-      "The gesture must be added in viewDidAppear",
-      "The view must be first responder",
+      "The view must be a UIButton or a UIControl subclass, since gesture recognizers only attach to control types",
+      "The gesture recognizer must be added inside viewDidAppear, because the view hierarchy is not ready to accept recognizers until it is fully visible on screen",
+      "The view must be the current first responder in the responder chain before it can receive and process any gesture recognizer events",
     ],
     answer: 0,
     explanation:
@@ -36,9 +36,9 @@ const quiz: Question[] = [
     code: `@objc func handlePan(_ gr: UIPanGestureRecognizer) { /* ... */ }`,
     options: [
       "Repeatedly — it's continuous; check gr.state (.began/.changed/.ended)",
-      "Exactly once when the drag ends",
-      "Once per touch, not per movement",
-      "Never — pan isn't a recognizer",
+      "Exactly once when the drag ends and the finger lifts, delivering the final translation value at that point",
+      "Exactly once per finger touch, when the touch first makes contact with the screen, not as the finger moves",
+      "Never — UIPanGestureRecognizer is not a real recognizer type; panning must be implemented via touchesMoved directly",
     ],
     answer: 0,
     explanation:
@@ -88,9 +88,9 @@ const quiz: Question[] = [
     code: `// pannable container view contains a UIButton`,
     options: [
       "Use the delegate (gestureRecognizer(_:shouldReceive:) / shouldBegin) or require(toFail:) so the pan doesn't steal the button's touch",
-      "Remove the button",
-      "Disable Auto Layout",
-      "Make the button first responder",
+      "Remove the UIButton from the view hierarchy entirely and replicate its appearance and tap behavior using a UILabel with its own tap recognizer",
+      "Disable Auto Layout on the container view, since constraint-based layout interferes with the hit-testing used by both the pan and the button",
+      "Make the button the current first responder on viewDidAppear, which gives it priority over the pan gesture for all touch events in the container",
     ],
     answer: 0,
     difficulty: "senior",
@@ -103,9 +103,9 @@ const quiz: Question[] = [
     prompt: "When writing a custom UIGestureRecognizer subclass, what do you do if the touches don't match your gesture?",
     options: [
       "Set `state = .failed` so other recognizers can proceed",
-      "Return nil from touchesBegan",
-      "Call removeGestureRecognizer on yourself",
-      "Throw an error",
+      "Return nil from touchesBegan to signal to UIKit that the recognizer is declining to handle the current touch sequence",
+      "Call removeGestureRecognizer on yourself inside touchesMoved to detach the recognizer from the view when the gesture cannot be confirmed",
+      "Throw a Swift error from touchesEnded to propagate the failure up the responder chain and let the next object handle it instead",
     ],
     answer: 0,
     difficulty: "senior",
@@ -118,9 +118,9 @@ const quiz: Question[] = [
     prompt: "How do gesture recognizers interact with a view's own `touchesBegan`?",
     options: [
       "Recognizers can intercept/delay touches before (or instead of) they reach the view's touchesBegan",
-      "They never affect touchesBegan",
-      "They only run after touchesEnded",
-      "They replace the responder chain entirely",
+      "Gesture recognizers never affect the delivery of touches to a view's touchesBegan, touchesMoved, or touchesEnded methods in any way",
+      "Gesture recognizers only activate after touchesEnded fires, so they never compete with a view's in-progress touch handling",
+      "Adding a gesture recognizer to a view replaces the responder chain entirely, so the view no longer participates in next-responder lookup for unhandled events",
     ],
     answer: 0,
     difficulty: "senior",

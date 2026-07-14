@@ -7,9 +7,9 @@ const quiz: Question[] = [
     prompt: "What does conforming to `UIViewRepresentable` let you do?",
     options: [
       "Wrap a UIKit `UIView` so it can be used as a SwiftUI view",
-      "Convert a SwiftUI view into a UIView permanently",
-      "Run SwiftUI on the web",
-      "Replace @State with UIKit state",
+      "Permanently convert a SwiftUI view into a UIView so it can be placed in a UIKit hierarchy",
+      "Enable SwiftUI rendering in a WKWebView-hosted web context outside native iOS",
+      "Replace @State and @Binding with UIKit-style target-action state management",
     ],
     answer: 0,
     explanation:
@@ -21,9 +21,9 @@ const quiz: Question[] = [
     prompt: "What's the difference between `makeUIView` and `updateUIView`?",
     options: [
       "`makeUIView` creates the view once; `updateUIView` runs whenever SwiftUI state changes, to sync it into UIKit",
-      "`makeUIView` runs every frame; `updateUIView` runs once",
-      "They are called in random order",
-      "Only one of them is required",
+      "`makeUIView` re-runs on every single display frame, completely rebuilding the UIKit view object from scratch each time",
+      "SwiftUI calls them in a scheduler-determined unspecified order that may vary across OS versions and device loads",
+      "Only `makeUIView` is required by the protocol; `updateUIView` is optional and can be safely omitted from the conformance",
     ],
     answer: 0,
     explanation:
@@ -35,9 +35,9 @@ const quiz: Question[] = [
     prompt: "Why do you need a Coordinator in a Representable?",
     options: [
       "UIKit communicates via delegate/target-action objects, but the Representable is a value type — the Coordinator (a class) acts as the delegate and forwards events back to SwiftUI",
-      "To speed up rendering",
-      "To store the UIView",
-      "To replace @Binding",
+      "To offload all layout measurement work to a dedicated background thread and significantly improve rendering performance for complex UIKit views",
+      "To maintain a persistent strong reference to the underlying UIView instance across each of the many repeated Representable struct re-creations SwiftUI performs",
+      "To completely replace the entire @Binding and closure system with a UIKit-style notification-center-based callback mechanism that handles all bidirectional, two-way communication between the two frameworks",
     ],
     answer: 0,
     explanation:
@@ -58,9 +58,9 @@ const quiz: Question[] = [
     prompt: "How does a UIKit event (e.g. an image was picked) get back into SwiftUI's state?",
     options: [
       "The Coordinator (delegate) writes to a `@Binding` or calls a closure, updating the SwiftUI source of truth",
-      "SwiftUI polls the UIView every frame",
-      "Through a global variable",
-      "It can't — data only flows down",
+      "SwiftUI automatically polls the UIView's observable properties on every display frame and copies any changes inward",
+      "Through a process-wide shared global variable that both the UIKit view and the SwiftUI rendering layer observe via KVO",
+      "It fundamentally cannot be done — data is strictly one-directional in Representable and only flows from SwiftUI down into UIKit",
     ],
     answer: 0,
     explanation:
@@ -90,9 +90,9 @@ const quiz: Question[] = [
 }`,
     options: [
       "updateUIView runs repeatedly, so a new view is built each time (wasteful/broken) — creation belongs in makeUIView",
-      "Nothing — this is the correct place",
-      "It won't compile",
-      "It permanently caches the page",
+      "Absolutely nothing — `updateUIView` is in fact the officially recommended location for all UIKit object creation and full configuration",
+      "The compiler rejects it because WKWebView cannot legally be instantiated inside a non-escaping closure parameter context",
+      "It permanently caches the very first URL page that was loaded and silently ignores every subsequent URL subsequently passed to `load`",
     ],
     answer: 0,
     difficulty: "senior",
@@ -105,9 +105,9 @@ const quiz: Question[] = [
     prompt: "How does the Representable get its Coordinator to set as the UIKit view's delegate?",
     options: [
       "SwiftUI creates it via `makeCoordinator()` and provides it as `context.coordinator` inside make/update",
-      "You instantiate it globally",
-      "It's injected via @Environment automatically",
-      "UIKit creates it for you",
+      "You instantiate it as a global singleton shared across all Representable instances in the app",
+      "It is injected automatically via @Environment when you declare the Coordinator type on the conformance",
+      "UIKit allocates and manages it internally, so you never interact with it outside the delegate protocol",
     ],
     answer: 0,
     difficulty: "senior",
@@ -120,9 +120,9 @@ const quiz: Question[] = [
     prompt: "A UIKit app wants to add one new screen written in SwiftUI. What's the standard approach?",
     options: [
       "Build the screen in SwiftUI and push a `UIHostingController(rootView:)` from the existing UIKit flow",
-      "Rewrite the entire app in SwiftUI first",
-      "Use UIViewRepresentable to wrap the SwiftUI view",
-      "It's impossible to mix them",
+      "Fully rewrite the entire app in SwiftUI first and then incrementally restore any missing UIKit screens afterwards",
+      "Use UIViewRepresentable to wrap the new SwiftUI screen inside an existing UIView subclass in the UIKit hierarchy",
+      "It is technically impossible to render SwiftUI and UIKit views within the same application process at the same time",
     ],
     answer: 0,
     difficulty: "senior",

@@ -7,9 +7,9 @@ const quiz: Question[] = [
     prompt: "Why model navigation destinations as a type-safe enum rather than string identifiers?",
     options: [
       "The compiler enforces handling every destination and passing the right data; routes become values you can pass, test, and serialize",
-      "Enums render faster",
-      "Strings can't be used in Swift",
-      "It avoids using NavigationStack",
+      "Enum-based routing renders destination views measurably faster because the compiler resolves dispatch statically rather than hashing a string at runtime",
+      "Strings cannot be used as navigation identifiers in Swift's NavigationStack because the String type is not Hashable by default",
+      "It avoids using NavigationStack entirely, which is deprecated in favor of the newer NavigationPath and navigation value APIs",
     ],
     answer: 0,
     explanation:
@@ -21,9 +21,9 @@ const quiz: Question[] = [
     prompt: "What's a downside of fully centralized routing (one router knows every screen)?",
     options: [
       "The central router can become a bottleneck / God object",
-      "Deep linking becomes impossible",
-      "It can't be tested",
-      "Features become too independent",
+      "Deep linking becomes impossible because there's no feature-local handler to parse incoming URLs",
+      "It can't be tested without spinning up the full router and all registered destinations together",
+      "Features become too independent, making it hard to enforce a consistent navigation style across the app",
     ],
     answer: 0,
     explanation:
@@ -35,9 +35,9 @@ const quiz: Question[] = [
     prompt: "What's the recommended first step when handling a deep link URL?",
     options: [
       "Parse the URL/payload into a typed Route in one place, then resolve and apply it",
-      "String-match the URL wherever navigation happens",
-      "Ignore it unless the app is already running",
-      "Immediately present an alert",
+      "String-match the URL path at each navigation call site, so every screen handles its own incoming links independently",
+      "Ignore the deep link unless the app is already running in the foreground and the relevant screen is visible",
+      "Immediately present an alert asking the user to confirm they want to navigate to the linked destination",
     ],
     answer: 0,
     explanation:
@@ -58,9 +58,9 @@ const quiz: Question[] = [
     prompt: "How do value-based Codable routes help navigation state restoration?",
     options: [
       "You can persist the route path and rebuild the exact stack on relaunch by decoding it",
-      "They prevent the app from being terminated",
-      "They disable deep links",
-      "They make navigation synchronous",
+      "They prevent the app from being terminated by the OS because the navigation state is checkpointed to disk automatically",
+      "They disable deep links by replacing URL-based routing with serialized route values the OS can't intercept",
+      "They make every navigation transition synchronous, ensuring the UI is fully rendered before the next push occurs",
     ],
     answer: 0,
     explanation:
@@ -87,9 +87,9 @@ const quiz: Question[] = [
     code: `// App is not running; user taps https://myapp.com/article/swift-6`,
     options: [
       "It must build the whole target stack from scratch (e.g. Tab → List → Detail) once the app finishes launching, not just push one screen",
-      "Nothing — cold and warm launches are identical",
-      "It should ignore the link on cold launch",
-      "It must reinstall the app",
+      "Nothing special — cold and warm launches are handled identically because UIKit automatically queues the link and delivers it once the root window is ready",
+      "It should silently drop the link on cold launch and only apply deep link navigation when the app is already fully running in the background",
+      "It must silently reinstall itself using the embedded update URL that Apple encodes into every universal link payload for cold-launch scenarios",
     ],
     answer: 0,
     difficulty: "senior",
@@ -102,9 +102,9 @@ const quiz: Question[] = [
     prompt: "What extra capability does making your Route type `Codable` (not just `Hashable`) unlock?",
     options: [
       "Persisting and restoring the navigation stack across app termination",
-      "Faster navigation animations",
-      "Automatic deep-link registration with the OS",
-      "Compile-time exhaustiveness",
+      "Faster navigation animations, because the encoder can pre-compute the transition before the view renders",
+      "Automatic deep-link registration with the OS, so URLs are matched to routes without manual URL scheme setup",
+      "Compile-time exhaustiveness over every destination, since Codable conformance requires handling all cases",
     ],
     answer: 0,
     difficulty: "senior",
@@ -117,9 +117,9 @@ const quiz: Question[] = [
     prompt: "In a modular app, how do you route to another feature without coupling modules?",
     options: [
       "Define route/handler abstractions in a shared module; features register/resolve through them, wired at the app level",
-      "Import every feature module into every other",
-      "Use a global mutable dictionary of view controllers",
-      "Hard-code destinations in each feature",
+      "Import every feature module into every other feature module that needs to navigate to it, accepting the coupling as a necessary cost",
+      "Use a global mutable dictionary of view controllers keyed by string route names, updated at runtime as features initialize",
+      "Hard-code destination types in each feature module by referencing the other feature's public view types directly",
     ],
     answer: 0,
     difficulty: "senior",

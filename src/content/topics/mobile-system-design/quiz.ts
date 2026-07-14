@@ -7,9 +7,9 @@ const quiz: Question[] = [
     prompt: "An interviewer says \"design a photo feed.\" What should your first move be?",
     options: [
       "Ask clarifying questions to scope the problem before designing anything",
-      "Immediately draw the component diagram",
-      "Immediately write the API contract",
-      "Ask what programming language to use",
+      "Immediately draw the component diagram to show the interviewer you know the standard layered architecture before they can redirect you with additional constraints",
+      "Immediately write the API contract so the interviewer can see a concrete request and response shape before the overall architecture has been agreed upon",
+      "Ask what programming language to use, because framework choice determines which architectural patterns are available and must be locked in first",
     ],
     answer: 0,
     explanation:
@@ -21,9 +21,9 @@ const quiz: Question[] = [
     prompt: "Which pair correctly separates a functional requirement from a non-functional one?",
     options: [
       "Functional: \"show a grid of photos\"; Non-functional: \"scrolling stays smooth with no dropped frames\"",
-      "Functional: \"scrolling stays smooth\"; Non-functional: \"show a grid of photos\"",
-      "Both are functional requirements",
-      "Both are non-functional requirements",
+      "Functional: \"scrolling stays smooth\"; Non-functional: \"show a grid of photos\" — because photo display is an infrastructure concern and scroll performance is an observable product feature",
+      "Both are functional requirements, because the product manager specified both of them in the same ticket and any specified behavior is by definition functional",
+      "Both are non-functional requirements, because visual layout and frame rate are both aspects of perceived quality rather than discrete user-visible capabilities",
     ],
     answer: 0,
     explanation:
@@ -37,9 +37,9 @@ const quiz: Question[] = [
 // server always returns the "current" items 21-40`,
     options: [
       "An item shifts into page 2 that the client already showed on page 1, so it appears to repeat (or one gets skipped)",
-      "Nothing — page numbers are always safe",
-      "The app crashes",
-      "The server silently caches the wrong page forever",
+      "Nothing — page numbers are always safe because the server recomputes each page from the current live list and the client deduplicates by item ID before rendering",
+      "The app crashes due to an index-out-of-bounds error when the collection view tries to load a cell at an offset that no longer exists in the updated data source",
+      "The server silently caches the wrong page forever because the CDN stores offset-paginated responses by URL and does not invalidate on item deletion",
     ],
     answer: 0,
     explanation:
@@ -60,9 +60,9 @@ const quiz: Question[] = [
     prompt: "In the layered sketch (View -> ViewModel -> Repository -> Cache/Network), what is the Repository's job?",
     options: [
       "Decide whether to serve data from the local cache or fetch it from the network — the only place that decision is made",
-      "Render the grid of photos on screen",
-      "Hold the screen's observable state for the View",
-      "Parse the raw HTTP response bytes",
+      "Render the grid of photos on screen by mapping the ViewModel's photo list into configured UICollectionViewCells with cached image thumbnails",
+      "Hold the screen's observable state for the View, including the current photo list, loading indicator flag, and any error message to display",
+      "Parse the raw HTTP response bytes from the network layer into strongly typed model objects before passing them up to the ViewModel for display formatting",
     ],
     answer: 0,
     explanation:
@@ -90,9 +90,9 @@ const quiz: Question[] = [
 // user deletes photo X, then reopens the grid within seconds`,
     options: [
       "The deleted photo X can still appear until the timer fires — a jarring bug for content the user just changed themselves",
-      "The photo is guaranteed to disappear immediately regardless of cache policy",
-      "The app throws a network error",
-      "The cache is bypassed automatically after any delete",
+      "The photo is guaranteed to disappear immediately regardless of cache policy, because a successful DELETE response causes the HTTP layer to invalidate any cached GET response for the same resource",
+      "The app throws a network error when the user tries to view the stale photo, because the server returns 404 for a deleted resource and the app surfaces that as an error state",
+      "The cache is bypassed automatically after any delete because UIKit's image loading pipeline marks entries as stale when it detects a mismatch between the local record and the server ETag",
     ],
     answer: 0,
     difficulty: "senior",
@@ -105,9 +105,9 @@ const quiz: Question[] = [
     prompt: "A candidate finishes their design and stops, waiting for the interviewer to poke holes in it. What's the stronger senior move instead?",
     options: [
       "Proactively name at least one bottleneck or scaling limit in their own design before being asked",
-      "Ask the interviewer to grade the design out loud",
-      "Add more boxes to the diagram to look thorough",
-      "Restate the functional requirements verbatim",
+      "Ask the interviewer to grade the design out loud so their feedback can guide what to improve in the remaining time",
+      "Add more boxes to the diagram to look thorough, covering every possible layer including analytics, A/B testing, and feature flags even if none were required",
+      "Restate the functional requirements verbatim to confirm alignment before transitioning to a trade-off discussion, ensuring nothing was misunderstood",
     ],
     answer: 0,
     difficulty: "senior",

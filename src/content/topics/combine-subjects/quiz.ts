@@ -7,9 +7,9 @@ const quiz: Question[] = [
     prompt: "What problem do subjects solve that ordinary publishers like `Just` or an array's `.publisher` don't?",
     options: [
       "Pushing values into a Combine pipeline from imperative, callback-driven code",
-      "Making a pipeline run faster",
-      "Removing the need for `AnyCancellable`",
-      "Converting a publisher into an `AsyncSequence`",
+      "Making a pipeline process values faster by bypassing the demand handshake and pushing immediately",
+      "Removing the need for `AnyCancellable` by managing subscription lifetimes internally within the subject",
+      "Converting any publisher into an `AsyncSequence` so it can be consumed with a for await loop",
     ],
     answer: 0,
     explanation:
@@ -21,9 +21,9 @@ const quiz: Question[] = [
     prompt: "What's the key behavioral difference between `PassthroughSubject` and `CurrentValueSubject`?",
     options: [
       "CurrentValueSubject stores and replays its latest value to new subscribers and exposes `.value`; PassthroughSubject has no memory",
-      "PassthroughSubject can never fail",
-      "CurrentValueSubject can only be used with Int",
-      "They behave identically except for the initializer",
+      "PassthroughSubject can never fail because its Failure type is permanently fixed to Never at declaration time and cannot be changed later",
+      "CurrentValueSubject can only be used with Int or other numeric types due to its seed value requirement",
+      "They behave identically at runtime except that CurrentValueSubject requires a non-optional initializer argument",
     ],
     answer: 0,
     explanation:
@@ -79,9 +79,9 @@ let a = pipeline.sink { _ in }
 let b = pipeline.sink { _ in }`,
     options: [
       "Twice — each subscriber restarts the cold pipeline from scratch",
-      "Once — Combine automatically shares work",
-      "Zero times — nothing runs without `.share()`",
-      "Once per app launch",
+      "Once — Combine automatically deduplicates side effects whenever multiple subscribers attach to the same pipeline",
+      "Zero times — the map closure is deferred until share() is inserted to multicast the result",
+      "Once per app launch, because cold publishers cache their side effects after the first subscriber attaches",
     ],
     answer: 0,
     explanation:
@@ -107,9 +107,9 @@ let b = pipeline.sink { _ in }`,
     prompt: "How do subjects interact with Combine's demand-driven backpressure system?",
     options: [
       "They largely bypass it — `.send()` delivers values immediately regardless of what the subscriber requested",
-      "They strictly enforce demand and block `.send()` until the subscriber asks for more",
-      "Subjects don't support any subscriber other than `sink`",
-      "Backpressure only applies to subjects, not other publishers",
+      "They strictly enforce demand and block the `.send()` call until the subscriber signals it is ready for more",
+      "Subjects don't support any subscriber type other than `sink`, which always opens unlimited demand anyway",
+      "Backpressure enforcement is only required for subjects; standard cold publishers are exempt from the demand model",
     ],
     answer: 0,
     difficulty: "senior",

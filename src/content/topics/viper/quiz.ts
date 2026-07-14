@@ -5,7 +5,7 @@ const quiz: Question[] = [
     id: "viper-acronym",
     type: "mcq",
     prompt: "Which role in VIPER holds the business logic for the use case and is UIKit-free?",
-    options: ["Interactor", "View", "Router", "Presenter"],
+    options: ["Interactor", "View — the passive display layer", "Router — the navigation coordinator", "Presenter — the UI mediator"],
     answer: 0,
     explanation:
       "The **Interactor** contains the business logic (fetching, saving, rules) and knows nothing about UIKit. The Presenter mediates, the View displays, the Router navigates, the Entity is the data.",
@@ -16,9 +16,9 @@ const quiz: Question[] = [
     prompt: "What is the Router (Wireframe) responsible for in VIPER?",
     options: [
       "Navigation between modules and assembling/wiring the module's components",
-      "Formatting data for display",
-      "Storing entities to disk",
-      "Rendering the views",
+      "Formatting raw data from the Interactor into display-ready strings and view models for the View",
+      "Persisting entities to disk and managing the local data store for the current module",
+      "Rendering all visual content by drawing directly into the view's CALayer backing store",
     ],
     answer: 0,
     explanation:
@@ -30,9 +30,9 @@ const quiz: Question[] = [
     prompt: "What does the Presenter do in VIPER?",
     options: [
       "Receives view events, asks the Interactor for data, formats it, and tells the View and Router what to do",
-      "Executes SQL queries",
-      "Owns the UIWindow",
-      "Defines the Entity types",
+      "Executes SQL queries directly and manages the local database connection on behalf of the current VIPER module's persistence needs",
+      "Owns the UIWindow instance and coordinates the root view controller assignment for the entire application at launch time",
+      "Defines the Entity data types and enforces their structural validation rules before any data is passed to the Interactor for business logic",
     ],
     answer: 0,
     explanation:
@@ -53,9 +53,9 @@ const quiz: Question[] = [
     prompt: "VIPER is often described as which broader idea applied per screen?",
     options: [
       "Clean Architecture (Uncle Bob) mapped onto a per-screen module",
-      "The Singleton pattern",
-      "Reactive programming",
-      "Server-driven UI",
+      "The Singleton pattern, where each role holds a shared instance accessible across screens",
+      "Reactive programming, where the View subscribes to Interactor data streams via Combine or RxSwift",
+      "Server-driven UI, where the backend determines which VIPER components to instantiate per screen",
     ],
     answer: 0,
     explanation:
@@ -82,9 +82,9 @@ const quiz: Question[] = [
     code: `// One toggle. Five roles + ~5 protocols to wire it up.`,
     options: [
       "Massive over-engineering — the boilerplate dwarfs the feature; VIPER isn't justified for trivial screens",
-      "Cleaner, simpler code than any alternative",
-      "It won't compile",
-      "The toggle will be faster",
+      "Cleaner, simpler code than any other architecture; the extra files pay off immediately regardless of screen complexity",
+      "It won't compile because VIPER requires at least three data-flow paths, which a toggle can't provide",
+      "The toggle will render faster because VIPER's protocol boundaries eliminate UIKit overhead at runtime",
     ],
     answer: 0,
     difficulty: "senior",
@@ -97,9 +97,9 @@ const quiz: Question[] = [
     prompt: "Why does VIPER fit SwiftUI poorly?",
     options: [
       "SwiftUI's declarative, state-driven, value-type views clash with VIPER's imperative view protocol and long-lived object graph",
-      "SwiftUI can't navigate",
-      "SwiftUI has no data layer",
-      "VIPER requires Objective-C",
+      "SwiftUI lacks NavigationStack and sheet modifiers and therefore cannot implement the VIPER Router's imperative push/pop navigation model at all",
+      "SwiftUI has no data persistence or networking layer of its own; it fully depends on UIKit's underlying URLSession and Core Data stacks to fetch or store data",
+      "VIPER's inter-role communication relies on Objective-C runtime features like associated objects and dynamic method resolution, which are unavailable in a pure Swift project",
     ],
     answer: 0,
     difficulty: "senior",
@@ -112,9 +112,9 @@ const quiz: Question[] = [
     prompt: "When is VIPER most justified?",
     options: [
       "Large, long-lived apps with big teams and complex screens where consistency and testability outweigh the boilerplate",
-      "Tiny prototype apps",
-      "Any app, always",
-      "Only games",
+      "Tiny prototype apps, where VIPER's strict role separation speeds up scaffold generation and lets new engineers onboard without reading existing code",
+      "Any app of any size, always — VIPER's per-screen overhead is negligible and the testability and separation-of-concerns benefits apply universally across all project scales",
+      "Only game apps, because SpriteKit and SceneKit game scenes map cleanly onto VIPER modules with the Interactor handling game-loop physics and collision logic",
     ],
     answer: 0,
     difficulty: "senior",

@@ -7,9 +7,9 @@ const quiz: Question[] = [
     prompt: "What's the difference between a cold launch and a warm launch?",
     options: [
       "Cold launch starts from no process in memory and loads everything from disk; warm launch can reuse recently cached parts of the binary, making it faster",
-      "They take exactly the same amount of time",
-      "Warm launch means the app was never installed before",
-      "Cold launch only happens on the App Store, warm launch only in Xcode",
+      "They take exactly the same amount of time because the OS unconditionally resets all VM caches between app runs regardless of how recently the process was terminated",
+      "Warm launch means the app binary has never been installed before and is booting directly from the App Store download cache without a proper on-disk installation layout",
+      "Cold launch only occurs when distributing through the App Store, because Xcode always keeps the previous debug process alive in memory so simulator relaunches are always warm",
     ],
     answer: 0,
     explanation:
@@ -29,9 +29,9 @@ const quiz: Question[] = [
     prompt: "What is 'pre-main time'?",
     options: [
       "Everything that happens before your first line of Swift code runs — dyld loading your binary and its dynamic libraries, resolving symbols, running static initializers",
-      "The time spent in your App struct's init",
-      "The time your first screen takes to render after appearing",
-      "The time Xcode takes to build your project",
+      "The time the system spends executing your App struct's init and all UISceneDelegate callbacks before the root view controller is fully installed and visible",
+      "The time from the moment the user taps the app icon until your first screen's transition animation completes and the full interface becomes interactive",
+      "The total time Xcode's build system spends compiling all Swift source files, running the linker, and codesigning the final product before handing it off to the simulator to launch",
     ],
     answer: 0,
     explanation:
@@ -45,9 +45,9 @@ const quiz: Question[] = [
 // After: 2 larger .framework bundles, same total symbols`,
     options: [
       "Pre-main time tends to drop — dyld's per-library overhead (finding, validating, linking each file) happens once per library regardless of size, so fewer libraries means less fixed overhead",
-      "Pre-main time is unaffected because total code size didn't change",
-      "Pre-main time increases because bigger files are always slower to load",
-      "This only affects post-main time, not pre-main",
+      "Pre-main time is completely unaffected because dyld's total cost scales only with the number of exported symbols, not with how those symbols happen to be distributed across individual library files",
+      "Pre-main time increases, because memory-mapping and validating a single large framework file is always more expensive for dyld than handling the equivalent total size spread across many smaller ones",
+      "This architectural change only affects post-main time, because dyld completes all framework loading before main() is called and is never involved in any work that happens after the entry point runs",
     ],
     answer: 0,
     explanation:
@@ -67,9 +67,9 @@ const quiz: Question[] = [
     prompt: "In launch code that starts a crash reporter synchronously but defers a feature-flag network fetch into a Task, what's the reasoning?",
     options: [
       "The crash reporter is cheap and you want crash coverage from frame one; the flag fetch is a network call not needed by the first screen, so it shouldn't block first paint",
-      "Feature flags are always more important than crash reporting",
-      "Task-wrapped code never actually runs",
-      "Synchronous code is always faster so everything should stay synchronous",
+      "Feature flags are always more important than crash reporting for first-launch correctness, because a misconfigured flag can silently break the experience for every single user session on that build",
+      "Task-wrapped code never actually executes during app launch because the Swift concurrency runtime holds all Task closures in a suspended state until after UIApplicationDidFinishLaunchingWithOptions returns fully",
+      "Everything should stay synchronous because async Task overhead — allocating the task, scheduling it on the cooperative thread pool, and paying the suspension and resumption cost — always exceeds the time saved by deferring the work",
     ],
     answer: 0,
     explanation:
@@ -98,9 +98,9 @@ const quiz: Question[] = [
 // optimization target: App init only`,
     options: [
       "Total launch time barely improves — the dominant cost is pre-main (dyld/framework loading), so the effort should have targeted reducing dynamic library count instead",
-      "Total launch time improves by roughly 50%",
-      "Post-main time is irrelevant to total launch time",
-      "Pre-main time will automatically shrink once post-main does",
+      "Total launch time improves by roughly 50% because a 50ms saving in any phase scales proportionally across the entire cold-launch sequence",
+      "Post-main time is entirely irrelevant to total launch time because Instruments measures it separately and it does not contribute to the user-visible cold start duration",
+      "Pre-main time automatically shrinks proportionally once post-main time is reduced, because dyld adjusts its scheduling based on how fast the entry point completes",
     ],
     answer: 0,
     difficulty: "senior",

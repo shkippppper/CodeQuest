@@ -21,9 +21,9 @@ const quiz: Question[] = [
     prompt: "How does XCTest know which methods in an XCTestCase subclass are tests to run?",
     options: [
       "The method name must start with 'test' and take no parameters",
-      "Every method in the class is run automatically",
-      "You must list them in an @Suite annotation",
-      "The method must return a Bool",
+      "Every method in the class is automatically run as a test, regardless of its name or parameter list",
+      "You must explicitly list them in a static @Suite annotation at the top of the XCTestCase subclass",
+      "The method must return a Bool indicating pass (true) or fail (false) to the XCTest runner",
     ],
     answer: 0,
     explanation:
@@ -36,9 +36,9 @@ const quiz: Question[] = [
     code: "enum PricingError: Error { case invalidDiscount }\n\nfunc finalPrice(discountPercent: Double) throws -> Double {\n    guard (0...100).contains(discountPercent) else {\n        throw PricingError.invalidDiscount\n    }\n    return 100 - discountPercent\n}\n\nfunc test_rejectsBadDiscount() {\n    XCTAssertThrowsError(try finalPrice(discountPercent: 150)) { error in\n        XCTAssertEqual(error as? PricingError, .invalidDiscount)\n    }\n}",
     options: [
       "Yes — the call throws invalidDiscount, and the closure confirms it's that specific case",
-      "No — XCTAssertThrowsError requires a do/catch block instead",
-      "No — the closure argument is invalid syntax",
-      "It crashes instead of failing",
+      "No — XCTAssertThrowsError requires a surrounding do/catch block; the trailing closure form is not valid in XCTest",
+      "No — the trailing closure that inspects the error is invalid syntax and will not compile in an XCTestCase method",
+      "It crashes the test runner instead of recording a clean failure because the error type is not NSError-bridged",
     ],
     answer: 0,
     explanation:
@@ -60,9 +60,9 @@ const quiz: Question[] = [
     code: "override func tearDownWithError() throws {\n    print(\"cleanup\")\n}\n\nfunc test_something() {\n    XCTAssertEqual(1, 2) // fails here\n    print(\"never reached\")\n}",
     options: [
       "Yes — tearDown always runs after the test body finishes, pass or fail",
-      "No — a failed assertion skips tearDown entirely",
-      "Only if the test throws an uncaught error, not on assertion failure",
-      "Only if you call it manually inside the test",
+      "No — a failed XCTAssert call throws an internal exception that unwinds the stack and skips tearDown entirely",
+      "Only if the test throws an uncaught Swift error; a plain assertion failure does not trigger tearDown execution",
+      "Only if you call super.tearDownWithError() manually at the end of the test method body before it returns",
     ],
     answer: 0,
     explanation:
@@ -97,9 +97,9 @@ const quiz: Question[] = [
     prompt: "A test using XCTestExpectation hangs until it times out and then fails, even though the async work under test actually completes correctly. What's the most likely cause?",
     options: [
       "The completion handler never calls expectation.fulfill() on the success path",
-      "wait(for:timeout:) was called before creating the expectation",
-      "XCTAssertEqual was used instead of XCTAssertTrue",
-      "The test method is marked async",
+      "wait(for:timeout:) was called before the expectation was created, so the runner never registers it as pending",
+      "XCTAssertEqual was used instead of XCTAssertTrue inside the completion handler, causing an assertion that absorbs the fulfill signal",
+      "The test method is marked async, which prevents wait(for:timeout:) from suspending correctly and causes it to time out immediately",
     ],
     answer: 0,
     difficulty: "senior",

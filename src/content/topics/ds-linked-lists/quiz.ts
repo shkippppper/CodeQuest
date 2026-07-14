@@ -7,9 +7,9 @@ const quiz: Question[] = [
     prompt: "Why must a linked list `Node` be a `class`, not a `struct`?",
     options: [
       "Classes are reference types, so multiple pointers can share and mutate the same node; a struct would copy on assignment",
-      "Structs can't hold generic values",
-      "Classes are faster to allocate",
-      "Structs can't have optional properties",
+      "Swift structs cannot hold generic type parameters, so a Node parameterized on a value type cannot be expressed as a struct",
+      "Class instances are faster to allocate than structs because they bypass Swift's copy-on-write overhead entirely",
+      "Swift structs cannot declare optional stored properties, making it impossible to represent a nullable next pointer without using a class",
     ],
     answer: 0,
     explanation:
@@ -21,9 +21,9 @@ const quiz: Question[] = [
     prompt: "Compared to inserting into the middle of an Array, why is inserting into a linked list (given a pointer to the spot) O(1)?",
     options: [
       "No elements need to shift — you just rewire a couple of `next` pointers instead of moving memory",
-      "Linked lists are stored contiguously so the CPU can vectorize the insert",
-      "Linked lists don't actually store all the elements",
-      "Because Swift compiles linked lists to arrays anyway",
+      "Linked list nodes are stored contiguously in memory, so the CPU can vectorize inserts the same way it does for arrays",
+      "Linked lists implement lazy storage and do not actually allocate nodes for all elements until they are explicitly accessed",
+      "Swift's compiler detects linked list operations and automatically compiles them down to array-backed storage for better cache performance",
     ],
     answer: 0,
     explanation:
@@ -43,9 +43,9 @@ while current != nil {
 }`,
     options: [
       "The rest of the list is lost immediately — `next` is read AFTER `current.next` was already overwritten, so it's always `prev`, not the real next node",
-      "It works fine, just less efficient",
-      "It throws a runtime error",
-      "It reverses only the first two nodes",
+      "It works correctly and produces a properly reversed list, just less efficiently than necessary due to the redundant intermediate pointer assignment ordering",
+      "It throws a runtime nil-unwrap crash when `current!.next` is accessed on the second iteration after being set to `prev`, which held nil on the very first iteration and was stored into next",
+      "It reverses only the first two nodes in the list and leaves all remaining nodes completely untouched, terminating the loop early because the incorrect pointer ordering sets current to a node already visited",
     ],
     answer: 0,
     explanation:
@@ -66,9 +66,9 @@ while current != nil {
     prompt: "In cycle detection, why does `slow` (1 step) and `fast` (2 steps) MUST eventually land on the same node if a cycle exists?",
     options: [
       "The gap between them shrinks by exactly 1 node every iteration once both are inside the cycle, so it must hit 0",
-      "Swift automatically detects cycles and stops the pointers",
-      "They start at different nodes",
-      "It's not guaranteed — sometimes they never meet",
+      "Swift's ARC automatically detects reference cycles and inserts a check that halts both pointers when a cycle is detected",
+      "Starting at different initial nodes guarantees that fast and slow always meet, regardless of whether a cycle exists",
+      "It is not mathematically guaranteed that fast and slow will ever land on the same node; on some cycle shapes they orbit indefinitely without meeting",
     ],
     answer: 0,
     difficulty: "senior",
@@ -104,9 +104,9 @@ while current != nil {
     prompt: "How do you remove the nth node from the end of a singly linked list in one pass, without knowing the list's length up front?",
     options: [
       "Advance a lead pointer n steps first, then move a trailing pointer and the lead pointer together until the lead hits the end; the trailing pointer is now at the node to remove",
-      "You must always do two passes — first to count length, then to remove",
-      "Reverse the list first, remove the nth node from the front, then reverse back",
-      "It's impossible in O(n) time",
+      "You must always perform two separate complete passes through the list — the first pass counts the total length, and the second pass walks to the correct removal position using that count",
+      "Reverse the entire list first so the target becomes the nth node from the front, remove it as a simple head-pointer update or standard deletion, then reverse the modified list back to its original direction",
+      "It is impossible to locate and remove the nth-from-end node in a single O(n) pass with O(1) extra space; any correct single-pass solution requires at least O(n) additional memory to record node positions",
     ],
     answer: 0,
     difficulty: "senior",

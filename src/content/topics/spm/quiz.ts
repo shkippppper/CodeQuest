@@ -7,9 +7,9 @@ const quiz: Question[] = [
     prompt: "What is the role of `Package.swift`?",
     options: [
       "A Swift file, evaluated by the compiler, that describes a package's targets, products, and dependencies",
-      "A JSON config file read only by Xcode",
-      "A shell script that runs before every build",
-      "A file that only lists third-party dependency URLs",
+      "A JSON configuration file that Xcode reads to configure the project's build settings and dependency graph",
+      "A shell script that SPM executes as a pre-build phase before compiling any target source files",
+      "A plain text file that lists only the remote third-party dependency URLs, with versions managed separately",
     ],
     answer: 0,
     explanation:
@@ -21,9 +21,9 @@ const quiz: Question[] = [
     prompt: "What's the difference between a target and a product in SPM?",
     options: [
       "A target is a compiled module of source files; a product is what's exposed for consumers to import",
-      "They're two names for the same thing",
-      "A product is source code; a target is the compiled binary",
-      "Targets are for apps, products are for libraries only",
+      "They're two names for the same concept — SPM uses them interchangeably throughout the PackageDescription API",
+      "A product contains the raw source code while a target is the compiled binary artifact that SPM caches between builds",
+      "Targets are exclusively for app executables, while products are exclusively for library modules consumed by other packages",
     ],
     answer: 0,
     explanation:
@@ -39,9 +39,9 @@ const quiz: Question[] = [
 ]`,
     options: [
       "Compile error in Networking — SPM only links targets explicitly listed as dependencies",
-      "It compiles fine because the folders are adjacent on disk",
-      "SPM auto-detects the import and adds the link",
-      "It links, but only in Release builds",
+      "It compiles fine because SPM scans adjacent target folders and automatically links any types it finds imported",
+      "SPM auto-detects the import statement and silently adds the missing dependency link to the resolved graph",
+      "It links successfully in Release builds only; Debug builds enforce explicit dependency declarations more strictly",
     ],
     answer: 0,
     explanation:
@@ -76,9 +76,9 @@ const quiz: Question[] = [
     prompt: "What happens when a package dependency is declared with `.package(path: \"../NetworkingKit\")`?",
     options: [
       "SPM builds directly from that filesystem path with no version resolution, live",
-      "SPM still resolves and pins a version in Package.resolved",
-      "It only works if the path is a Git repository",
-      "It's identical to a `url:` dependency but faster to fetch",
+      "SPM still resolves and records a pinned version in Package.resolved, using the local folder's git tag as the version",
+      "It only works if the path points to a directory containing a valid Git repository with at least one tagged commit",
+      "It is functionally identical to a `url:` dependency but resolves faster since no network fetch is required",
     ],
     answer: 0,
     explanation:
@@ -101,9 +101,9 @@ const quiz: Question[] = [
 import PackageDescription`,
     options: [
       "SPM parses it before compiling the manifest to select which PackageDescription API version is available",
-      "It's purely documentation with no effect on the build",
-      "It sets the minimum iOS deployment target",
-      "It controls which Swift compiler optimizes the final binary",
+      "It's purely documentation with no effect on the build; SPM ignores comments and infers the tools version from the Swift compiler",
+      "It sets the minimum iOS deployment target for all platforms declared in the manifest's platforms array",
+      "It controls which Swift compiler version is used to optimize the package's final binary output",
     ],
     answer: 0,
     difficulty: "senior",

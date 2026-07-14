@@ -5,7 +5,7 @@ const quiz: Question[] = [
     id: "observableobject-published",
     type: "mcq",
     prompt: "How do you mark properties of an `ObservableObject` so their changes update observing views?",
-    options: ["`@Published`", "`@State`", "`@Observed`", "`@Binding`"],
+    options: ["`@Published`", "`@State`, storing the value inside SwiftUI's external graph", "`@Observed`, the ObservableObject equivalent of the @Observable macro", "`@Binding`, forwarding write-back to the object's owning view"],
     answer: 0,
     explanation:
       "`@Published` properties emit `objectWillChange` when they change, re-rendering any view observing the object. `ObservableObject` must be a class (reference type).",
@@ -16,9 +16,9 @@ const quiz: Question[] = [
     prompt: "What's the key difference between `@StateObject` and `@ObservedObject`?",
     options: [
       "`@StateObject` means the view creates & owns the object (kept alive across re-renders); `@ObservedObject` observes one owned elsewhere",
-      "`@ObservedObject` is faster",
-      "`@StateObject` is for value types only",
-      "They are interchangeable",
+      "`@ObservedObject` is faster because it skips SwiftUI's internal lifetime management overhead and lets the object live directly on the heap",
+      "`@StateObject` is only for value types, and you must use `@ObservedObject` any time the model is declared as a reference-type class",
+      "They are completely interchangeable — both wrappers keep the object alive across re-renders and update the view on every @Published change",
     ],
     answer: 0,
     explanation:
@@ -34,9 +34,9 @@ const quiz: Question[] = [
 }`,
     options: [
       "The model is re-created every time the parent re-renders, silently resetting its state — use @StateObject",
-      "Nothing — this is correct",
-      "@ObservedObject can't hold a class",
-      "It won't compile",
+      "Nothing — this is correct; @ObservedObject can manage the object's lifetime when it's initialized inline just as well as @StateObject can",
+      "@ObservedObject can't hold a class because it is designed exclusively for value types that conform to ObservableObject",
+      "It won't compile because creating an ObservableObject inline in a property declaration requires the @StateObject wrapper instead",
     ],
     answer: 0,
     difficulty: "senior",
@@ -58,9 +58,9 @@ const quiz: Question[] = [
     prompt: "What happens if a view uses `@EnvironmentObject` but no ancestor injected that object?",
     options: [
       "The app crashes at runtime when the view appears",
-      "It silently uses a default instance",
-      "A compile error",
-      "The view is skipped",
+      "It silently uses a default instance constructed by calling the type's no-argument initializer, so no injection is strictly required",
+      "A compile error, because the compiler enforces that every @EnvironmentObject type must be injected somewhere in the view hierarchy",
+      "The view is skipped entirely and rendered as an empty rectangle until an ancestor provides the required environment object",
     ],
     answer: 0,
     explanation:
@@ -72,9 +72,9 @@ const quiz: Question[] = [
     prompt: "What does `@Environment(\\.colorScheme)` read?",
     options: [
       "A built-in environment VALUE (light/dark), by key path — distinct from @EnvironmentObject",
-      "A shared ObservableObject",
-      "The app's Info.plist",
-      "The device orientation only",
+      "A shared ObservableObject injected into the environment via the .environmentObject modifier",
+      "A value parsed from the app's Info.plist, which SwiftUI exposes through the environment for convenience",
+      "The current device orientation, and only that — it cannot read any other environment value from a key path",
     ],
     answer: 0,
     explanation:
@@ -100,9 +100,9 @@ const quiz: Question[] = [
     prompt: "With `ObservableObject`/`@Published`, if a view reads only `model.name` but `model.age` changes, what happens?",
     options: [
       "The view still re-renders — ObservableObject observation is object-level, not property-level",
-      "Nothing — only views reading `age` update",
-      "It crashes",
-      "Only `age` labels update",
+      "Nothing — only views that explicitly access `age` in their body re-render when that specific property changes",
+      "It crashes with a precondition failure because SwiftUI detects the view read a stale property after objectWillChange fired",
+      "Only the individual Text or Label views that display `age` update their content, leaving the rest of the view unchanged",
     ],
     answer: 0,
     difficulty: "senior",
@@ -115,9 +115,9 @@ const quiz: Question[] = [
     prompt: "A deeply-nested view needs the app-wide `Session` model without threading it through every initializer. Best tool?",
     options: [
       "`@EnvironmentObject` (inject once at the top, read anywhere below)",
-      "`@State` in each view",
-      "Pass it through every view's init as @ObservedObject",
-      "A global singleton read directly",
+      "`@State` declared independently in each view, storing a separate copy of the session in every level of the hierarchy",
+      "Pass it explicitly through every intermediate view's init as an @ObservedObject parameter, regardless of how many layers there are",
+      "A global singleton referenced directly inside each view's body, bypassing SwiftUI's observation and dependency tracking entirely",
     ],
     answer: 0,
     difficulty: "senior",

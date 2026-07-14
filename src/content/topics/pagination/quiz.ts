@@ -7,7 +7,7 @@ const quiz: Question[] = [
     prompt: "Why does a screen showing a ten-thousand-item catalog fetch it a page at a time instead of all at once?",
     options: [
       "Fetching everything means a slow multi-second wait and a device holding far more data in memory than it's currently displaying",
-      "Servers physically cannot return more than 30 items in one response",
+      "Servers physically cannot return more than 30 items in a single HTTP response due to a hard enforced protocol-level payload size limit",
       "JSON can only encode 30 objects per payload",
       "Pagination is required by the App Store",
     ],
@@ -24,7 +24,7 @@ const quiz: Question[] = [
 // user requests offset=90, limit=30 for page 4`,
     options: [
       "5 items the user already saw on page 3 reappear on page 4, and 5 items get skipped entirely from the end of the original page 4",
-      "Nothing changes — offset paging is unaffected by insertions",
+      "Nothing changes — offset paging tracks stable item identifiers internally, so insertions at the front of the list are silently and transparently ignored",
       "The server automatically adjusts the offset to compensate",
       "Page 4 becomes empty",
     ],
@@ -47,9 +47,9 @@ const quiz: Question[] = [
     prompt: "A numbered search-results screen where users click directly to 'page 7' is a better fit for which paging strategy, and why?",
     options: [
       "Offset — because it supports random access to an arbitrary page, which cursor paging cannot do",
-      "Cursor — because it's always faster to implement on the server",
+      "Cursor — because server-side cursor iteration is always faster to implement and requires no index scan",
       "Offset — because it's the only strategy JSON supports",
-      "Cursor — because it eliminates the need for a limit parameter",
+      "Cursor — because it eliminates the need for a limit parameter entirely",
     ],
     answer: 0,
     explanation:
@@ -84,7 +84,7 @@ const quiz: Question[] = [
     prompt: "Why does a paginated list need a distinct `loadedEmpty` state instead of folding zero-results into the same handling as a failed request?",
     options: [
       "A successful response with zero items and a failed request need different messaging — 'no results match' versus 'something went wrong, retry'",
-      "Empty responses are technically a type of network error",
+      "Empty responses are technically a type of network error and should trigger the same automatic retry and error-handling logic as a 500 status code from the server",
       "SwiftUI cannot render an empty array",
       "There's no real difference — they should be handled identically",
     ],
@@ -104,7 +104,7 @@ const quiz: Question[] = [
 }`,
     options: [
       "The cache still holds the un-favorited version, so a fresh app launch reading from the cache shows the item as un-favorited again",
-      "Nothing — in-memory and cached state are always kept in sync automatically",
+      "Nothing — Swift value semantics guarantee that copying a struct into both the array and the cache always keeps the two representations in sync automatically",
       "The app crashes on the next favorite toggle",
       "The item disappears from the list entirely",
     ],

@@ -7,9 +7,9 @@ const quiz: Question[] = [
     prompt: "Which three pieces make a Swift singleton actually enforce 'only one instance ever'?",
     options: [
       "`static let shared`, a `private init()`, and marking the class `final`",
-      "`static var shared`, a `public init()`, and marking the class `open`",
-      "A global variable and a `deinit`",
-      "A protocol extension with a default implementation",
+      "`static var shared`, a `public init()`, and marking the class `open` so subclasses can override the accessor",
+      "A global variable holding the instance and a `deinit` that resets it to nil when unused",
+      "A protocol extension with a default implementation that returns the same lazily cached instance each time",
     ],
     answer: 0,
     explanation:
@@ -40,9 +40,9 @@ const quiz: Question[] = [
     prompt: "You're implementing a singleton in Swift. Should you manually double-check a flag and lock a mutex around initialization, like the old Objective-C pattern?",
     options: [
       "No — `static let` already guarantees single, thread-safe initialization for free",
-      "Yes, always add your own locking or the app will crash",
-      "Only on macOS, not iOS",
-      "Only if the class has more than one property",
+      "Yes — always add your own dispatch_once-style locking or the runtime may initialize the instance twice under contention",
+      "Only on macOS builds; iOS provides thread-safe static initialization but macOS does not guarantee it without manual locking",
+      "Only if the class has more than one stored property, since multiple properties introduce the risk of partial initialization",
     ],
     answer: 0,
     explanation:
@@ -69,9 +69,9 @@ const quiz: Question[] = [
     code: `func testSetCategoryLogsChange() {\n    AudioSession.shared.setCategory(.playback)\n    // how do I check what AnalyticsLogger.shared logged?\n}`,
     options: [
       "AudioSession is hardwired to the real AnalyticsLogger.shared, so there's no way to substitute a fake logger to make assertions on",
-      "Swift doesn't allow calling static members in tests",
-      "`.shared` can only be called once per app run",
-      "The test will fail to compile because `setCategory` is private",
+      "Swift Testing does not permit direct access to static members from inside a test body; each must be accessed via a protocol-typed reference variable instead",
+      "`.shared` is a write-once accessor — subsequent calls within the same process return nil, so any test that accesses it more than once will be unreliable",
+      "The test will fail to compile because `setCategory` is declared private on AudioSession and cannot be called from outside the module boundary",
     ],
     answer: 0,
     explanation:
@@ -92,9 +92,9 @@ const quiz: Question[] = [
     prompt: "Apple ships `URLSession.shared`, `FileManager.default`, and `UserDefaults.standard` as singletons. Under what conditions is reaching for a singleton actually the right call?",
     options: [
       "When the underlying resource is genuinely singular at the OS level (hardware, a filesystem, a network stack), the type is stateless or its state should truly be shared everywhere, and it's still exposed in a way that can be substituted in tests",
-      "Whenever a value needs to be reused in more than one file",
-      "Never — Apple's own APIs are considered anti-patterns too",
-      "Only for types that conform to Codable",
+      "Whenever any object needs to be accessed from more than one source file anywhere in the codebase, since that basic cross-file sharing requirement is entirely sufficient justification for applying the singleton pattern without any further design analysis",
+      "Never under any circumstances whatsoever — Apple's own APIs like URLSession.shared and FileManager.default are now widely regarded as anti-patterns by the Swift community and Apple itself plans to deprecate them",
+      "Only for types that explicitly conform to Codable, because only fully serializable value types can ever safely share mutable state across separate Swift module boundaries without causing data corruption",
     ],
     answer: 0,
     difficulty: "senior",

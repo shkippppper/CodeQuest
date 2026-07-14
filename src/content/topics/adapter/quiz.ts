@@ -7,9 +7,9 @@ const quiz: Question[] = [
     prompt: "What is the adapter pattern's intent?",
     options: [
       "Wrap an object with an incompatible interface inside a type that translates calls into the interface your code expects",
-      "Guarantee only one instance of a type ever exists",
-      "Decide which concrete type to construct at runtime",
-      "Add new behavior to an object without subclassing it",
+      "Guarantee only one instance of a particular type ever exists across the entire lifetime of the application",
+      "Decide which concrete type to instantiate at runtime based on configuration or environment conditions",
+      "Add new behavior to an existing object dynamically at runtime without ever modifying, subclassing, or recompiling the original type",
     ],
     answer: 0,
     explanation:
@@ -45,9 +45,9 @@ const quiz: Question[] = [
     prompt: "What does a protocol adapter (`extension VendorSDK: AnalyticsClient { ... }`) require that an object adapter doesn't?",
     options: [
       "Permission to extend the type being adapted — it doesn't work if you can't add a conformance to that type",
-      "A separate wrapper class",
-      "The vendor type to already be `final`",
-      "Marking every method `@objc`",
+      "A separate wrapper class that holds the vendor type as a property and forwards calls on its behalf",
+      "The vendor type to already be declared `final`, because in Swift a non-final type is not allowed to gain any new protocol conformances",
+      "Marking every bridged method `@objc` so the Objective-C runtime can dispatch through the conformance",
     ],
     answer: 0,
     explanation:
@@ -83,9 +83,9 @@ const quiz: Question[] = [
     code: `func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {\n    continuation?.resume(returning: locations[0])\n    continuation = nil\n}\nfunc locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {\n    continuation?.resume(throwing: error)\n    continuation = nil\n}`,
     options: [
       "Nothing happens — `continuation` was already set to `nil`, so `continuation?.resume(throwing:)` is a no-op",
-      "The app crashes because a continuation was resumed twice",
-      "The `async` function returns the location a second time",
-      "The error silently replaces the earlier successful result",
+      "The app crashes immediately, because resuming a CheckedContinuation a second time is always a fatal error",
+      "The `async` function resumes a second time and returns the location again to whatever is awaiting it",
+      "The error silently overwrites the already-delivered location result inside the awaiting task's storage",
     ],
     answer: 0,
     explanation:
@@ -97,9 +97,9 @@ const quiz: Question[] = [
     prompt: "A vendor SDK type is defined in a closed-source binary framework you can extend from your own module. Which adapter approach avoids any risk of a future vendor SDK update introducing a conflicting method name?",
     options: [
       "An object adapter — because it wraps the vendor type as a stored property instead of adding a conformance directly to it",
-      "A protocol adapter — extensions are always safer than composition",
-      "Neither approach carries any risk",
-      "Rewriting the vendor SDK's source code",
+      "A protocol adapter — extending a type you don't own is always safer than composing it inside a wrapper class",
+      "Neither approach carries any future-compatibility risk because Swift resolves method name conflicts at compile time automatically",
+      "Rewriting the vendor SDK from its binary into Swift source code so you can control every method name it exports",
     ],
     answer: 0,
     difficulty: "senior",

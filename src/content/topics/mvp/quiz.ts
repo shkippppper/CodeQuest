@@ -7,9 +7,9 @@ const quiz: Question[] = [
     prompt: "What's the key difference between a Presenter (MVP) and a ViewModel (MVVM)?",
     options: [
       "The Presenter holds a reference to the view and calls it imperatively; the ViewModel exposes observable state the view binds to",
-      "The Presenter renders pixels; the ViewModel doesn't",
-      "The ViewModel references the view; the Presenter doesn't",
-      "They are the same thing",
+      "The Presenter renders pixels directly by calling Core Graphics APIs; the ViewModel only manages data transformations and never touches the drawing layer",
+      "The ViewModel holds a strong reference to the view and calls display methods on it; the Presenter never references the view and only emits state changes",
+      "They implement the same pattern under different names — both hold a view reference and drive it imperatively through a protocol contract",
     ],
     answer: 0,
     explanation:
@@ -21,9 +21,9 @@ const quiz: Question[] = [
     prompt: "What does 'passive view' mean in MVP?",
     options: [
       "The view contains no presentation logic — it just forwards actions and displays what the presenter tells it",
-      "The view is read-only",
-      "The view runs on a background thread",
-      "The view has no user interaction",
+      "The view is entirely read-only and cannot be mutated after it is first rendered by the presenter during setup",
+      "The view executes all display work on a dedicated background thread so the presenter never blocks the main run loop",
+      "The view accepts no user interaction and is updated exclusively through data pushed from a server subscription",
     ],
     answer: 0,
     explanation:
@@ -44,9 +44,9 @@ const quiz: Question[] = [
     prompt: "How do you typically unit-test an MVP presenter?",
     options: [
       "Inject a mock view and assert which view methods were called (interaction testing)",
-      "Assert on the presenter's published state",
-      "Snapshot the rendered UI",
-      "Run UI tests through XCUITest",
+      "Assert on the presenter's published ObservableObject state properties using Combine expectations",
+      "Capture a pixel snapshot of the rendered UI and compare it against a stored reference image",
+      "Run UI tests through XCUITest, tapping buttons and asserting on accessibility labels in the full app",
     ],
     answer: 0,
     explanation:
@@ -58,9 +58,9 @@ const quiz: Question[] = [
     prompt: "Why should a presenter hold its view reference as `weak`?",
     options: [
       "The view controller owns the presenter; a strong back-reference would create a retain cycle",
-      "Weak references are faster",
-      "So the view can be nil at launch",
-      "It's required by the compiler",
+      "Weak references allow the runtime to skip retain-count bookkeeping and therefore execute property accesses faster than strong references",
+      "Declaring the view weak allows it to be nil during the launch sequence before the window has been assigned a root view controller",
+      "The Swift compiler requires any property whose type is a protocol to be declared weak, otherwise the module will not compile",
     ],
     answer: 0,
     explanation:
@@ -86,9 +86,9 @@ const quiz: Question[] = [
     prompt: "Why is classic MVP an awkward fit for SwiftUI?",
     options: [
       "SwiftUI is declarative and binding-first, whereas MVP relies on imperatively calling view methods on a retained view reference",
-      "SwiftUI can't use protocols",
-      "SwiftUI has no user input",
-      "MVP is banned in SwiftUI",
+      "SwiftUI cannot use protocols at all, so the view-protocol contract that MVP depends on cannot be expressed in a SwiftUI project",
+      "SwiftUI views receive no user input directly; all gestures are routed through the system and cannot be forwarded to a presenter",
+      "Apple explicitly bans the MVP pattern in SwiftUI apps and rejects them during App Store review if a presenter holds a view reference",
     ],
     answer: 0,
     difficulty: "senior",
@@ -102,9 +102,9 @@ const quiz: Question[] = [
     code: `XCTAssertEqual(mockView.loadingStates, [true, false])`,
     options: [
       "MVP — interaction testing (verifying calls to the view via its protocol)",
-      "MVVM — state testing",
-      "MVC — controller testing",
-      "It's a UI snapshot test",
+      "MVVM — state testing against the view model's published isLoading property using XCTestExpectation",
+      "MVC — controller testing by asserting on the UIViewController's internal state after invoking its lifecycle methods",
+      "A UI snapshot test capturing the rendered pixels of the loading indicator at both states for visual regression comparison",
     ],
     answer: 0,
     difficulty: "senior",
@@ -117,9 +117,9 @@ const quiz: Question[] = [
     prompt: "For the presenter to stay testable, what must it avoid?",
     options: [
       "Importing UIKit or referencing concrete view types — it should depend only on the view protocol",
-      "Having any methods",
-      "Using the Model",
-      "Being a class",
+      "Having any public methods, because a testable presenter must expose all behavior through the view protocol rather than through its own interface",
+      "Using the Model directly; a testable presenter must always retrieve data through a repository protocol injected at initialization time",
+      "Being declared as a class rather than a struct, because class-based presenters create strong reference cycles that prevent the mock view from being deallocated between test runs",
     ],
     answer: 0,
     difficulty: "senior",

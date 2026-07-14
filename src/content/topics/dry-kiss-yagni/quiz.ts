@@ -7,9 +7,9 @@ const quiz: Question[] = [
     prompt: "What does DRY actually require?",
     options: [
       "Every piece of knowledge (a fact or rule) should be expressed in exactly one place",
-      "No two lines of code may ever look similar",
-      "Every function must be reused at least twice",
-      "All code must live in a single file",
+      "No two lines of code may ever look visually similar, even if they represent different business rules",
+      "Every function must be called from at least two distinct call sites before it is allowed to remain in the codebase",
+      "All code must live in a single file so that related logic is always co-located and never accidentally duplicated",
     ],
     answer: 0,
     explanation:
@@ -27,9 +27,9 @@ struct RefundCalculator {
 }`,
     options: [
       "No logic error — it's a forgotten duplicate of a fact that should have lived in one place",
-      "A rounding error in Decimal arithmetic",
-      "A race condition between the two structs",
-      "RefundCalculator has a typo in the discount value",
+      "A rounding error caused by Decimal arithmetic treating 0.9 and 0.85 as binary floating-point approximations",
+      "A race condition caused by both structs reading the same Ticket value concurrently from different threads",
+      "RefundCalculator has a deliberate typo in the discount multiplier that was introduced when the struct was first written",
     ],
     answer: 0,
     explanation:
@@ -50,9 +50,9 @@ struct RefundCalculator {
     prompt: "What does KISS mean when the same result can be produced by three plain if-statements or a generic rule-table lookup?",
     options: [
       "Prefer the plain if-statements — reach for the generic version only once the problem actually requires it",
-      "Always prefer the generic, data-driven version because it looks more professional",
-      "Always prefer whichever version has fewer total characters",
-      "KISS says to avoid using if-statements entirely",
+      "Always prefer the generic, data-driven rule-table version because it signals engineering maturity and scales better to future requirements",
+      "Always prefer whichever version has fewer total characters in the source file, since shorter code is by definition simpler",
+      "KISS says to avoid using if-statements entirely, replacing all conditional logic with polymorphism or strategy objects instead",
     ],
     answer: 0,
     explanation:
@@ -78,9 +78,9 @@ struct RefundCalculator {
     prompt: "A ticket-pricing feature has exactly one discount rule, but the code ships with a PricingStrategy protocol, a strategy-registration system, and a resolver that picks the cheapest of several registered strategies. What principle does this violate?",
     options: [
       "YAGNI — it builds speculative generality for use cases nobody has asked for yet",
-      "DRY — because the protocol duplicates the struct's logic",
-      "Nothing — protocols are always the correct default",
-      "KISS only, not YAGNI, since the code technically works",
+      "DRY — because the PricingStrategy protocol duplicates the same discount logic already present in the concrete struct",
+      "Nothing — using a protocol with a registration system is always the correct default when a concept might need to vary in the future",
+      "KISS only, not YAGNI, since the plugin system technically produces correct output for the current single rule",
     ],
     answer: 0,
     explanation:
@@ -105,9 +105,9 @@ func total(for t: Ticket) -> Decimal { t.price * 0.9 }
 func total(for t: Ticket) -> Decimal { t.price * 0.9 }`,
     options: [
       "Whether the two blocks represent the same underlying fact or two different rules that coincidentally match today",
-      "Whether merging them will reduce the total line count",
-      "Whether both files are in the same target",
-      "Nothing — identical code should always be merged immediately",
+      "Whether merging them will reduce the total line count across both files, since fewer lines always indicates better adherence to DRY",
+      "Whether both functions are defined in Swift files that belong to the same compilation target in the project",
+      "Nothing — any two functions with identical source text should always be merged immediately to prevent the codebase from diverging later",
     ],
     answer: 0,
     difficulty: "senior",

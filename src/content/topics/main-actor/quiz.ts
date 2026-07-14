@@ -7,9 +7,9 @@ const quiz: Question[] = [
     prompt: "Why must UIKit/SwiftUI updates happen on the main thread?",
     options: [
       "The UI frameworks are single-threaded by design and not thread-safe",
-      "The main thread is faster",
-      "Background threads can't allocate memory",
-      "Only the main thread has network access",
+      "The main thread runs at a higher scheduling priority, so UI updates happen sooner and with lower perceived latency than on any background queue",
+      "Background threads can't allocate memory for UIView subclasses because UIKit's allocator is registered only on the main thread's run loop",
+      "Only the main thread has network access, because URLSession routes all callbacks and data delivery through the main run loop by default",
     ],
     answer: 0,
     explanation:
@@ -21,9 +21,9 @@ const quiz: Question[] = [
     prompt: "What is `@MainActor`?",
     options: [
       "The built-in global actor representing the main thread — annotate code to guarantee it runs on main",
-      "A wrapper that speeds up the main thread",
-      "A replacement for URLSession",
-      "A SwiftUI-only property wrapper",
+      "A wrapper that speeds up the main thread by coalescing multiple UI updates into a single synchronous pass before the next display frame",
+      "A replacement for URLSession that provides a thread-safe async interface for network requests without requiring manual dispatch to the main queue",
+      "A SwiftUI-only property wrapper that binds a view's state directly to the main run loop and re-renders on every main-thread tick",
     ],
     answer: 0,
     explanation:
@@ -35,9 +35,9 @@ const quiz: Question[] = [
     prompt: "Calling a `@MainActor` method from a non-main-actor async context requires…",
     options: [
       "`await` — you may need to hop onto the main actor",
-      "nothing special",
-      "a `DispatchQueue.global()` call first",
-      "marking the caller `nonisolated`",
+      "nothing special — the Swift concurrency runtime detects the actor boundary automatically and performs the hop without requiring an explicit await at the call site",
+      "a `DispatchQueue.global()` call first to ensure you are off the main queue before crossing back onto the main actor's isolated context",
+      "marking the caller `nonisolated` so the compiler treats the call as actor-agnostic and skips the isolation enforcement check entirely",
     ],
     answer: 0,
     explanation:
@@ -58,9 +58,9 @@ const quiz: Question[] = [
     prompt: "Why do you rarely need to annotate SwiftUI view code with `@MainActor`?",
     options: [
       "`View.body` is already `@MainActor`, so view code runs on main by default",
-      "SwiftUI runs everything on a background thread",
-      "SwiftUI disables concurrency checking",
-      "Views are value types and can't touch the UI",
+      "SwiftUI runs everything on a background thread and marshals completed renders back to the display compositor without requiring developer-managed thread hops",
+      "SwiftUI disables concurrency checking for all view code, treating the entire view graph as implicitly nonisolated to avoid false-positive actor warnings",
+      "Views are value types and can't touch the UI directly, so actor isolation is irrelevant — only class-based objects need to be constrained to the main actor",
     ],
     answer: 0,
     explanation:
@@ -95,9 +95,9 @@ final class VM {
 }`,
     options: [
       "Yes — the Task inherits the main actor, so the heavy sync work runs on the main thread and freezes the UI",
-      "No — Task always runs on a background thread",
-      "No — @MainActor moves it off main automatically",
-      "It won't compile",
+      "No — Task always dispatches to a background thread pool regardless of where it is created, because that is the entire purpose of the Task API in Swift concurrency",
+      "No — @MainActor moves the synchronous work off main automatically by detecting that it contains no await points and rescheduling it onto a cooperative thread pool",
+      "It won't compile, because a @MainActor type cannot spawn an unstructured Task containing synchronous work without an explicit nonisolated annotation",
     ],
     answer: 0,
     difficulty: "senior",
@@ -110,9 +110,9 @@ final class VM {
     prompt: "What does `MainActor.assumeIsolated { }` do?",
     options: [
       "Runs the block synchronously, asserting you're already on the main actor (traps if you're not)",
-      "Hops to the main actor asynchronously",
-      "Detaches work from the main actor",
-      "Disables main-actor checking permanently",
+      "Hops to the main actor asynchronously, suspending the caller until the main actor's queue drains and the block can be scheduled for execution",
+      "Detaches work from the main actor so that code inside the block runs on a background cooperative thread pool without inheriting any actor isolation",
+      "Disables main-actor checking permanently for the current file, allowing any subsequent code to access main-actor-isolated state without await or annotation",
     ],
     answer: 0,
     difficulty: "senior",
@@ -125,9 +125,9 @@ final class VM {
     prompt: "A legacy `URLSession` completion handler updates `label.text` directly and occasionally crashes. Best fix?",
     options: [
       "Marshal the UI update onto the main actor (@MainActor method or await MainActor.run)",
-      "Add a longer timeout",
-      "Retain the label more strongly",
-      "Wrap the whole app in @MainActor",
+      "Add a longer timeout so the completion handler fires after the background thread has finished its work and the main thread is idle enough to accept the update safely",
+      "Retain the label more strongly by storing it in a class-level property, because the crash is caused by the label being deallocated before the background callback fires",
+      "Wrap the whole app in @MainActor so every completion handler, delegate callback, and async function is forced onto the main thread without needing individual annotations",
     ],
     answer: 0,
     difficulty: "senior",

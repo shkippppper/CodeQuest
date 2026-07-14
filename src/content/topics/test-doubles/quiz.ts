@@ -7,9 +7,9 @@ const quiz: Question[] = [
     prompt: "What is a test double, in general terms?",
     options: [
       "Any object that stands in for a real dependency during a test",
-      "A type that duplicates production code for redundancy",
-      "A second copy of the app used only in CI",
-      "A protocol with two conforming types",
+      "A type that duplicates production code so that two versions can run side-by-side for redundancy",
+      "A second compiled copy of the app binary kept in CI to run alongside production",
+      "A protocol that must have exactly two conforming types to satisfy a compiler rule",
     ],
     answer: 0,
     explanation:
@@ -21,9 +21,9 @@ const quiz: Question[] = [
     prompt: "What is the key difference between a stub and a spy?",
     options: [
       "A stub only returns canned data; a spy also records how it was called so the test can verify interactions",
-      "A stub records calls; a spy returns canned data",
-      "There is no difference — they're two names for the same thing",
-      "A spy can only be used with classes, a stub only with structs",
+      "A stub secretly records every invocation and its arguments; a spy just returns hardcoded canned data without any tracking",
+      "There is no meaningful difference between them — they're simply two names for the same test-double concept in all frameworks",
+      "A spy can only be used with classes because it tracks state, while a stub must be implemented as a struct due to Swift's value semantics",
     ],
     answer: 0,
     explanation:
@@ -49,9 +49,9 @@ func test_loadName_doesNotLog() async throws {
 }`,
     options: [
       "The test passes normally — loadName never calls logger.log, so the dummy's body never runs",
-      "The test crashes with fatalError as soon as it runs",
-      "It fails to compile because DummyLogger has no real implementation",
-      "XCTest automatically skips tests that use dummies",
+      "The test crashes immediately with a fatalError as soon as DummyLogger is instantiated by the initializer",
+      "It fails to compile because a conforming type with a fatalError body isn't considered a valid protocol implementation by the Swift compiler",
+      "XCTest detects dummies at runtime via reflection and automatically marks those tests as skipped in the test report",
     ],
     answer: 0,
     explanation:
@@ -74,9 +74,9 @@ func test_loadName_doesNotLog() async throws {
       "ProfileViewModel takes a `let repository: NetworkUserRepository` (a concrete struct), not a protocol. What's the consequence for testing?",
     options: [
       "No test double can be substituted — there's no protocol to conform to and swap in",
-      "Nothing changes — Swift lets you subclass any struct for testing",
-      "XCTest will auto-generate a mock at compile time",
-      "The code becomes slower but is still fully testable",
+      "Nothing changes — Swift transparently allows you to subclass any struct at runtime, so injecting a subclassed stub works fine",
+      "XCTest scans for concrete dependencies and auto-generates a matching mock type at compile time using macros",
+      "The code compiles and runs slightly slower in the test suite but remains fully testable without any architectural changes",
     ],
     answer: 0,
     explanation:
@@ -109,9 +109,9 @@ _ = try await sut.loadName(id: "42")
 XCTAssertEqual(spy.fetchUserCallCount, 1)`,
     options: [
       "The assertion fails: fetchUserCallCount is 2, catching the accidental duplicate call",
-      "The assertion passes; call counts aren't tracked across async calls",
-      "The test crashes because spies can't be called twice",
-      "The assertion is skipped since a stub-only test would already catch this",
+      "The assertion passes because async suspension boundaries reset the spy's call counter back to zero between awaits",
+      "The test crashes at runtime because a hand-rolled spy type cannot safely record calls when the same method is invoked more than once",
+      "The assertion is silently skipped by XCTest, since a stub returning the right value would already catch any data-fetch regression without needing a call count",
     ],
     answer: 0,
     difficulty: "senior",
@@ -125,9 +125,9 @@ XCTAssertEqual(spy.fetchUserCallCount, 1)`,
       "A test mocks five collaborators and asserts the exact order they were called in. A refactor reorders two internal calls without changing any user-visible behavior, and the test breaks. What does this demonstrate?",
     options: [
       "Over-mocking — the test is asserting on implementation details (call order) instead of observable behavior, making it brittle against safe refactors",
-      "The test is correct and the refactor introduced a real bug",
-      "Mocks should never be paired with order assertions in any test",
-      "XCTest doesn't support asserting call order, so the failure is a framework bug",
+      "The test caught a real regression — if internal call order changed, the user-visible outcome is also guaranteed to have changed",
+      "Mocks should never be paired with order assertions in any test, regardless of whether the order matters for correctness in the specific scenario",
+      "XCTest provides no API to assert call ordering across multiple mocked collaborators, so the failure must be a framework-level reporting bug rather than a real test failure",
     ],
     answer: 0,
     difficulty: "senior",

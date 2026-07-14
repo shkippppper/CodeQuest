@@ -40,9 +40,9 @@ const quiz: Question[] = [
     prompt: "Building a heap from an existing array of n elements via heapify runs in what time?",
     options: [
       "O(n) — most nodes are near the bottom and sift down only a short distance",
-      "O(n log n) — same as n individual inserts",
-      "O(log n) — heapify only touches the root",
-      "O(n²) — every node compares against every other",
+      "O(n log n) — equivalent in cost to inserting all n elements one by one into an initially empty heap",
+      "O(log n) — heapify makes a single downward pass starting from the root and touching only O(log n) nodes",
+      "O(n squared) — each of the n nodes must be compared against every other node to establish the heap property throughout the tree",
     ],
     answer: 0,
     difficulty: "senior",
@@ -56,9 +56,9 @@ const quiz: Question[] = [
     code: `var heap = [9, 7, 5, 2, 1]\n// remove index 0 directly?`,
     options: [
       "It would leave a gap that breaks the parent/left/right index arithmetic for every other element",
-      "Swift arrays don't allow removing index 0",
-      "It's fine — heaps support direct removal at any index in O(1)",
-      "It would only break min-heaps, not max-heaps",
+      "Swift arrays do not expose a method for removing at index 0; only removeFirst and removeLast are available, neither of which maintains the heap",
+      "It is fine to remove index 0 directly, since heaps store all elements contiguously and the remaining indices automatically shift to fill the gap",
+      "Removing index 0 directly breaks only min-heaps, because the sift-down direction is reversed; max-heaps can handle the direct removal without structural repair",
     ],
     answer: 0,
     explanation:
@@ -84,9 +84,9 @@ const quiz: Question[] = [
     prompt: "Why can't you do an efficient in-order traversal to get sorted output directly from a heap the way you can from a BST?",
     options: [
       "A heap only orders parent vs. child, not left vs. right or across subtrees, so there's no left-to-right ordering to walk",
-      "Heaps don't support traversal at all",
-      "Heaps are stored as linked structures, not arrays, so traversal is O(n²)",
-      "A heap is always deeper than a BST with the same elements",
+      "Heaps do not support any form of traversal; iterating over the backing array is undefined behavior that may skip or repeat elements",
+      "Heaps are stored as linked node structures rather than arrays, so any traversal must follow pointers and costs O(n squared) due to repeated parent lookups",
+      "A heap with n elements is always at least twice as deep as a BST containing the same elements, making in-order traversal impractically expensive",
     ],
     answer: 0,
     difficulty: "senior",

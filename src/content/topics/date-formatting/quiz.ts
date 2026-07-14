@@ -7,9 +7,9 @@ const quiz: Question[] = [
     prompt: "What does a Swift Date value actually represent?",
     options: [
       "A single point on a universal timeline, with no inherent time zone",
-      "A formatted string like \"July 10, 2026\"",
-      "A day-of-week and hour tied to the device's time zone",
-      "A calendar entry with year, month, and day fields",
+      "A localized formatted string such as \"July 10, 2026\", generated automatically from the current calendar",
+      "A day-of-week and hour value permanently tied to the device's current time zone at the moment of creation",
+      "A structured calendar entry storing separate year, month, and day integer fields that can be accessed directly",
     ],
     answer: 0,
     explanation:
@@ -31,9 +31,9 @@ const quiz: Question[] = [
     code: `let a = now.addingTimeInterval(86_400)\nlet b = calendar.date(byAdding: .day, value: 1, to: now)!`,
     options: [
       "a can land on the wrong wall-clock hour since it adds exactly 86,400 seconds; b lands on the correct wall-clock time because Calendar accounts for the clock change",
-      "They always produce the same result",
-      "b is always wrong and a is always correct",
-      "Both ignore daylight saving time equally",
+      "They always produce the exact same result, because Foundation normalizes both paths through the same internal time-zone table before returning the computed Date",
+      "b is always wrong because Calendar.date(byAdding:) ignores the DST offset entirely and adds raw seconds internally just like addingTimeInterval does",
+      "Both approaches ignore daylight saving transitions equally, since Date itself carries no time zone and neither method receives one to consult during the calculation",
     ],
     answer: 0,
     explanation:
@@ -45,9 +45,9 @@ const quiz: Question[] = [
     prompt: "Why does Date() never 'have' a time zone?",
     options: [
       "Because a Date is a single point in time; the time zone only matters when a Calendar or formatter interprets it for display",
-      "Because time zones were removed from Foundation",
-      "Because Date always assumes UTC display",
-      "Because every Date is automatically localized on creation",
+      "Because Apple removed time zone support from Foundation after Swift 3 and moved it exclusively into CoreLocation",
+      "Because Date always stores and displays its value as UTC, making a separate time zone concept redundant and unnecessary",
+      "Because every Date value is automatically localized to the device's current region at the moment of creation and can't be re-interpreted",
     ],
     answer: 0,
     explanation:
@@ -82,9 +82,9 @@ const quiz: Question[] = [
     prompt: "What's a key advantage of Date.FormatStyle over DateFormatter's dateFormat string pattern?",
     options: [
       "A typo in a FormatStyle call is caught at compile time; a typo in a dateFormat pattern string is only caught at runtime, if at all",
-      "FormatStyle doesn't support localization",
-      "DateFormatter is always faster",
-      "FormatStyle can't produce relative phrasing like 'yesterday'",
+      "FormatStyle doesn't support localization, so it always produces English output regardless of the device's region settings",
+      "DateFormatter is always significantly faster at runtime because it compiles the format string once into an internal bytecode representation",
+      "FormatStyle is limited to absolute date display and cannot produce relative phrasing like 'yesterday' or 'in 2 hours' under any configuration",
     ],
     answer: 0,
     difficulty: "senior",
@@ -98,9 +98,9 @@ const quiz: Question[] = [
     code: `now.formatted(date: .abbreviated, time: .shortened)\n// user A: US device\n// user B: UK device`,
     options: [
       "The text layout differs (e.g. month/day order, AM/PM vs 24-hour) because the formatter uses each device's current Locale automatically",
-      "Nothing differs — formatting is locale-independent",
-      "Only the language of month names can differ, never the layout",
-      "It throws an error unless a Locale is passed explicitly",
+      "Nothing differs — formatted(date:time:) uses a fixed universal layout that ignores locale to ensure consistent cross-device output",
+      "Only the translated names of months and weekdays differ between locales; the structural layout such as ordering and separators never changes",
+      "It throws a runtime error on non-US devices unless a Locale is passed explicitly to the formatted call",
     ],
     answer: 0,
     difficulty: "senior",

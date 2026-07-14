@@ -7,9 +7,9 @@ const quiz: Question[] = [
     prompt: "What is the core intent of the observer pattern?",
     options: [
       "A subject keeps a list of observers and notifies all of them when it changes, without knowing what each observer does",
-      "One object holds a single weak reference to another and asks it questions",
-      "A subclass overrides a method to change behavior",
-      "Objects are created through a shared factory",
+      "One object holds a single weak reference to another object and polls it on a repeating timer to ask whether any relevant state has changed since the last check",
+      "A subclass overrides a virtual method defined in the parent class to change its runtime behavior without modifying any line of the parent class source code",
+      "Objects are instantiated through a shared factory object that inspects runtime parameters and routes each construction request to the appropriate concrete subclass implementation",
     ],
     answer: 0,
     explanation:
@@ -21,9 +21,9 @@ const quiz: Question[] = [
     prompt: "How does the observer pattern differ from delegation in shape?",
     options: [
       "Observer is one-to-many (a list of listeners); delegation is one-to-one (a single delegate property)",
-      "They are the same pattern with different names",
-      "Delegation always uses NotificationCenter; observer never does",
-      "Observer can only be implemented with KVO",
+      "They implement the same structural relationship under different names — both broadcast to a fixed set of typed recipients using the same underlying mechanism",
+      "Delegation is always implemented through NotificationCenter string-keyed broadcasts, while observer requires a typed protocol the subject directly retains",
+      "Observer can only be implemented using KVO on an NSObject subclass, whereas delegation is protocol-based and available to any Swift type",
     ],
     answer: 0,
     explanation:
@@ -49,9 +49,9 @@ NotificationCenter.default.addObserver(
 ) { _ in print("got it") }`,
     options: [
       "Compiles fine; the listener's closure simply never runs because the names don't match",
-      "A compile-time error about mismatched notification names",
-      "A runtime crash",
-      "Swift automatically treats the names as equal since they're the same word",
+      "A compile-time error flagging the mismatched notification name strings as an unresolved identifier",
+      "A runtime crash with an NSException listing both names and explaining that no registered observer matched the posted notification",
+      "Swift automatically normalizes both names to lowercase before comparing, so they are treated as equal and the listener's closure runs",
     ],
     answer: 0,
     explanation:
@@ -77,9 +77,9 @@ NotificationCenter.default.addObserver(
     prompt: "You need a dozen unrelated screens across the app, none aware of each other, to react when the user logs out. Which tool fits best?",
     options: [
       "NotificationCenter — loose, string-based broadcast is ideal for many unrelated, decoupled listeners",
-      "KVO on a single NSObject property",
-      "A single weak delegate property",
-      "Passing a direct closure reference to each of the 12 screens manually",
+      "KVO on a single NSObject property shared between all screens, using the change dictionary to distinguish which screen should react",
+      "A single weak delegate property on the authentication manager, updated to point to whichever screen is currently in the foreground",
+      "Passing a direct closure reference to each of the 12 screens manually at startup, storing them in an array the auth manager iterates when the user logs out",
     ],
     answer: 0,
     explanation:
@@ -98,9 +98,9 @@ setupObserving()
 cart.items.append("apple")`,
     options: [
       "The AnyCancellable returned by sink is a local variable that goes out of scope at the end of setupObserving(), so the subscription is cancelled immediately",
-      "Combine publishers only fire once per app launch",
-      "@Published requires NSObject to work",
-      "sink closures cannot capture cart",
+      "Combine publishers deliver values only once per app launch per unique subscriber, after which the upstream publisher sends a completion event and closes the stream permanently",
+      "@Published requires the enclosing class to inherit from NSObject because Combine uses Key-Value Observing as its underlying change-notification mechanism for all @Published properties",
+      "Closures passed to sink cannot capture class instances like cart by strong reference; Swift automatically downgrades the capture to unowned, which becomes nil before the first upstream event fires",
     ],
     answer: 0,
     difficulty: "senior",
@@ -113,9 +113,9 @@ cart.items.append("apple")`,
     prompt: "How does the newer Observation framework (@Observable) improve on Combine's @Published for SwiftUI view updates?",
     options: [
       "It tracks exactly which properties a view reads and only redraws that view when one of those specific properties changes, rather than redrawing every subscriber on any change",
-      "It removes the need to ever cancel subscriptions",
-      "It only works with NSObject subclasses, giving stronger runtime guarantees",
-      "It replaces NotificationCenter entirely and cannot be used alongside it",
+      "It eliminates the need to ever store or cancel subscriptions because the Observation framework automatically manages the full lifetime of every token it internally creates",
+      "It is restricted to NSObject subclasses, which gives the runtime stronger guarantees about object identity, deallocation ordering, and thread safety during active observations",
+      "It is a full drop-in replacement for NotificationCenter and cannot be used in any codebase that still has NotificationCenter observers, because the two systems produce duplicate notifications for the same event",
     ],
     answer: 0,
     difficulty: "senior",

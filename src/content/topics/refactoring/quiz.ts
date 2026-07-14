@@ -7,9 +7,9 @@ const quiz: Question[] = [
     prompt: "What is refactoring?",
     options: [
       "Changing a program's internal structure without changing its external behavior",
-      "Adding new features while cleaning up old code",
-      "Rewriting a module from scratch in a new language",
-      "Fixing a bug found in production",
+      "Adding new features while simultaneously cleaning up old code in the same commit to keep changes cohesive",
+      "Rewriting a module from scratch in a new language or framework to take advantage of a better ecosystem",
+      "Fixing a bug found in production by changing the code path that produced the incorrect external behavior",
     ],
     answer: 0,
     explanation:
@@ -30,9 +30,9 @@ const quiz: Question[] = [
     prompt: "A method on `OrderSummaryView` reaches deep into `order.customer.address.city.postalCode` to do most of its work. What smell is this?",
     options: [
       "Feature envy — the method is more interested in another object's data than its own",
-      "Long parameter list",
-      "Duplicated code",
-      "Dead code",
+      "Long parameter list — the method accepts too many arguments representing fields from the customer and address objects",
+      "Duplicated code — the same deep chain of property accesses is repeated verbatim in multiple methods across the codebase",
+      "Dead code — the method reads deeply nested properties that are never actually used to produce a visible output",
     ],
     answer: 0,
     explanation:
@@ -48,9 +48,9 @@ const quiz: Question[] = [
 }`,
     options: [
       "Step 2 is the one that changed behavior, since step 1 was still green",
-      "One of all three steps broke it, but you can't tell which",
-      "The test itself is broken",
-      "Nothing — refactoring can't be verified by tests",
+      "One of all three steps broke it, but you can't tell which because the test only runs at the end after all changes",
+      "The test itself is broken — it must have had a latent flaw that the refactor exposed rather than caused",
+      "Nothing useful — tests can't be used to verify refactoring since they only catch bugs, not structural changes",
     ],
     answer: 0,
     explanation:
@@ -85,9 +85,9 @@ const quiz: Question[] = [
     prompt: "What is the safest order of operations when you want to both refactor a function and add a new feature to it?",
     options: [
       "Refactor first in its own commit with tests green throughout, then add the feature in a separate commit",
-      "Do both at once to save time, since the tests will catch anything",
-      "Add the feature first, then refactor around it in the same commit",
-      "Skip tests since refactoring doesn't change behavior anyway",
+      "Do both at once in a single commit to save time, since the test suite will catch any regression you introduce by accident",
+      "Add the feature first so you understand the needed shape, then refactor around it in the same commit before pushing",
+      "Skip tests during refactoring since it preserves behavior by definition, and only run them after adding the new feature",
     ],
     answer: 0,
     difficulty: "senior",
@@ -101,9 +101,9 @@ const quiz: Question[] = [
     code: `func process(type: String, amount: Double, isRefund: Bool, notify: Bool, retries: Int) { }`,
     options: [
       "Long parameter list — extract the related flags/values into a small type (e.g. a ProcessRequest struct) that groups what belongs together",
-      "Feature envy — move the function into another class",
-      "Duplicated code — copy the function and split it in two",
-      "Nothing is wrong; more parameters just mean more flexibility",
+      "Feature envy — the function reaches deep into foreign objects for its data, so move the entire processing logic into the class that actually owns those values",
+      "Duplicated code — copy the function and split it into two narrower functions, each handling one set of the boolean flags",
+      "Nothing is wrong — more parameters simply mean more flexibility, and callers can always pass nil or false for flags they don't need",
     ],
     answer: 0,
     difficulty: "senior",

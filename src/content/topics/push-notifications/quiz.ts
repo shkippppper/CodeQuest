@@ -7,9 +7,9 @@ const quiz: Question[] = [
     prompt: "In the push flow, which party has the persistent, always-on connection directly to the user's device?",
     options: [
       "APNs — your backend never connects to the device directly",
-      "Your backend server, directly to the device",
-      "The App Store",
-      "The device connects directly to another user's device",
+      "Your backend server, which keeps an always-on TLS connection open to each registered device to deliver messages",
+      "The App Store, which relays push payloads through its existing software update infrastructure to conserve connections",
+      "The device connects directly to another user's device using a peer-to-peer protocol negotiated at registration time",
     ],
     answer: 0,
     explanation:
@@ -24,9 +24,9 @@ const quiz: Question[] = [
 // C: The backend sends a push request to APNs`,
     options: [
       "B, then C, then A — Ada's app to backend, backend to APNs, APNs to Bob's device",
-      "A, then B, then C",
-      "B, then A, then C",
-      "Ada's device pushes directly to Bob's device",
+      "A, then B, then C — APNs reserves a slot first, then the backend fills it, then the app triggers the send",
+      "B, then A, then C — Ada's backend tells APNs to open a channel, then the device connects, then the backend sends",
+      "Ada's device pushes directly to Bob's device using the token as an address, skipping APNs and the backend entirely",
     ],
     answer: 0,
     explanation:
@@ -47,9 +47,9 @@ const quiz: Question[] = [
     prompt: "What distinguishes a silent push from a regular alert push?",
     options: [
       "It carries `content-available: 1` with no alert/sound/badge, waking the app briefly in the background to run code without showing anything to the user",
-      "It uses a different protocol than APNs entirely",
-      "It can only be sent to iPads",
-      "It guarantees delivery within one second",
+      "It uses an entirely different underlying protocol from APNs, routing through a separate dedicated Apple infrastructure channel reserved for background delivery",
+      "It can only be sent to iPads because iPhones require explicit user permission before any background wake is allowed by the OS",
+      "It guarantees delivery within one second because APNs prioritizes silent pushes above visible alert pushes in its internal delivery queue",
     ],
     answer: 0,
     explanation:
@@ -90,9 +90,9 @@ const quiz: Question[] = [
     prompt: "A backend keeps sending pushes to a device token for a user who uninstalled the app eight months ago. What's the correct long-term handling?",
     options: [
       "APNs reports invalid/expired tokens back to the sender, and the backend should listen for that signal and prune the dead token rather than retrying forever",
-      "Keep retrying indefinitely — APNs will eventually succeed",
-      "Device tokens never expire or become invalid",
-      "Ask the user to manually delete their old token from Settings",
+      "Keep retrying indefinitely — APNs queues undelivered pushes for up to 30 days and delivers them automatically once the device reinstalls the app and registers again",
+      "Device tokens never expire or become invalid once issued, so the backend can safely continue sending to any token it has stored",
+      "Ask the user to manually delete their old token from Settings, then re-register by reinstalling the app to obtain a valid new token",
     ],
     answer: 0,
     difficulty: "senior",
@@ -106,9 +106,9 @@ const quiz: Question[] = [
     code: `// aps.alert payload has a strict size limit (a few KB per push)`,
     options: [
       "No — the payload is capped at a small size meant for display text; real content should be fetched from the server after the tap or during sync, not embedded in the push",
-      "Yes — APNs payloads have no size limit",
-      "Yes, but only for silent pushes",
-      "No — alert payloads can only contain a single emoji",
+      "Yes — APNs payloads have no enforced size limit at all, so embedding the complete message body is a recommended pattern for offline support and reduced server round trips",
+      "Yes, but only for silent pushes, because the OS routes silent-push payloads through a separate higher-capacity APNs channel",
+      "No — alert payloads can only contain a single emoji character because APNs encodes the alert field as a two-byte Unicode scalar",
     ],
     answer: 0,
     difficulty: "senior",

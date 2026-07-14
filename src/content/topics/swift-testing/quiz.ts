@@ -7,9 +7,9 @@ const quiz: Question[] = [
     prompt: "What marks a function as a test in Swift Testing?",
     options: [
       "The @Test attribute — no class, no 'test' prefix required",
-      "Subclassing XCTestCase",
-      "A function name starting with 'test'",
-      "Conforming to the Testable protocol",
+      "Subclassing XCTestCase and placing the function anywhere inside that class's body",
+      "A function name starting with 'test', which the runner discovers at launch via Objective-C reflection",
+      "Conforming to the Testable protocol and implementing its required run() method for the framework to invoke",
     ],
     answer: 0,
     explanation:
@@ -26,9 +26,9 @@ const quiz: Question[] = [
 }`,
     options: [
       "The test stops immediately at #require — the #expect and print never run",
-      "The test records a failure and continues to #expect",
-      "It compiles but crashes at runtime with no failure recorded",
-      "#require is ignored unless wrapped in #expect",
+      "The test records a failure and continues to the #expect line, which also runs and may record a second independent failure",
+      "It compiles but crashes at runtime with no failure recorded, because #require produces a precondition rather than a test assertion",
+      "#require is ignored unless wrapped in #expect, since the outer macro is what actually communicates with the test runner",
     ],
     answer: 0,
     explanation:
@@ -65,7 +65,7 @@ const quiz: Question[] = [
 func appliesDiscount(percent: Int, currency: String) {
     // ...
 }`,
-    options: ["6, one for every (percent, currency) combination", "2", "3", "1"],
+    options: ["6, one for every (percent, currency) combination", "2, once per element in the first array only", "3, once per currency in the second array only", "1, since @Test runs the body once regardless of argument count"],
     answer: 0,
     explanation:
       "Passing two argument collections to @Test(arguments:) runs the test once per combination — the cartesian product. 2 percents x 3 currencies = 6 runs, each reported independently.",
@@ -76,9 +76,9 @@ func appliesDiscount(percent: Int, currency: String) {
     prompt: "In a struct-based @Suite, why doesn't shared mutable state persist between two @Test functions?",
     options: [
       "Swift Testing creates a fresh struct instance, running init() again, for every single @Test",
-      "Swift Testing resets all global variables after each test",
-      "Each @Test runs in its own process",
-      "It does persist by default; you must opt into isolation with a trait",
+      "Swift Testing resets all global variables after each test by scanning the module for stored properties and zeroing them out",
+      "Each @Test runs in its own process, so memory is wiped between tests just as it would be after an app relaunch",
+      "It does persist by default; you must opt into isolation with a trait like .serialized or a custom isolation modifier",
     ],
     answer: 0,
     explanation:
@@ -90,9 +90,9 @@ func appliesDiscount(percent: Int, currency: String) {
     prompt: "How does Swift Testing support async test functions compared to XCTest?",
     options: [
       "async is just part of the function signature; #expect and #require work directly on async/throwing expressions",
-      "Async tests require a completion-handler-based expectation object",
-      "Swift Testing cannot run async tests at all",
-      "Async tests must be wrapped in a synchronous bridge function first",
+      "Async tests require a completion-handler-based expectation object, just like XCTestExpectation, that you fulfill inside a Task closure",
+      "Swift Testing cannot run async tests at all and falls back to XCTest infrastructure when it detects an async function signature",
+      "Async tests must be wrapped in a synchronous bridge function first, which calls Task and waits with a semaphore for completion",
     ],
     answer: 0,
     explanation:
@@ -104,9 +104,9 @@ func appliesDiscount(percent: Int, currency: String) {
     prompt: "A suite of tests that passed reliably under XCTest starts failing intermittently after being migrated to Swift Testing, with no code changes to the logic under test. What's the most likely cause?",
     options: [
       "Swift Testing runs tests in parallel by default, exposing shared mutable state or ordering assumptions that XCTest's mostly-serial execution hid",
-      "Swift Testing macros are non-deterministic by design",
-      "#expect silently ignores some failures",
-      "Struct-based suites cannot run more than one test per session",
+      "Swift Testing macros are intentionally non-deterministic and deliberately evaluate assertion conditions in a randomized order each run to stress-test the logic under test",
+      "#expect silently discards failure records when the expression contains optional chaining, producing no output in the test report for those cases",
+      "Struct-based @Suite types cannot run more than one @Test function per session without adding an explicit .parallel trait to the suite declaration",
     ],
     answer: 0,
     difficulty: "senior",

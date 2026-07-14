@@ -7,9 +7,9 @@ const quiz: Question[] = [
     prompt: "What is the builder pattern's intent?",
     options: [
       "Separate assembling a complex object step by step from the object's final, immutable shape",
-      "Guarantee only one instance of a type ever exists",
-      "Convert one interface into another that a caller expects",
-      "Add behavior to an object without subclassing",
+      "Guarantee only one instance of a type ever exists throughout the entire application lifecycle",
+      "Convert one interface into another compatible interface that the existing caller already expects to receive",
+      "Add new behavior to an existing object at runtime without modifying its class or using subclassing",
     ],
     answer: 0,
     explanation:
@@ -22,9 +22,9 @@ const quiz: Question[] = [
     code: `RequestBuilder(url: url)\n    .method("POST")\n    .header("Authorization", "Bearer abc123")\n    .build()`,
     options: [
       "Chaining another method call directly on the result, forming a fluent interface",
-      "Nothing — `return self` is required by the compiler for all methods",
-      "Automatically calling `.build()` at the end",
-      "Making the builder thread-safe",
+      "Nothing — `return self` is required by the compiler for all non-Void mutating methods on class types",
+      "Automatically calling `.build()` at the end of the chain once no further method calls are detected",
+      "Making the builder thread-safe by ensuring each call acquires and releases a per-instance lock automatically",
     ],
     answer: 0,
     explanation:
@@ -45,9 +45,9 @@ const quiz: Question[] = [
     prompt: "What compiler feature lets you write `VStack { Text(\"Hi\"); Image(...) }` as plain statements instead of an array literal?",
     options: [
       "Result builders (`@resultBuilder`), via a `buildBlock` method that combines the statements",
-      "Property wrappers",
-      "Generics",
-      "Protocol extensions",
+      "Property wrappers, which intercept the stored value and rewrite it using a projected value accessor",
+      "Generics, which allow the container type to accept any child view without knowing its concrete type at compile time",
+      "Protocol extensions, which inject default implementations of the body property into any View conforming type",
     ],
     answer: 0,
     explanation:
@@ -60,9 +60,9 @@ const quiz: Question[] = [
     code: `@resultBuilder\nstruct MenuBuilder {\n    static func buildBlock(_ items: MenuItem...) -> [MenuItem] { items }\n}\n// inside a block:\nif someCondition {\n    MenuItem(name: "Coffee", price: 3.5)\n}`,
     options: [
       "It fails to compile — conditionals need `buildEither`/`buildOptional`, which this builder doesn't implement",
-      "It compiles and skips the item silently when `someCondition` is false",
-      "It compiles and always includes the item regardless of the condition",
-      "It compiles because `buildBlock` handles conditionals automatically",
+      "It compiles and silently skips the item at runtime whenever `someCondition` evaluates to false during execution",
+      "It compiles and always includes the MenuItem unconditionally, treating the if as a compile-time hint only",
+      "It compiles without error because `buildBlock` is variadic and handles optional branches by accepting zero arguments",
     ],
     answer: 0,
     explanation:
@@ -97,9 +97,9 @@ const quiz: Question[] = [
     prompt: "You pass the same `RequestBuilder` instance into two different configuration functions, and both call `.method(...)` with different values before either sees the other's call. What happens?",
     options: [
       "Whichever `.method(...)` call happens last silently overwrites the earlier one — a fluent builder's mutable state is shared, not isolated per call path",
-      "Swift throws a runtime error for double-mutation",
-      "Both values are kept and merged automatically",
-      "The builder becomes immutable after the first `.method()` call",
+      "Swift throws a runtime error indicating that the same builder property was written more than once in a session",
+      "Both values are kept in full and automatically merged into a combined representation by the builder\\'s internal state machine, with neither call winning over the other",
+      "The builder becomes permanently immutable after the first `.method()` call to protect against further mutations",
     ],
     answer: 0,
     difficulty: "senior",

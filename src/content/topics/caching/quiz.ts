@@ -7,9 +7,9 @@ const quiz: Question[] = [
     prompt: "What's the key behavioral difference between NSCache and a plain Dictionary used as a cache?",
     options: [
       "NSCache can automatically evict entries under memory pressure and is thread-safe; Dictionary does neither",
-      "NSCache is persisted to disk automatically",
-      "Dictionary is faster in every case",
-      "There is no real difference",
+      "NSCache is persisted to disk automatically and survives app termination just like URLCache does",
+      "Dictionary is faster in every lookup case because it skips the overhead of NSCache\\'s eviction bookkeeping",
+      "There is no real difference; NSCache is just a renamed Dictionary with the same thread and memory behavior",
     ],
     answer: 0,
     explanation:
@@ -30,9 +30,9 @@ const quiz: Question[] = [
     prompt: "What's the trade-off between a memory cache and a disk cache?",
     options: [
       "Memory cache is fast but disappears when the app terminates; disk cache survives restarts but is slower to read",
-      "Disk cache is always faster than memory cache",
-      "Memory cache survives app restarts, disk cache doesn't",
-      "There is no meaningful difference",
+      "Disk cache is always faster than memory cache because it avoids Swift\\'s heap allocations entirely",
+      "Memory cache survives app restarts intact, while disk cache is cleared on every cold launch by the OS",
+      "There is no meaningful difference in speed or persistence; both are equally fast and equally volatile on termination",
     ],
     answer: 0,
     explanation:
@@ -45,9 +45,9 @@ const quiz: Question[] = [
     code: `// Request 1: memory miss, disk miss -> network fetch, saved to disk + memory\n// Request 2 (after memory cache cleared): memory miss, disk hit -> promoted to memory\n// Request 3: ?`,
     options: [
       "Memory hit — fast, because request 2 promoted the disk hit back into the memory cache",
-      "Another network fetch",
-      "Another disk read, memory is never used again",
-      "It fails because the URL was already used twice",
+      "Another full network fetch because promotion only lasts until the next memory warning is received",
+      "Another disk read, because memory promotion only applies within a single request and is never cached again",
+      "It fails with a cache conflict error because the same URL was already fetched twice in the same session",
     ],
     answer: 0,
     explanation:
@@ -82,9 +82,9 @@ const quiz: Question[] = [
     prompt: "After a URLCache-stored response's max-age has expired, what typically happens on the next request if the server supports ETags?",
     options: [
       "A conditional request is sent; if nothing changed, the server replies 304 Not Modified and the body isn't resent",
-      "The cached response is discarded and never used again",
-      "The full response body is always re-downloaded regardless of whether it changed",
-      "ETags disable caching entirely",
+      "The cached response is immediately discarded and permanently removed from URLCache regardless of ETag validity",
+      "The full response body is always re-downloaded from scratch regardless of whether the content actually changed",
+      "ETags disable caching entirely for that resource because the server signals it cannot trust client-stored copies",
     ],
     answer: 0,
     difficulty: "senior",
@@ -98,9 +98,9 @@ const quiz: Question[] = [
     code: `// order (front = most recently used): [C, B, A]\n// capacity reached, insert D`,
     options: [
       "A — the least recently used entry, at the back of the recency order",
-      "C — the most recently used entry",
-      "A random entry",
-      "The oldest-inserted entry regardless of recent access",
+      "C — the most recently used entry, because LRU always evicts the front of the recency-ordered list",
+      "A random entry chosen by a probabilistic sampling algorithm to avoid worst-case sequential eviction patterns",
+      "The oldest-inserted entry regardless of how recently it was accessed or how frequently it was requested",
     ],
     answer: 0,
     difficulty: "senior",

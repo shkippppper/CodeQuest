@@ -7,9 +7,9 @@ const quiz: Question[] = [
     prompt: "What does a snapshot test catch that a typical unit test structurally can't?",
     options: [
       "Unintended pixel-level visual changes, like a broken font or a shifted layout, even when no value in the view model changed",
-      "Logic errors in a view model's computed properties",
-      "Race conditions between two async functions",
-      "Memory leaks caused by retain cycles",
+      "Logic errors in a view model's computed properties that silently produce incorrect output values without causing any change in the rendered pixels",
+      "Race conditions between two async functions that concurrently read and write the same shared mutable state across task boundaries",
+      "Memory leaks caused by retain cycles between a view controller and its view model that prevent deallocation after the screen is dismissed",
     ],
     answer: 0,
     explanation:
@@ -21,9 +21,9 @@ const quiz: Question[] = [
     prompt: "What does `assertSnapshot(of: view, as: .image, record: true)` do?",
     options: [
       "Overwrites the saved reference image with the current rendering and always passes — it never compares",
-      "Fails the test if the view doesn't match the last saved image",
-      "Runs the snapshot test only on CI",
-      "Deletes all previously recorded snapshots",
+      "Fails the test immediately if any pixel in the current rendering differs from the previously saved reference image",
+      "Runs the snapshot assertion only when executed on CI, skipping it entirely on local developer machines",
+      "Deletes all previously recorded snapshots in the __Snapshots__ directory so they can be regenerated from scratch",
     ],
     answer: 0,
     explanation:
@@ -39,9 +39,9 @@ const quiz: Question[] = [
 }`,
     options: [
       "It will always pass, silently re-recording the reference every run — it can never actually fail",
-      "It will fail on the very next unrelated pixel change",
-      "It will only run once and then be skipped automatically",
-      "CI will refuse to build until record is set back to false",
+      "It will fail on the very next unrelated pixel change, because record mode still does a pixel-level comparison before overwriting",
+      "It will only run once and then be skipped automatically on subsequent runs once a reference image file exists on disk",
+      "CI will refuse to build the test target until record is set back to false and all snapshot references are committed",
     ],
     answer: 0,
     explanation:
@@ -77,9 +77,9 @@ const quiz: Question[] = [
     prompt: "What is 'snapshot fatigue'?",
     options: [
       "Reviewers rubber-stamping 'update snapshots' commits without actually reviewing the diffs, because failures are too frequent to inspect individually",
-      "The CPU cost of rendering many views to images during a test run",
-      "A crash caused by taking too many snapshots in one test",
-      "The delay before a snapshot test times out",
+      "The cumulative CPU and disk I/O cost of rendering and compressing many large view images during a complete snapshot test suite run on the CI machine",
+      "A recurring and hard-to-reproduce crash that triggers when a single test function records more reference snapshot images than the framework's internal image buffer can accommodate",
+      "The configurable per-assertion timeout delay configured in the test plan before a snapshot assertion gives up waiting for the view hierarchy to fully finish rendering",
     ],
     answer: 0,
     explanation:
@@ -94,9 +94,9 @@ const quiz: Question[] = [
 // Every screen using that spacing token fails its snapshot test`,
     options: [
       "Dozens of unrelated snapshot failures fire from one intentional change, training reviewers to stop reading diffs — snapshot testing should be reserved for visually critical, low-churn components",
-      "Nothing changes, because snapshot tests only check logic, not layout",
-      "Only the design system's own tests fail; screen-level tests are unaffected",
-      "The build fails to compile since spacing tokens can't be snapshot tested",
+      "Nothing at all changes in the snapshot test results, because snapshot assertions verify only underlying data model logic and are completely immune to any visual layout shifts caused by spacing token updates",
+      "Only the design system module's own dedicated snapshot tests fail; every single screen-level snapshot test living in other feature modules remains completely green and is totally unaffected by the spacing token change",
+      "The entire test target fails to compile immediately because spacing token value types don't conform to the Snapshotable protocol that the snapshot testing library requires for all image-based assertions",
     ],
     answer: 0,
     difficulty: "senior",

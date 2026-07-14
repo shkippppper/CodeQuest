@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Check, X, Eye, Lightbulb, HelpCircle, Brain, Terminal, ListChecks } from "lucide-react";
 import type { Question } from "../../content/types";
 import { CodeBlock } from "../CodeBlock";
@@ -23,6 +23,30 @@ function normalize(s: string): string {
   return s.trim().toLowerCase().replace(/\s+/g, " ").replace(/;$/, "");
 }
 
+// Deterministic per-question display order so the correct option isn't always in
+// the same slot. Seeded by question.id → same shuffle every render/session, but
+// varied across questions. Grading always uses the original index, never `pos`.
+function seededOrder(id: string, n: number): number[] {
+  let h = 2166136261;
+  for (let i = 0; i < id.length; i++) {
+    h ^= id.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  const rand = () => {
+    h += 0x6d2b79f5;
+    let t = h;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+  const order = Array.from({ length: n }, (_, i) => i);
+  for (let i = n - 1; i > 0; i--) {
+    const j = Math.floor(rand() * (i + 1));
+    [order[i], order[j]] = [order[j], order[i]];
+  }
+  return order;
+}
+
 export function QuestionCard({ question, onGraded }: Props) {
   const [graded, setGraded] = useState(false);
   const [correct, setCorrect] = useState(false);
@@ -35,6 +59,9 @@ export function QuestionCard({ question, onGraded }: Props) {
 
   const meta = TYPE_LABEL[question.type];
   const TypeIcon = meta.icon;
+
+  const optionCount = "options" in question ? question.options.length : 0;
+  const order = useMemo(() => seededOrder(question.id, optionCount), [question.id, optionCount]);
 
   function grade(isCorrect: boolean, score?: number) {
     setCorrect(isCorrect);
@@ -81,7 +108,8 @@ export function QuestionCard({ question, onGraded }: Props) {
       {/* ---- MCQ / PREDICT ---- */}
       {(question.type === "mcq" || question.type === "predict") && (
         <div className="mt-4 flex flex-col gap-2">
-          {question.options.map((opt, i) => {
+          {order.map((i, pos) => {
+            const opt = question.options[i];
             const isAnswer = i === question.answer;
             const isPicked = i === selected;
             let stateCls = "";
@@ -108,7 +136,7 @@ export function QuestionCard({ question, onGraded }: Props) {
                   className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-xs font-semibold"
                   style={{ borderColor: "var(--border)" }}
                 >
-                  {graded && isAnswer ? <Check size={14} color="var(--ok)" /> : graded && isPicked ? <X size={14} color="var(--bad)" /> : String.fromCharCode(65 + i)}
+                  {graded && isAnswer ? <Check size={14} color="var(--ok)" /> : graded && isPicked ? <X size={14} color="var(--bad)" /> : String.fromCharCode(65 + pos)}
                 </span>
                 <span className={question.type === "predict" ? "font-mono text-[0.85rem]" : ""}>
                   <InlineMarkdown>{opt}</InlineMarkdown>
@@ -131,7 +159,8 @@ export function QuestionCard({ question, onGraded }: Props) {
       {/* ---- MULTI (select all that apply) ---- */}
       {question.type === "multi" && (
         <div className="mt-4 flex flex-col gap-2">
-          {question.options.map((opt, i) => {
+          {order.map((i) => {
+            const opt = question.options[i];
             const isAnswer = question.answers.includes(i);
             const isPicked = multiSel.has(i);
             let style: React.CSSProperties = { borderColor: "var(--border)", background: "var(--bg)" };

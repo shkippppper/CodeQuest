@@ -7,9 +7,9 @@ const quiz: Question[] = [
     prompt: "What's the difference between hit testing and the responder chain?",
     options: [
       "Hit testing finds the initial view for a touch; the responder chain routes an unhandled event up through next responders",
-      "They are the same mechanism",
-      "Hit testing routes keyboard input; the chain finds touched views",
-      "The chain runs before hit testing",
+      "They are the same mechanism — hit testing IS the responder chain, just named differently depending on whether a touch is involved",
+      "Hit testing routes keyboard input to the focused view, while the responder chain finds the correct view for touch events",
+      "The responder chain runs before hit testing — UIKit walks it first to find a willing handler, then confirms with point(inside:)",
     ],
     answer: 0,
     explanation:
@@ -21,9 +21,9 @@ const quiz: Question[] = [
     prompt: "What is the first responder primarily for?",
     options: [
       "Receiving non-positional events like keyboard input and menu/shortcut actions first",
-      "Being the topmost view on screen",
-      "Handling the first touch of a gesture",
-      "The app delegate",
+      "Being the topmost view on screen — the view rendered last in the view hierarchy Z-order automatically becomes first responder",
+      "Handling the very first touch of a multi-touch gesture before any other view gets a chance to recognize the sequence",
+      "The app delegate — it is always the first responder so that global keyboard shortcuts are handled before any view sees them",
     ],
     answer: 0,
     explanation:
@@ -44,9 +44,9 @@ const quiz: Question[] = [
     prompt: "Which views does hit testing skip (so they can't receive touches)?",
     options: [
       "Hidden views, views with isUserInteractionEnabled = false, and near-transparent (alpha < 0.01) views",
-      "Views with a background color",
-      "Views inside a stack view",
-      "Views with rounded corners",
+      "Views with any background color, since a colored background suggests the view is purely decorative and not interactive",
+      "Views nested inside a UIStackView, because the stack view intercepts all touches on behalf of its arranged subviews",
+      "Views with a cornerRadius greater than zero, because clipped corners reduce the hittable area below the frame rectangle",
     ],
     answer: 0,
     explanation:
@@ -59,9 +59,9 @@ const quiz: Question[] = [
     code: `// button → ? → ? → ? → ?`,
     options: [
       "button → superviews → view controller → window → UIApplication → AppDelegate",
-      "button → AppDelegate → window → view controller",
-      "button → UIApplication → superviews",
-      "button → window → button again",
+      "button → AppDelegate → window → view controller → superviews, because the app delegate handles global events first",
+      "button → UIApplication → superviews → view controller, skipping the window since it's transparent to event routing",
+      "button → window → button again — the event bounces back to the initial hit-tested view after the window fails to handle it",
     ],
     answer: 0,
     explanation:
@@ -88,9 +88,9 @@ const quiz: Question[] = [
     code: `// child button extends beyond parent.bounds`,
     options: [
       "Hit testing asks the parent point(inside:) first; points outside the parent's bounds return false, so the child never gets the touch",
-      "Buttons can't extend past their parent",
-      "The button is hidden",
-      "It's a rendering-only issue, taps still work",
+      "Buttons declared as subviews can't extend visually or interactively past their parent's frame in any direction whatsoever",
+      "The button is hidden — UIKit automatically hides any portion of a subview that extends outside its parent's clipsToBounds area",
+      "It's purely a rendering issue and taps work fine everywhere — hit testing uses the button's own absolute frame, not the parent's bounds",
     ],
     answer: 0,
     difficulty: "senior",
@@ -103,9 +103,9 @@ const quiz: Question[] = [
     prompt: "How does a `sendAction` with `target: nil` (e.g. copy:/paste:) find its handler?",
     options: [
       "It travels up the responder chain until a responder implements that selector",
-      "It calls the AppDelegate directly",
-      "It broadcasts to every view",
-      "It does nothing without an explicit target",
+      "It calls the AppDelegate directly, bypassing the chain, since the delegate handles all system-level actions globally",
+      "It broadcasts to every visible view simultaneously, and all matching handlers execute in reverse Z-order",
+      "It does nothing without an explicit target — UIKit ignores sendAction calls where target is nil as a safety measure",
     ],
     answer: 0,
     difficulty: "senior",
@@ -118,9 +118,9 @@ const quiz: Question[] = [
     prompt: "You want an overlay view to let touches reach the content behind it. What do you do?",
     options: [
       "Override hitTest to return nil (or the underlying view) for points the overlay shouldn't handle",
-      "Set the overlay's alpha to 1",
-      "Add more constraints",
-      "Make the overlay the first responder",
+      "Set the overlay's alpha to exactly 1.0, since any fully opaque view automatically passes all touches through to views behind it",
+      "Add more Auto Layout constraints to shrink the overlay's frame so it doesn't cover the interactive content underneath",
+      "Make the overlay the first responder so it receives all events at the start of the chain and can decide how to forward them",
     ],
     answer: 0,
     difficulty: "senior",

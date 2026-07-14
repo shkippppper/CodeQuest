@@ -7,9 +7,9 @@ const quiz: Question[] = [
     prompt: "What is the 'frame budget' at 60Hz?",
     options: [
       "About 16.7ms — the time the system gives you to produce one frame before it must show something on screen",
-      "60 seconds",
-      "Exactly 1ms, always, on every device",
-      "The total time your app is allowed to run",
+      "60 seconds total per rendering pass, averaged across all frames so short frames can subsidize expensive ones",
+      "Exactly 1ms on every device, regardless of display refresh rate, since Metal enforces a fixed GPU submission window",
+      "The total time your app is allowed to run in the background before the OS suspends it to reclaim CPU resources",
     ],
     answer: 0,
     explanation:
@@ -23,9 +23,9 @@ const quiz: Question[] = [
 // 60Hz frame budget: ~16.7ms`,
     options: [
       "A hitch — the system reshows the previous frame and the new one lands a cycle later, reading as a brief stutter",
-      "Nothing different, 20ms is well within budget",
-      "The screen goes black until the frame finishes",
-      "The frame rate permanently drops to 30Hz",
+      "Nothing different — 20ms is well within the 60Hz budget, since the budget is measured per-second not per-frame",
+      "The screen goes black until the frame finishes rendering, then resumes normally with no visible dropped content",
+      "The frame rate permanently drops to 30Hz, because the OS detects sustained budget overruns and halves the refresh rate",
     ],
     answer: 0,
     explanation:
@@ -59,9 +59,9 @@ const quiz: Question[] = [
     prompt: "What's the difference between overdraw and blending?",
     options: [
       "Overdraw is painting the same pixel more than once per frame; blending is combining a translucent layer with what's underneath, which costs more than overwriting an opaque pixel",
-      "They're two names for exactly the same thing",
-      "Overdraw only happens in UIKit, blending only in SwiftUI",
-      "Blending is cheaper than drawing an opaque layer",
+      "They're two different names for exactly the same rendering problem — both describe wasted GPU work caused by repainting the same already-painted pixels multiple times in the framebuffer",
+      "Overdraw only happens in UIKit because CALayer compositing is manual, while blending only happens in SwiftUI's declarative render pass",
+      "Blending is cheaper than drawing an opaque layer because it skips the depth test and reuses the existing pixel color directly",
     ],
     answer: 0,
     explanation:
@@ -81,9 +81,9 @@ const quiz: Question[] = [
     prompt: "In the Simulator, which debug overlay would you use to visually confirm which views are triggering offscreen rendering?",
     options: [
       "Color Off-screen Rendered — tints affected views yellow",
-      "Color Blended Layers — this is for offscreen rendering",
-      "Slow Animations",
-      "There is no visual way to check this, only Instruments",
+      "Color Blended Layers — this overlay highlights offscreen rendering by tinting affected views in a distinct red overlay",
+      "Slow Animations — it reduces the frame rate to 1Hz, which makes offscreen passes visible as a prolonged black flash",
+      "There is no visual way to check offscreen rendering in the Simulator — you must use Instruments' GPU Frame Capture tool",
     ],
     answer: 0,
     explanation:
@@ -104,9 +104,9 @@ struct RowView: View {
 }`,
     options: [
       "RowView's body re-evaluates on every scrollOffset update even though it never reads that property, because it observes the whole object",
-      "RowView never re-evaluates since it doesn't read scrollOffset",
-      "Only the first RowView on screen re-evaluates",
-      "SwiftUI automatically skips re-evaluation for properties a view doesn't use",
+      "RowView never re-evaluates while scrolling because SwiftUI tracks property-level access and skips views that didn't read scrollOffset",
+      "Only the first RowView that was created on screen re-evaluates, since it holds the initial observation subscription for that object",
+      "SwiftUI automatically skips re-evaluation for any published property a view's body didn't explicitly access during the previous render pass",
     ],
     answer: 0,
     difficulty: "senior",

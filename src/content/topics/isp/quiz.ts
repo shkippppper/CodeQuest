@@ -7,9 +7,9 @@ const quiz: Question[] = [
     prompt: "What does the Interface Segregation Principle say?",
     options: [
       "Clients shouldn't be forced to depend on methods they don't use",
-      "Every type must conform to exactly one protocol",
-      "Protocols should never have more than one requirement",
-      "Interfaces should always be classes, never protocols",
+      "Every type must conform to exactly one protocol so dependency relationships remain unambiguous",
+      "Protocols should never have more than one requirement, because each requirement increases coupling",
+      "Interfaces should always be implemented as classes rather than protocols to enable inheritance",
     ],
     answer: 0,
     explanation:
@@ -26,9 +26,9 @@ const quiz: Question[] = [
 }`,
     options: [
       "It bundles three independent hardware capabilities into one contract, forcing every conformer to deal with all three even if it only supports one",
-      "It has too few methods to be useful",
-      "It doesn't use generics",
-      "Protocols in Swift can only have one requirement, so this is invalid",
+      "It has too few methods to cover all the print-job management and spooler-queue tasks a real production printer driver must handle",
+      "It lacks generic type parameters, so it cannot safely express document transformations across different concrete document types without runtime casting",
+      "Protocols in Swift can only declare one method requirement at a time, so a protocol body with three method signatures is always a compiler error",
     ],
     answer: 0,
     explanation:
@@ -47,9 +47,9 @@ let p: Printer = BasicUSBPrinter()
 _ = p.scanDocument()`,
     options: [
       "The app crashes at runtime — scanDocument() calls fatalError()",
-      "It silently returns an empty Document",
-      "Compile error — BasicUSBPrinter doesn't conform to Printer",
-      "It prints the document instead of scanning",
+      "It silently returns an empty Document, because fatalError is intercepted by the runtime and replaced with a zero-value fallback",
+      "Compile error — BasicUSBPrinter doesn't conform to Printer because the return type of scanDocument doesn't match",
+      "It prints the document instead of scanning, because the compiler substitutes the only implemented capability",
     ],
     answer: 0,
     explanation:
@@ -76,9 +76,9 @@ func printReport(_ doc: Document, using printer: Printing) {
 printReport(someDoc, using: AllInOneDevice())`,
     options: [
       "Yes — AllInOneDevice conforms to Printing (among others), so it satisfies the narrower parameter type on its own",
-      "No — AllInOneDevice must conform to exactly Printing and nothing else to be passed",
-      "Compile error — a type can't conform to more than one protocol in Swift",
-      "No — printReport requires an explicit Printing & Scanning & Faxing type",
+      "No — AllInOneDevice must conform to exactly Printing and no other protocols; additional conformances prevent it from being passed as a narrower type",
+      "Compile error — a type in Swift cannot conform to more than one protocol simultaneously in the same declaration",
+      "No — printReport explicitly requires a Printing & Scanning & Faxing existential, so a type conforming to all three must be declared with that combined type",
     ],
     answer: 0,
     explanation:
@@ -104,9 +104,9 @@ printReport(someDoc, using: AllInOneDevice())`,
     prompt: "What is a Swift protocol extension's default implementation actually good for, per this lesson?",
     options: [
       "Reducing boilerplate for a capability every conformer legitimately has, with a sensible shared default — not a fix for a fat protocol's forced-but-unwanted methods",
-      "Silently hiding methods a conformer can't implement, so calling them does nothing instead of crashing",
-      "Forcing every conformer of a protocol to override every method",
-      "Replacing the need for protocols entirely",
+      "Silently hiding methods a conformer cannot implement by returning a zero or empty value instead of crashing, which hides the missing capability entirely from downstream callers",
+      "Forcing every conformer of a protocol to override every method by marking the default implementation as final, which prevents any conforming type from providing its own specialized version",
+      "Replacing the need for protocol declarations entirely by providing full concrete implementations that allow types to participate in polymorphism without writing an explicit conformance",
     ],
     answer: 0,
     explanation:
@@ -123,9 +123,9 @@ printReport(someDoc, using: AllInOneDevice())`,
 }`,
     options: [
       "It hides the missing capability instead of removing it from the type's contract — callers now get silently wrong empty documents instead of an obvious, debuggable crash",
-      "It's actually a correct and complete fix with no downsides",
-      "Protocol extensions cannot provide default implementations in Swift, so this code doesn't compile",
-      "It causes a retain cycle",
+      "It is a correct and complete fix: the protocol extension satisfies the requirement, preserves the existing conformance, and gives callers a safe non-crashing fallback document value",
+      "Protocol extensions are not permitted to provide default implementations for any method that has a return type, because the compiler cannot verify that the returned default value is semantically valid",
+      "It introduces a retain cycle because the protocol extension stores a strong implicit back-reference to every conforming type that relies on the default implementation at runtime",
     ],
     answer: 0,
     difficulty: "senior",

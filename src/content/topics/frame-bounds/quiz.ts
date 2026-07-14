@@ -21,9 +21,9 @@ const quiz: Question[] = [
     prompt: "What does `bounds` describe?",
     options: [
       "The view's own internal rectangle in its own coordinate system (origin defaults to 0,0)",
-      "The view's position inside its superview",
-      "The device screen size",
-      "The safe area",
+      "The view's position inside its superview, expressed as an origin point plus a size in the parent's coordinate space",
+      "The device screen size in logical points, updated whenever the device orientation changes or an external display is connected",
+      "The safe area insets subtracted from the full bounds, giving the region where content won't be obscured by the notch or home indicator",
     ],
     answer: 0,
     explanation:
@@ -35,9 +35,9 @@ const quiz: Question[] = [
     prompt: "How does a UIScrollView 'scroll' its content?",
     options: [
       "By changing its `bounds.origin`, which shifts the visible portion without moving the view in its superview",
-      "By changing its `frame.origin`",
-      "By resizing all subviews",
-      "By moving the window",
+      "By changing its `frame.origin`, which repositions the entire scroll view container within its parent to simulate a scrolling effect",
+      "By resizing all subviews proportionally so that more content fits within the fixed frame as the user drags a finger across the screen",
+      "By moving the window's root view controller, shifting all content relative to the physical display boundaries rather than the view hierarchy",
     ],
     answer: 0,
     explanation:
@@ -50,9 +50,9 @@ const quiz: Question[] = [
     code: `// reposition view inside its superview`,
     options: [
       "frame.origin and center change; bounds is unchanged",
-      "bounds.origin changes; frame is unchanged",
-      "Both frame and bounds origins change",
-      "Neither changes",
+      "bounds.origin changes while frame stays fixed in the superview, since the reposition is tracked in the view's own coordinate space",
+      "Both frame and bounds origins change together, since they describe the same rect just from different reference frames",
+      "Neither changes, because repositioning is handled by Auto Layout constraints rather than by mutating frame or bounds directly",
     ],
     answer: 0,
     explanation:
@@ -88,9 +88,9 @@ const quiz: Question[] = [
     code: `view.transform = CGAffineTransform(rotationAngle: .pi / 4)`,
     options: [
       "bounds and center stay the same; frame becomes the larger axis-aligned box enclosing the rotated square",
-      "Both bounds and frame rotate identically",
-      "bounds becomes larger; frame stays the same",
-      "Nothing changes",
+      "Both bounds and frame rotate identically, since they describe the same physical area and the transform applies to the coordinate system they share",
+      "bounds becomes larger to enclose the rotated corners while frame stays the same size because frame is fixed in the superview's axis-aligned grid",
+      "Nothing changes until the view is redrawn on the next run loop cycle, at which point both frame and bounds update to reflect the new rotation angle",
     ],
     answer: 0,
     difficulty: "senior",
@@ -103,9 +103,9 @@ const quiz: Question[] = [
     prompt: "Once a non-identity `transform` is applied, which should you avoid using to position/size the view?",
     options: [
       "`frame` — use `bounds` (size) and `center` (position) instead",
-      "`center` — it's invalid under transforms",
-      "`bounds` — it's meaningless under transforms",
-      "All three are equally safe",
+      "`center` — it reports the midpoint in the superview's pre-transform coordinate space, so setting it moves the view to the wrong position after rotation is applied",
+      "`bounds` — it becomes meaningless under transforms since it no longer maps to a predictable region of the superview's coordinate space",
+      "All three are equally safe to read and write under a non-identity transform, since UIKit automatically adjusts each property to account for the current transformation matrix",
     ],
     answer: 0,
     difficulty: "senior",
@@ -118,9 +118,9 @@ const quiz: Question[] = [
     prompt: "Why does changing a superview's `bounds.origin` reposition its subviews?",
     options: [
       "Subview frames are interpreted relative to the superview's bounds, so shifting the bounds origin shifts all children",
-      "It doesn't affect subviews at all",
-      "Subviews are positioned relative to the window",
-      "Because it resizes the subviews",
+      "It doesn't affect subviews at all — subview positions are stored as absolute screen coordinates that remain fixed regardless of any ancestor's bounds changes",
+      "Subviews are positioned relative to the window's coordinate system, so only changing the window's bounds origin would cause them to appear to move on screen",
+      "Because it resizes the subviews proportionally to fill the new visible region, scaling their frames so their content fills the same fraction of the visible area as before",
     ],
     answer: 0,
     difficulty: "senior",

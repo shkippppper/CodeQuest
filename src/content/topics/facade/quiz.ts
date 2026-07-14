@@ -7,9 +7,9 @@ const quiz: Question[] = [
     prompt: "What does the facade pattern provide?",
     options: [
       "A single, simple entry point that internally coordinates calls to several independent subsystems in the correct order",
-      "A way to make a class impossible to subclass",
-      "A caching layer for network requests only",
-      "A protocol with no methods",
+      "A way to make a class impossible to subclass, by marking it final and hiding its initializer behind a factory method instead",
+      "A caching layer for network requests only, storing responses so repeated calls to the same endpoint return instantly without hitting the server",
+      "A protocol with no methods, acting as a marker conformance that grants access to restricted subsystem APIs at compile time",
     ],
     answer: 0,
     explanation:
@@ -21,9 +21,9 @@ const quiz: Question[] = [
     prompt: "In the CheckoutFacade example, what does `placeOrder(cart:user:)` actually eliminate for callers?",
     options: [
       "The need for every call site to know the correct order to call inventory, pricing, payment, shipping, and notifications",
-      "The need for InventoryService and PaymentGateway to exist at all",
-      "The need for error handling anywhere in the app",
-      "The need for a network connection",
+      "The need for InventoryService and PaymentGateway to exist at all — the facade reimplements their logic internally so no other objects are required",
+      "The need for error handling anywhere in the app, since the facade catches and resolves all subsystem errors before they can propagate to the caller",
+      "The need for a network connection, because the facade caches all order data locally and syncs to the server only when the app goes to the background",
     ],
     answer: 0,
     explanation:
@@ -44,9 +44,9 @@ const quiz: Question[] = [
     prompt: "What distinguishes a facade from a plain API layer (e.g. a `UserAPI` wrapping one network call)?",
     options: [
       "A facade coordinates multiple independent subsystems; an API layer typically translates the format of a single subsystem",
-      "A facade is always a struct, an API layer is always a class",
-      "There is no difference, they're the same pattern",
-      "A facade must be a singleton",
+      "A facade is always a struct, while an API layer is always a class with reference semantics so multiple callers share the same cached state",
+      "There is no difference — both patterns wrap underlying complexity behind a cleaner interface, and the terms are used interchangeably in practice",
+      "A facade must be a singleton so all callers share the same subsystem orchestration state and there is no risk of conflicting coordinator instances",
     ],
     answer: 0,
     explanation:
@@ -59,9 +59,9 @@ const quiz: Question[] = [
     code: `let order = try await checkoutFacade.placeOrder(cart: cart, user: user)`,
     options: [
       "No — it just calls placeOrder, and the facade enforces the ordering internally",
-      "Yes — every call site must replicate the reserve-before-charge order manually",
-      "The order doesn't matter for correctness",
-      "It must call PaymentGateway directly first",
+      "Yes — every call site must replicate the reserve-before-charge order manually, since the facade only wraps the subsystems without enforcing any particular sequence between them",
+      "The order doesn't matter for correctness, because the payment gateway automatically rolls back any charge if the inventory reservation fails afterward",
+      "It must call PaymentGateway directly first to pre-authorize the card before the facade is allowed to start reserving inventory on the caller's behalf",
     ],
     answer: 0,
     explanation:
@@ -87,9 +87,9 @@ const quiz: Question[] = [
     prompt: "What's the risk of continuously adding unrelated methods to an existing facade over time?",
     options: [
       "It turns into a god object that no longer represents one coordinated workflow, undermining the reason it existed",
-      "It becomes faster automatically",
-      "Swift will refuse to compile it past a method count limit",
-      "It automatically becomes thread-safe",
+      "It becomes faster automatically, because a single large type avoids the cross-module dispatch overhead of calling into many smaller coordinator objects",
+      "Swift will refuse to compile it past a method count limit, triggering a compiler error that forces you to split the type into separate extension files",
+      "It automatically becomes thread-safe, because having all subsystem calls in one type means the compiler can serialize them through a single internal queue",
     ],
     answer: 0,
     difficulty: "senior",
@@ -109,9 +109,9 @@ const quiz: Question[] = [
 }`,
     options: [
       "Debugging becomes much harder — callers and logs lose which subsystem actually failed and why",
-      "Nothing changes, error handling is purely cosmetic",
-      "It makes the facade faster",
-      "It becomes impossible to call placeOrder at all",
+      "Nothing changes — error handling is purely cosmetic, and all callers only care whether the order succeeded or failed, never which step was responsible",
+      "It makes the facade noticeably faster, because wrapping every subsystem throw in a single catch block avoids the overhead of propagating typed errors up the call stack",
+      "It becomes impossible to call placeOrder at all, because throwing a non-conforming OrderFailed type without re-declaring the full error contract causes a compile error",
     ],
     answer: 0,
     difficulty: "senior",

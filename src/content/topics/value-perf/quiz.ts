@@ -7,9 +7,9 @@ const quiz: Question[] = [
     prompt: "Why is allocating a local struct typically cheaper than allocating a local class instance?",
     options: [
       "The struct is stack-allocated (a pointer bump, freed automatically on return); the class instance requires a heap allocation plus ARC retain/release",
-      "Structs skip type checking entirely",
-      "Classes are always slower to initialize regardless of memory location",
-      "Structs are compiled to machine code, classes are interpreted",
+      "Structs skip Swift's type-checking and protocol witness resolution entirely at the call site, so the compiler generates fewer load instructions per invocation",
+      "Classes are always slower to initialize regardless of memory location or allocation strategy, due to mandatory reference counting overhead on every instance",
+      "Structs are compiled directly to native machine code while class methods are dispatched through a bytecode interpreter embedded in the Swift runtime",
     ],
     answer: 0,
     explanation:
@@ -26,9 +26,9 @@ const quiz: Question[] = [
 let p = Profile(age: 30, name: "Ada")`,
     options: [
       "Yes — `name`'s character storage lives on the heap even though `Profile` itself is stack-allocated",
-      "No — structs never touch the heap under any circumstances",
-      "Only if the struct is stored in a class",
-      "Only in Release builds",
+      "No — structs never touch the heap under any circumstances, because value types are entirely stack-resident",
+      "Only if the struct is stored inside a heap-allocated class property",
+      "Only in Release builds when optimization is enabled",
     ],
     answer: 0,
     explanation:
@@ -54,9 +54,9 @@ for i in data.indices {
 }`,
     options: [
       "`snapshot` holds an extra strong reference to the same buffer, so it's never uniquely referenced and every mutation re-copies it",
-      "Array subscript assignment is always O(n) regardless of references",
-      "`for i in data.indices` recomputes the whole array each iteration",
-      "This code doesn't compile",
+      "Array subscript assignment is always O(n) regardless of how many strong references exist to the underlying storage buffer",
+      "`for i in data.indices` recomputes the indices sequence by deep-copying the entire array's storage buffer on each loop pass",
+      "This code doesn't compile because assigning a `var` array to a `let` constant is forbidden in Swift when the element type does not conform to Sendable",
     ],
     answer: 0,
     difficulty: "senior",
@@ -69,9 +69,9 @@ for i in data.indices {
     prompt: "What does an `any Shape` existential container store for a large conforming struct that doesn't fit its small inline buffer?",
     options: [
       "A pointer to a heap-allocated copy of the value, alongside type metadata and a witness table",
-      "The value is truncated to fit the inline buffer",
-      "A compile error is raised",
-      "Nothing — existentials only support types small enough to fit inline",
+      "The value is silently truncated to fit inside the existential container's fixed inline buffer",
+      "A compile error is raised because large conforming types cannot be used as existentials",
+      "Nothing — existentials only support small types; large ones must use a generic constraint instead",
     ],
     answer: 0,
     explanation:
@@ -106,9 +106,9 @@ for i in data.indices {
     prompt: "What does the compiler's specialization of a generic function produce?",
     options: [
       "A dedicated, fully-typed copy of the function for a specific concrete type, with no generic overhead left",
-      "A runtime lookup table mapping types to implementations",
-      "A boxed existential wrapping the generic parameter",
-      "Nothing — Swift generics always run through type erasure at runtime",
+      "A runtime lookup table that maps each concrete type to its own dynamically dispatched implementation at every call site in the module",
+      "A boxed existential container wrapping the generic parameter so the concrete type is fully erased before any code generation occurs",
+      "Nothing visible — Swift generics are fully erased at compile time and always run through a type-metadata lookup at runtime just like Java generics do",
     ],
     answer: 0,
     difficulty: "senior",

@@ -7,7 +7,7 @@ const quiz: Question[] = [
     prompt: "What must you do before adding Auto Layout constraints to a view created in code?",
     options: [
       "Set `translatesAutoresizingMaskIntoConstraints = false`",
-      "Call `layoutIfNeeded()` first",
+      "Call `layoutIfNeeded()` first so the view computes its final frame before any constraints are added",
       "Set its frame to zero",
       "Add it to a UIStackView",
     ],
@@ -21,7 +21,7 @@ const quiz: Question[] = [
     prompt: "What is a view's intrinsic content size?",
     options: [
       "The natural size it derives from its content (e.g. a label from its text)",
-      "The size of its superview",
+      "The exact size of its immediate superview's bounds, inherited automatically before any layout pass runs",
       "Always 44×44 points",
       "The screen size",
     ],
@@ -35,7 +35,7 @@ const quiz: Question[] = [
     prompt: "What do content hugging and compression resistance control?",
     options: [
       "Hugging resists growing beyond intrinsic size; compression resistance resists shrinking below it",
-      "Hugging resists shrinking; compression resistance resists growing",
+      "Hugging resists shrinking below the content size, while compression resistance is what resists growing beyond the content size",
       "Both control color",
       "They set the frame directly",
     ],
@@ -50,7 +50,7 @@ const quiz: Question[] = [
     code: `// labelA and labelB in a horizontal row, not enough width`,
     options: [
       "The label with the LOWER horizontal compression-resistance priority",
-      "The label with the higher compression resistance",
+      "The label configured with the higher horizontal compression-resistance priority always truncates first",
       "The one added first",
       "Both truncate equally",
     ],
@@ -74,7 +74,7 @@ const quiz: Question[] = [
     prompt: "What does `UIStackView` do for you?",
     options: [
       "Generates and manages the constraints for its arranged subviews based on axis/distribution/alignment/spacing",
-      "Renders faster than any other view",
+      "Renders its arranged subviews significantly faster than any other UIKit container, because it bypasses the normal constraint solver entirely",
       "Replaces the need for view controllers",
       "Disables Auto Layout",
     ],
@@ -103,7 +103,7 @@ const quiz: Question[] = [
     options: [
       "Constraints are contradictory; UIKit broke one to recover — usually fix by adjusting a constraint's priority, not deleting blindly",
       "The app is out of memory",
-      "A view is missing from the hierarchy",
+      "It means one of your views is missing from the view hierarchy entirely, so the constraint solver can't resolve the layout and logs it",
       "Auto Layout is disabled",
     ],
     answer: 0,
@@ -119,7 +119,7 @@ const quiz: Question[] = [
       "Ambiguous = too few constraints (position/size undetermined); conflicting = too many/contradictory constraints",
       "They are the same thing",
       "Ambiguous means the view is offscreen",
-      "Conflicting means the view has no superview",
+      "Conflicting layout simply means the view was never added to a superview, so Auto Layout has no parent coordinate space to resolve against",
     ],
     answer: 0,
     difficulty: "senior",

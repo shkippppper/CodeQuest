@@ -7,9 +7,9 @@ const quiz: Question[] = [
     prompt: "What problem does the Coordinator pattern primarily solve?",
     options: [
       "It removes navigation/flow logic from view controllers, making them flow-agnostic and reusable",
-      "It speeds up view rendering",
-      "It replaces the Model layer",
-      "It manages memory automatically",
+      "It speeds up view rendering by batching UINavigationController push calls into a single layout pass per run loop tick",
+      "It replaces the Model layer by owning the data objects that view controllers read and write during a navigation flow",
+      "It manages memory automatically by maintaining weak references to all view controllers it has ever pushed on the stack",
     ],
     answer: 0,
     explanation:
@@ -21,9 +21,9 @@ const quiz: Question[] = [
     prompt: "In the Coordinator pattern, how does a view controller trigger navigation?",
     options: [
       "It reports an event (via delegate/closure); the coordinator decides the destination",
-      "It pushes the next view controller itself",
-      "It calls the AppDelegate",
-      "It mutates global navigation state directly",
+      "It pushes the next view controller itself using the UINavigationController reference it holds as a stored property",
+      "It calls the AppDelegate's navigation helper method, which then delegates the actual push to the root coordinator",
+      "It mutates global navigation state directly by writing a destination value into a shared singleton the coordinator observes",
     ],
     answer: 0,
     explanation:
@@ -44,9 +44,9 @@ const quiz: Question[] = [
     prompt: "What's the classic memory bug with child coordinators?",
     options: [
       "Forgetting to remove a finished child from the parent's array, so it leaks",
-      "Retaining the navigation controller weakly",
-      "Using closures for callbacks",
-      "Creating too few coordinators",
+      "Retaining the navigation controller weakly, which causes it to be deallocated before the coordinator can push any view controllers",
+      "Using closures for coordinator callbacks instead of a protocol delegate, which the compiler rejects as an ambiguous retention rule",
+      "Creating too few child coordinators, forcing a single coordinator to manage unrelated flows and violating single-responsibility",
     ],
     answer: 0,
     explanation:
@@ -58,9 +58,9 @@ const quiz: Question[] = [
     prompt: "How does data typically flow with coordinators?",
     options: [
       "Down via initializers/parameters when building a screen; up via closures/delegates when a screen reports an event",
-      "Only through global singletons",
-      "Only downward, never back up",
-      "Through NotificationCenter exclusively",
+      "Only through global singletons that both the coordinator and the view controllers observe for state changes at all times",
+      "Only downward via dependency injection — screens never need to communicate back because coordinators listen via KVO instead",
+      "Through NotificationCenter exclusively, since coordinators must decouple themselves from their screens using only string-named events",
     ],
     answer: 0,
     explanation:
@@ -86,9 +86,9 @@ const quiz: Question[] = [
     prompt: "How does the coordinator idea map onto SwiftUI's navigation?",
     options: [
       "A Router/coordinator owns a NavigationPath as observable state; views append typed routes instead of pushing controllers",
-      "SwiftUI can't keep navigation out of views",
-      "You must drop coordinators entirely in SwiftUI",
-      "Coordinators become UIViewControllers",
+      "SwiftUI's declarative model makes it impossible to keep navigation logic out of views, so the pattern cannot be applied at all",
+      "You must drop the coordinator pattern entirely in SwiftUI and let each view own its own NavigationLink destinations directly",
+      "Coordinators become UIViewControllers wrapped in UIViewControllerRepresentable so SwiftUI can host them inside a NavigationStack",
     ],
     answer: 0,
     difficulty: "senior",
@@ -102,9 +102,9 @@ const quiz: Question[] = [
     code: `child.onFinish = { self.removeChild(child) }   // strong self + parent holds child`,
     options: [
       "A retain cycle — parent → child (array) and child → parent (closure) keep each other alive",
-      "Nothing — this is correct",
-      "The child never starts",
-      "A compile error",
+      "Nothing — this is the recommended pattern; closures in onFinish should always capture self strongly to prevent premature deallocation",
+      "The child coordinator never starts because the strong self capture prevents the closure from being stored on the child object",
+      "A compile error because Swift disallows strong self captures inside closures that are stored as properties on reference types",
     ],
     answer: 0,
     difficulty: "senior",
@@ -117,9 +117,9 @@ const quiz: Question[] = [
     prompt: "How does the Coordinator pattern relate to MVVM?",
     options: [
       "They compose — MVVM handles presentation while the coordinator handles navigation the ViewModel delegates out",
-      "They are mutually exclusive",
-      "Coordinators replace ViewModels",
-      "MVVM already includes coordinators by definition",
+      "They are mutually exclusive — using a coordinator makes ViewModels redundant because the coordinator itself owns all presentation state",
+      "Coordinators replace ViewModels entirely by absorbing both the navigation logic and all the presentation state into one object",
+      "MVVM already includes a built-in coordinator role by definition, so adding a separate coordinator object creates an unwanted duplication of flow logic",
     ],
     answer: 0,
     difficulty: "senior",

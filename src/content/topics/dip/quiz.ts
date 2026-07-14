@@ -7,9 +7,9 @@ const quiz: Question[] = [
     prompt: "What does the Dependency Inversion Principle say?",
     options: [
       "High-level modules shouldn't depend on low-level modules — both should depend on abstractions",
-      "Always inject dependencies through an initializer",
-      "Never let a class have more than one dependency",
-      "Low-level modules should depend directly on high-level modules",
+      "Always inject every dependency through an initializer parameter rather than through properties or factory methods",
+      "Never let any single class or struct depend on more than one external module or service at a time",
+      "Low-level modules should import and depend directly on high-level modules so that business logic drives all infrastructure decisions",
     ],
     answer: 0,
     explanation:
@@ -23,9 +23,9 @@ const quiz: Question[] = [
 final class MySQLDatabase { ... }    // opens sockets, writes bytes`,
     options: [
       "OrderProcessor is high-level (business rule); MySQLDatabase is low-level (mechanical detail)",
-      "MySQLDatabase is high-level because it does more work",
-      "They're both low-level since neither has UI code",
-      "Whichever class is larger is high-level",
+      "MySQLDatabase is the high-level module because it performs more computational work and manages more resources than the processor",
+      "Both are low-level because neither contains UI code, and high-level status requires a visible presentation layer",
+      "Whichever class has more lines of code is considered the high-level module, since larger classes encode more policy decisions",
     ],
     answer: 0,
     explanation:
@@ -84,9 +84,9 @@ final class PostgresDatabase: OrderStore {
 }`,
     options: [
       "No — the dependency is injected, but the parameter type is still the concrete MySQLDatabase, so nothing is inverted",
-      "Yes — passing db through init is exactly what DIP requires",
-      "Yes — because MySQLDatabase is a class, not a struct",
-      "No — because init should never take parameters",
+      "Yes — passing the concrete db through init is exactly what DIP requires; the principle demands injection, not necessarily an abstraction",
+      "Yes — because MySQLDatabase is a class rather than a struct, it satisfies the reference-type requirement that DIP mandates for dependencies",
+      "No — because DIP requires that init never accept any parameters at all; dependencies must be set through property assignment after initialization",
     ],
     answer: 0,
     explanation:
@@ -98,9 +98,9 @@ final class PostgresDatabase: OrderStore {
     prompt: "Where is it most worth applying DIP?",
     options: [
       "At boundaries — networking, persistence, payment providers, and other volatile or external dependencies",
-      "On every single type in the codebase, including simple value types like Money",
-      "Only inside unit test files",
-      "Only on types marked final",
+      "On every single type in the codebase, including simple value types like Money and domain enums, to maximize testability everywhere",
+      "Only inside unit test targets, where wrapping dependencies in protocols prevents real network or database calls during testing",
+      "Only on types explicitly marked final, since non-final classes can already be subclassed as a substitute for protocol-based inversion",
     ],
     answer: 0,
     explanation:
@@ -118,9 +118,9 @@ final class MySQLDatabase: OrderStore { ... }
 final class OrderProcessor { let store: OrderStore ... }`,
     options: [
       "No — the abstraction still lives on the low-level side, so the high-level module still depends downward on the persistence module",
-      "Yes — using a protocol at all satisfies DIP regardless of where it's declared",
-      "Yes — because OrderProcessor never references MySQLDatabase by name",
-      "No — because OrderStore should be a class, not a protocol",
+      "Yes — introducing a protocol anywhere in the codebase fully satisfies DIP regardless of which module owns and declares it",
+      "Yes — because OrderProcessor only ever references the OrderStore protocol by name and never imports MySQLDatabase directly",
+      "No — because OrderStore is declared as a protocol rather than an abstract class, which violates DIP's requirement for a concrete base type",
     ],
     answer: 0,
     difficulty: "senior",

@@ -16,9 +16,9 @@ const quiz: Question[] = [
     prompt: "In Cocoa (UIKit) MVC, how do the Model and View communicate?",
     options: [
       "Through the Controller — they don't talk to each other directly",
-      "The View mutates the Model directly",
-      "The Model owns and updates the View",
-      "They share global state",
+      "The View mutates the Model directly via property bindings, bypassing the Controller entirely",
+      "The Model owns and updates the View by holding a strong reference to each UIView it needs to display",
+      "They share a global state singleton, which both read and write independently without coordination",
     ],
     answer: 0,
     explanation:
@@ -39,9 +39,9 @@ const quiz: Question[] = [
     prompt: "Why is logic inside a UIKit view controller hard to unit test?",
     options: [
       "It's entangled with UIKit — you'd need a live view hierarchy to exercise it",
-      "Swift can't test classes",
-      "Controllers are private by default",
-      "XCTest doesn't support MVC",
+      "Swift's type system cannot run XCTest assertions on a class that imports UIKit in the same module",
+      "View controllers and their methods are private by default and cannot be accessed from a separate test target",
+      "XCTest has no built-in support for the MVC pattern, so controller tests require a third-party framework to set up the test harness",
     ],
     answer: 0,
     explanation:
@@ -53,9 +53,9 @@ const quiz: Question[] = [
     prompt: "What do MVVM, MVP, and Coordinators all have in common relative to MVC?",
     options: [
       "They extract responsibilities out of the view controller to reduce coupling and improve testability",
-      "They eliminate the Model",
-      "They remove the need for views",
-      "They only work in SwiftUI",
+      "They eliminate the Model entirely and let the view controller manage its own data through internal state properties",
+      "They remove the need for views altogether by generating the interface programmatically from metadata at runtime",
+      "They only work correctly in SwiftUI and cannot be applied to UIKit-based applications without significant framework modifications",
     ],
     answer: 0,
     explanation:
@@ -81,9 +81,9 @@ const quiz: Question[] = [
     prompt: "How does classic Smalltalk MVC differ from Apple's Cocoa MVC?",
     options: [
       "In Smalltalk MVC the Model notifies the View directly; in Cocoa MVC everything routes through the Controller",
-      "Smalltalk MVC has no Model",
-      "Cocoa MVC has no Controller",
-      "They are identical",
+      "Smalltalk MVC has no Model layer; data lives directly in the View and is manipulated in response to user input without any separate data object",
+      "Cocoa MVC has no Controller; the UIView subclass handles both display and all user-interaction responses directly",
+      "They are identical in structure and communication flow — Apple's documentation simply renamed the layers for clarity in an iOS context",
     ],
     answer: 0,
     difficulty: "senior",
@@ -97,9 +97,9 @@ const quiz: Question[] = [
     code: `// Consider a simple settings screen: one toggle, one label.`,
     options: [
       "False — MVC doesn't force logic into the controller; the anti-pattern comes from misuse, and MVC is fine for simple screens",
-      "True — every MVC controller becomes massive",
-      "True — UIKit forbids extracting logic",
-      "False — because MVC has no controller",
+      "True — the UIViewController lifecycle forces all business rules, networking, and formatting to accumulate in a single place regardless of how carefully you structure the code",
+      "True — UIKit's API design actively prevents extracting any logic out of the view controller because most UIKit callbacks are defined on UIViewController and cannot be delegated",
+      "False — because MVC as defined by Apple has no controller layer; UIViewController is classified as part of the View in Cocoa's implementation of the pattern",
     ],
     answer: 0,
     difficulty: "senior",
@@ -112,9 +112,9 @@ const quiz: Question[] = [
     prompt: "Which responsibility does classic MVC lack a dedicated home for, pushing it into the controller?",
     options: [
       "Presentation logic (e.g. formatting a date, computing a button's enabled state) and navigation",
-      "Storing raw data",
-      "Rendering pixels",
-      "Handling memory allocation",
+      "Storing raw data, because MVC assigns that responsibility jointly to both the Model and the Controller with no clear boundary",
+      "Rendering pixels directly — UIKit's view drawing pipeline exists outside MVC and the pattern provides no hook for it",
+      "Handling memory allocation, which must therefore happen in the controller since no other MVC layer has access to the heap",
     ],
     answer: 0,
     difficulty: "senior",

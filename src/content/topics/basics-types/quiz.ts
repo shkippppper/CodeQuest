@@ -8,7 +8,7 @@ const quiz: Question[] = [
     code: `let limit = 10
 limit = 20
 print(limit)`,
-    options: ["Compile error — cannot assign to a `let`", "Prints 20", "Prints 10", "Runtime crash"],
+    options: ["Compile error — cannot assign to a `let`", "Prints 20 because the compiler promotes `let` to `var` automatically", "Prints 10 because only the first assignment to a `let` is visible", "Runtime crash with EXC_BAD_ACCESS when the write lands on a read-only page"],
     answer: 0,
     explanation:
       "`let` declares a constant, so reassigning `limit` is a **compile-time** error, not a runtime one. Use `var` if the value must change.",
@@ -42,9 +42,9 @@ let ratio = 2.5
 let total = apples + ratio`,
     options: [
       "Compile error — can't add `Int` and `Double`",
-      "Prints 5.5",
-      "Prints 5",
-      "Prints 6",
+      "Prints 5.5 because Swift silently widens Int to Double before the addition",
+      "Prints 5 because the fractional part is truncated when mixing integer and float operands",
+      "Prints 6 because the result is rounded to the nearest integer by the type system",
     ],
     answer: 0,
     explanation:
@@ -77,9 +77,9 @@ print(message)`,
     prompt: "What does Swift do if you read a local variable that hasn't been assigned on every code path?",
     options: [
       "Refuses to compile (definite-initialization error)",
-      "Reads a default zero value",
-      "Reads `nil`",
-      "Crashes at runtime",
+      "Reads a default zero value, because Swift initializes all local variables to 0 or false before use",
+      "Reads `nil`, because uninitialized variables are implicitly treated as optionals by the compiler",
+      "Crashes at runtime with an uninitialized memory trap when the variable is first read",
     ],
     answer: 0,
     explanation:
@@ -122,9 +122,9 @@ let result = Int8(exactly: big)`,
     prompt: "In release builds, what happens at `Int.max + 1` in ordinary Swift arithmetic?",
     options: [
       "It traps (crashes) — overflow is a runtime error by default",
-      "It silently wraps around to `Int.min`",
-      "It saturates at `Int.max`",
-      "It promotes to a wider type automatically",
+      "It silently wraps around to `Int.min` the same way C unsigned arithmetic does on all platforms",
+      "It saturates at `Int.max` and stays there, preventing any further increment until the value is reset",
+      "It automatically promotes to a wider integer type such as Int128 to accommodate the result",
     ],
     answer: 0,
     difficulty: "senior",

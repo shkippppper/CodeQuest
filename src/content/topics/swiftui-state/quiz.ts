@@ -7,9 +7,9 @@ const quiz: Question[] = [
     prompt: "What does `@State` do?",
     options: [
       "Declares state a view owns, stored outside the struct so it survives re-renders and triggers updates",
-      "Marks a property as read-only",
-      "Shares a reference-type model across many views",
-      "Runs code on a background thread",
+      "Marks the decorated property as read-only and prevents any mutation from anywhere within the view body",
+      "Shares a reference-type observable model object across many sibling views that all observe it simultaneously",
+      "Registers a closure that executes on a background thread whenever the decorated property value changes externally",
     ],
     answer: 0,
     explanation:
@@ -21,9 +21,9 @@ const quiz: Question[] = [
     prompt: "What is `@Binding` for?",
     options: [
       "A two-way reference to state owned elsewhere — read and write without duplicating it",
-      "Creating brand-new state in the child",
-      "Persisting state to disk",
-      "Making a property constant",
+      "Creating brand-new independent state local to the child, initialized from the passed value",
+      "Automatically persisting a property's value to UserDefaults across app launches",
+      "Making a property constant so the child view can read but never mutate it",
     ],
     answer: 0,
     explanation:
@@ -63,9 +63,9 @@ struct Parent: View {
     prompt: "What is the 'single source of truth' principle?",
     options: [
       "Each piece of mutable state has exactly one owner; everything else references or derives it (never duplicates)",
-      "All state must live in one global object",
-      "State can only be read, never written",
-      "Every view must have its own copy of the state",
+      "All application state must be collapsed into a single global model object that is shared across the entire view hierarchy",
+      "State values can only ever be read through a published observable interface and must never be mutated directly anywhere",
+      "Every single view in the entire hierarchy must maintain its own fully independent copy of every relevant state value",
     ],
     answer: 0,
     explanation:
@@ -95,9 +95,9 @@ struct Parent: View {
 }`,
     options: [
       "SwiftUI treats it as a new view and resets the row's @State to its initial value",
-      "The @State is preserved across the id change",
-      "It crashes",
-      "The id has no effect on @State",
+      "The @State is fully preserved across the id change because the view type is still the same",
+      "It crashes with a fatal assertion because @State cannot survive a runtime identity change",
+      "The id modifier is ignored at runtime and has absolutely no observable effect on @State storage",
     ],
     answer: 0,
     difficulty: "senior",
@@ -110,9 +110,9 @@ struct Parent: View {
     prompt: "A child view needs to display (not modify) a value the parent owns. What should it use?",
     options: [
       "A plain `let` property — no binding needed for read-only data",
-      "@State — to own its own copy",
-      "@Binding — always required to pass data down",
-      "@EnvironmentObject",
+      "@State so the child owns an independent copy it can modify without affecting the parent",
+      "@Binding is always required whenever any data is passed down from parent to child view",
+      "@EnvironmentObject injected at the root so the child can observe any future writes",
     ],
     answer: 0,
     difficulty: "senior",
@@ -125,9 +125,9 @@ struct Parent: View {
     prompt: "When is `@State` the wrong tool, requiring `@StateObject`/`@Observable` instead?",
     options: [
       "When the state is a reference-type model shared across views, not a local value type",
-      "When the value is an Int",
-      "When the view has a body",
-      "When you use previews",
+      "When the value is an Int or any other primitive numeric type larger than 64 bits",
+      "Whenever the view defines a body property, @State automatically becomes invalid by design",
+      "When you use Xcode previews, because @State storage is not available in preview contexts",
     ],
     answer: 0,
     difficulty: "senior",

@@ -7,9 +7,9 @@ const quiz: Question[] = [
     prompt: "How does `async let a = f(); async let b = g()` differ from `let a = await f(); let b = await g()`?",
     options: [
       "`async let` runs f and g concurrently; the sequential `await` version runs them one after another",
-      "They are identical",
-      "`async let` runs them sequentially",
-      "The `await` version is concurrent",
+      "They are identical — both forms start f and g at the same time; the difference is only stylistic",
+      "`async let` runs them sequentially, just like the plain await form, but using a slightly different internal scheduler path",
+      "The `await` version is concurrent because each await suspends the caller and lets the other task run on a free thread",
     ],
     answer: 0,
     explanation:
@@ -21,9 +21,9 @@ const quiz: Question[] = [
     prompt: "When should you use a `TaskGroup` instead of `async let`?",
     options: [
       "When the number of child tasks is dynamic (e.g. one per element of a list)",
-      "When you have exactly two tasks",
-      "When you don't need results",
-      "Never — async let replaces it",
+      "When you have exactly two tasks, since async let only supports a single concurrent binding at a time",
+      "When you don't need results and want to fire-and-forget work without collecting return values",
+      "Never — async let fully replaces TaskGroup even for dynamic counts, because you can put async let inside a loop",
     ],
     answer: 0,
     explanation:
@@ -44,9 +44,9 @@ const quiz: Question[] = [
     prompt: "In what order do results arrive when iterating `for await x in group`?",
     options: [
       "Completion order — whichever child finishes first",
-      "The order tasks were added",
-      "Reverse order",
-      "Sorted order",
+      "The order tasks were added with addTask, preserving the original submission sequence regardless of how long each takes",
+      "Reverse order — results arrive last-in, first-out based on when each child task was scheduled",
+      "Sorted order — the group sorts results by their return value before yielding them to the for-await loop",
     ],
     answer: 0,
     explanation:
@@ -58,9 +58,9 @@ const quiz: Question[] = [
     prompt: "In structured concurrency, can a child task (via `async let` / `TaskGroup`) outlive the scope that created it?",
     options: [
       "No — the parent scope cannot return until all its children finish",
-      "Yes — children run independently forever",
-      "Only if marked @escaping",
-      "Only detached tasks can have children",
+      "Yes — children run independently forever; the parent can return early and the runtime keeps child tasks alive on their own",
+      "Only if the async let binding is marked @escaping to opt the child out of the structured lifetime guarantee",
+      "Only detached tasks can have children; async let and TaskGroup don't create real parent-child relationships",
     ],
     answer: 0,
     explanation:
@@ -86,9 +86,9 @@ const quiz: Question[] = [
     prompt: "You start work with a bare `Task { await doWork() }` inside a view. What's your responsibility?",
     options: [
       "It's unstructured — you must store the handle and cancel it yourself (e.g. on disappear)",
-      "Nothing — it's cancelled automatically with the view",
-      "It runs on a detached thread with no actor context",
-      "It blocks the caller until done",
+      "Nothing — it's cancelled automatically with the enclosing view or scope, just like a structured child task would be",
+      "It runs on a detached thread with no actor context and no inherited priority from the call site",
+      "It blocks the caller until done, suspending the current actor just like a plain await expression would",
     ],
     answer: 0,
     difficulty: "senior",
@@ -101,9 +101,9 @@ const quiz: Question[] = [
     prompt: "How does `Task.detached { }` differ from `Task { }`?",
     options: [
       "Detached inherits nothing — no priority, no actor isolation, no task-local values",
-      "Detached is always faster",
-      "Detached is automatically cancelled",
-      "There is no difference",
+      "Detached is always faster because it skips the overhead of copying actor context and priority from the parent task",
+      "Detached is automatically cancelled when the calling scope exits, the same way a structured child task would be",
+      "There is no difference — both Task and Task.detached produce unstructured tasks that inherit all the same context from the caller",
     ],
     answer: 0,
     difficulty: "senior",
@@ -120,9 +120,9 @@ const quiz: Question[] = [
 }`,
     options: [
       "The child task is automatically cancelled and awaited as the scope exits",
-      "x keeps running forever in the background",
-      "Compile error — you must await every async let",
-      "It leaks the task",
+      "x keeps running forever in the background, since the runtime has no way to know the caller abandoned the binding",
+      "Compile error — the compiler requires you to explicitly await every async let binding before the enclosing scope returns",
+      "It leaks the task indefinitely; the async let binding holds a strong reference that prevents the task from being deallocated",
     ],
     answer: 0,
     difficulty: "senior",
@@ -135,9 +135,9 @@ const quiz: Question[] = [
     prompt: "A `.high` priority task awaits the result of a `.low` priority task. What does the runtime do to avoid priority inversion?",
     options: [
       "Priority escalation — it temporarily raises the low task's priority",
-      "It deadlocks",
-      "It cancels the low task",
-      "Nothing — the high task just waits at low speed",
+      "It deadlocks when both tasks share the same serial actor, since the high-priority waiter blocks the actor the low-priority task needs",
+      "It cancels the low task and restarts it at high priority so the waiter can proceed without being blocked indefinitely",
+      "Nothing — the high task just waits at low speed, accepting the inversion as an unavoidable consequence of cooperative scheduling",
     ],
     answer: 0,
     difficulty: "senior",
