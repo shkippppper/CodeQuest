@@ -7,6 +7,7 @@ import { TOPICS, TOTAL_TOPICS, TOTAL_QUESTIONS, groupedBySubject, topicsForSubje
 import { CATEGORIES, SUBJECTS, type SubjectId } from "../content/types";
 import { useProgress } from "../game/store";
 import { useSubject } from "../game/subject";
+import { reviewCountForSubject } from "../game/review";
 import { BADGES } from "../game/badges";
 import { topicMastery, masteryColor, masteryLabel, MASTERY_TIERS, type MasteryTier } from "../lib/mastery";
 
@@ -24,9 +25,10 @@ function Lucide({ name, size, color }: { name: string; size: number; color?: str
 }
 
 export function Dashboard() {
-  const { state, level, reviewCount } = useProgress();
+  const { state, level } = useProgress();
   const { subject, setSubject } = useSubject();
   const subjectInfo = SUBJECTS[subject];
+  const reviewCount = useMemo(() => reviewCountForSubject(state, subject), [state, subject]);
 
   const completedCount = Object.keys(state.completedTopics).length;
   const accuracy = state.totalAnswered > 0 ? Math.round((state.totalCorrect / state.totalAnswered) * 100) : 0;

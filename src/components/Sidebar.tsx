@@ -6,6 +6,7 @@ import { groupedBySubject } from "../content/registry";
 import { CATEGORIES, DIFFICULTY_META, SUBJECTS, type Difficulty } from "../content/types";
 import { useProgress } from "../game/store";
 import { useSubject } from "../game/subject";
+import { reviewCountForSubject } from "../game/review";
 import { cn } from "../lib/cn";
 import { topicMastery, type MasteryTier } from "../lib/mastery";
 
@@ -26,8 +27,9 @@ const TIER_ICON: Record<MasteryTier, typeof Circle> = {
 };
 
 export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
-  const { state, reviewCount } = useProgress();
+  const { state } = useProgress();
   const { subject, setSubject } = useSubject();
+  const reviewCount = useMemo(() => reviewCountForSubject(state, subject), [state, subject]);
   const [query, setQuery] = useState("");
   const [diffs, setDiffs] = useState<Set<Difficulty>>(new Set());
   const [collapsed, setCollapsed] = useState<Set<string>>(() => {

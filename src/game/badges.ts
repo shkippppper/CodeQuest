@@ -1,6 +1,6 @@
 import type { ProgressState } from "./store";
-import { TOPICS } from "../content/registry";
-import type { CategoryId } from "../content/types";
+import { TOPICS, topicsForSubject } from "../content/registry";
+import type { CategoryId, SubjectId } from "../content/types";
 
 export interface BadgeDef {
   id: string;
@@ -22,6 +22,12 @@ function perfectCount(s: ProgressState): number {
 
 function categoryComplete(s: ProgressState, cat: CategoryId): boolean {
   const ids = TOPICS.filter((t) => t.meta.category === cat).map((t) => t.meta.id);
+  if (ids.length === 0) return false;
+  return ids.every((id) => s.completedTopics[id]);
+}
+
+function subjectComplete(s: ProgressState, subject: SubjectId): boolean {
+  const ids = topicsForSubject(subject).map((t) => t.meta.id);
   if (ids.length === 0) return false;
   return ids.every((id) => s.completedTopics[id]);
 }
@@ -121,6 +127,22 @@ export const BADGES: BadgeDef[] = [
     icon: "Workflow",
     tier: "gold",
     earned: (s) => categoryComplete(s, "concurrency"),
+  },
+  {
+    id: "sql_foundations",
+    name: "Schema Savant",
+    description: "Complete every SQL Foundations topic.",
+    icon: "Database",
+    tier: "silver",
+    earned: (s) => categoryComplete(s, "sql-foundations"),
+  },
+  {
+    id: "sql_master",
+    name: "Query Master",
+    description: "Complete every SQL & Databases topic.",
+    icon: "Server",
+    tier: "gold",
+    earned: (s) => subjectComplete(s, "sql"),
   },
   {
     id: "xp_500",
