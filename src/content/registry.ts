@@ -1,4 +1,4 @@
-import { CATEGORIES, type CategoryId, type Difficulty, type Question, type Topic, type TopicMeta } from "./types";
+import { CATEGORIES, SUBJECTS, type CategoryId, type Difficulty, type Question, type SubjectId, type Topic, type TopicMeta } from "./types";
 
 const metaModules = import.meta.glob<{ default: TopicMeta }>("./topics/*/meta.ts", { eager: true });
 const mdModules = import.meta.glob<string>("./topics/*/explanation.md", {
@@ -81,6 +81,27 @@ export function groupedByCategory(): CategoryGroup[] {
     .filter((g) => g.topics.length > 0);
 }
 
+/** The subject a topic belongs to, derived from its category. */
+export function subjectOfTopic(t: Topic): SubjectId {
+  return CATEGORIES[t.meta.category].subject;
+}
+
+/** Categories with topics, grouped under their subject (subjects in `order`). */
+export function groupedBySubject(): { id: SubjectId; groups: CategoryGroup[] }[] {
+  const subjects = Object.values(SUBJECTS).sort((a, b) => a.order - b.order);
+  return subjects
+    .map((s) => ({
+      id: s.id,
+      groups: groupedByCategory().filter((g) => CATEGORIES[g.id].subject === s.id),
+    }))
+    .filter((s) => s.groups.length > 0);
+}
+
+/** All topics for a subject, in the same category/topic order as `TOPICS`. */
+export function topicsForSubject(s: SubjectId): Topic[] {
+  return TOPICS.filter((t) => subjectOfTopic(t) === s);
+}
+
 /** Flat ordered list of topic ids — used for prev/next navigation. */
 export const TOPIC_ORDER: string[] = TOPICS.map((t) => t.meta.id);
 
@@ -117,9 +138,19 @@ export function countByDifficulty(difficulty: Difficulty | "mixed"): number {
   return ALL_QUESTIONS.filter((q) => q.difficulty === difficulty).length;
 }
 
-/** Fisher–Yates shuffle, then take `count`, optionally filtered by difficulty. */
-export function sampleQuestions(count: number, difficulty: Difficulty | "mixed"): FlatQuestion[] {
-  const pool = difficulty === "mixed" ? ALL_QUESTIONS : ALL_QUESTIONS.filter((q) => q.difficulty === difficulty);
+/** Every question belonging to topics in the given subject. */
+export function questionsForSubject(s: SubjectId): FlatQuestion[] {
+  return ALL_QUESTIONS.filter((q) => subjectOfTopic(q.topic) === s);
+}
+
+/** Fisher–Yates shuffle, then take `count`, optionally filtered by difficulty and subject. */
+export function sampleQuestions(
+  count: number,
+  difficulty: Difficulty | "mixed",
+  subject?: SubjectId,
+): FlatQuestion[] {
+  let pool = difficulty === "mixed" ? ALL_QUESTIONS : ALL_QUESTIONS.filter((q) => q.difficulty === difficulty);
+  if (subject) pool = pool.filter((q) => subjectOfTopic(q.topic) === subject);
   const arr = [...pool];
   for (let i = arr.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));

@@ -3,14 +3,14 @@ import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "motion/react";
 import { Swords, ArrowRight, Trophy, Target, RotateCcw, Shuffle, Zap } from "lucide-react";
 import {
-  ALL_QUESTIONS,
-  countByDifficulty,
+  questionsForSubject,
   sampleQuestions,
   type FlatQuestion,
 } from "../content/registry";
-import { DIFFICULTY_META, type Difficulty } from "../content/types";
+import { DIFFICULTY_META, SUBJECTS, type Difficulty } from "../content/types";
 import { QuestionCard } from "../components/quiz/QuestionCard";
 import { useProgress } from "../game/store";
+import { useSubject } from "../game/subject";
 
 type DiffChoice = Difficulty | "mixed";
 const SIZES = [10, 20, 30] as const;
@@ -24,17 +24,21 @@ function diffColor(d: DiffChoice): string {
 }
 
 export function ChallengePage() {
+  const { subject } = useSubject();
   const [phase, setPhase] = useState<"config" | "run" | "done">("config");
   const [diff, setDiff] = useState<DiffChoice>("mixed");
   const [size, setSize] = useState<number>(20);
   const [items, setItems] = useState<FlatQuestion[]>([]);
   const [result, setResult] = useState({ correct: 0, total: 0 });
 
-  const available = useMemo(() => countByDifficulty(diff), [diff]);
+  const subjectPool = useMemo(() => questionsForSubject(subject), [subject]);
+  const countFor = (d: DiffChoice) =>
+    d === "mixed" ? subjectPool.length : subjectPool.filter((q) => q.difficulty === d).length;
+  const available = countFor(diff);
   const effectiveSize = Math.min(size, available);
 
   function start() {
-    setItems(sampleQuestions(size, diff));
+    setItems(sampleQuestions(size, diff, subject));
     setPhase("run");
   }
 
@@ -53,7 +57,7 @@ export function ChallengePage() {
             <div>
               <h1 className="text-2xl font-extrabold leading-tight">Challenge mode</h1>
               <p className="text-sm" style={{ color: "var(--text-muted)" }}>
-                Random questions pulled from all {ALL_QUESTIONS.length} across every topic.
+                Random questions pulled from all {subjectPool.length} in {SUBJECTS[subject].label}.
               </p>
             </div>
           </div>
@@ -79,7 +83,7 @@ export function ChallengePage() {
                   {d === "mixed" ? <Shuffle size={16} /> : <span className="h-2.5 w-2.5 rounded-full" style={{ background: c }} />}
                   {diffLabel(d)}
                   <span className="text-[0.7rem] font-normal" style={{ color: "var(--text-muted)" }}>
-                    {countByDifficulty(d)} Qs
+                    {countFor(d)} Qs
                   </span>
                 </button>
               );

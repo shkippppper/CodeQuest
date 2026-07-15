@@ -9,11 +9,13 @@ import { SettingsPage } from "./pages/SettingsPage";
 import { NotFoundPage } from "./pages/NotFoundPage";
 import { ThemeProvider } from "./theme/ThemeContext";
 import { ProgressProvider } from "./game/store";
+import { SubjectProvider } from "./game/subject";
 
 export default function App() {
   return (
     <ThemeProvider>
       <ProgressProvider>
+        <SubjectProvider>
         <BrowserRouter>
           <Routes>
             <Route element={<Layout />}>
@@ -27,6 +29,7 @@ export default function App() {
             </Route>
           </Routes>
         </BrowserRouter>
+        </SubjectProvider>
       </ProgressProvider>
     </ThemeProvider>
   );

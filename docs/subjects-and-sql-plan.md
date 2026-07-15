@@ -245,15 +245,15 @@ Combine → `AsyncSequence` migration · Embedded Swift / Swift-on-server overvi
 
 ## Task checklist
 
-- [ ] **P1** Add `SubjectId` / `SubjectInfo` / `SUBJECTS` to `types.ts`; add `subject` to
+- [x] **P1** Add `SubjectId` / `SubjectInfo` / `SUBJECTS` to `types.ts`; add `subject` to
       `CategoryInfo`; set `subject: "swift"` on 15 existing categories; add 8 `sql` categories.
-- [ ] **P1** Registry helpers: `subjectOfTopic`, `groupedBySubject`, `topicsForSubject`,
+- [x] **P1** Registry helpers: `subjectOfTopic`, `groupedBySubject`, `topicsForSubject`,
       `questionsForSubject`; optional `subject` arg on `sampleQuestions`. `tsc -b` green.
-- [ ] **P2** `useSubject()` + `cq_subject` persistence.
-- [ ] **P2** Sidebar subject pills + subject-filtered tree.
-- [ ] **P2** Dashboard hero/paths per subject + subject strip with completion %.
-- [ ] **P2** Scope Challenge/Review to active subject; palette optional. Build green + smoke test.
-- [ ] **P3** Pilot one SQL topic (recommend `sql-select-where`), verify quality bar.
+- [x] **P2** `useSubject()` + `cq_subject` persistence. (`src/game/subject.tsx`)
+- [x] **P2** Sidebar subject pills + subject-filtered tree.
+- [x] **P2** Dashboard hero/paths per subject + subject strip with completion %.
+- [x] **P2** Scope Challenge/Review to active subject; palette optional. Build green + smoke test.
+- [x] **P3** Pilot one SQL topic (`sql-select-where`), verify quality bar. (auditor OK, renders, no console errors)
 - [ ] **P3** Author remaining 30 SQL topics in waves; each passes checkslugs + tsc.
 - [ ] **P3** Add §18 SQL section to `CURRICULUM.md`.
 - [ ] **Final** `npx tsc -b && npm run build` green; commit.

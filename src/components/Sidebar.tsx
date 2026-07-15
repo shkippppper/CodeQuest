@@ -1,11 +1,20 @@
 import { useMemo, useState } from "react";
 import { NavLink } from "react-router-dom";
+import * as Icons from "lucide-react";
 import { Search, Bookmark, LayoutGrid, RotateCcw, Swords, X, Circle, CircleDashed, CircleDot, CheckCircle2, ChevronDown } from "lucide-react";
-import { groupedByCategory } from "../content/registry";
-import { CATEGORIES, DIFFICULTY_META, type Difficulty } from "../content/types";
+import { groupedBySubject } from "../content/registry";
+import { CATEGORIES, DIFFICULTY_META, SUBJECTS, type Difficulty } from "../content/types";
 import { useProgress } from "../game/store";
+import { useSubject } from "../game/subject";
 import { cn } from "../lib/cn";
 import { topicMastery, type MasteryTier } from "../lib/mastery";
+
+const SUBJECT_LIST = Object.values(SUBJECTS).sort((a, b) => a.order - b.order);
+
+function Lucide({ name, size, color }: { name: string; size: number; color?: string }) {
+  const Cmp = (Icons as unknown as Record<string, React.ComponentType<{ size?: number; color?: string }>>)[name] ?? Icons.Circle;
+  return <Cmp size={size} color={color} />;
+}
 
 const ALL_DIFF: Difficulty[] = ["junior", "mid", "senior"];
 
@@ -18,6 +27,7 @@ const TIER_ICON: Record<MasteryTier, typeof Circle> = {
 
 export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   const { state, reviewCount } = useProgress();
+  const { subject, setSubject } = useSubject();
   const [query, setQuery] = useState("");
   const [diffs, setDiffs] = useState<Set<Difficulty>>(new Set());
   const [collapsed, setCollapsed] = useState<Set<string>>(() => {
@@ -34,7 +44,8 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
 
   const groups = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return groupedByCategory()
+    const forSubject = groupedBySubject().find((s) => s.id === subject)?.groups ?? [];
+    return forSubject
       .map((g) => ({
         ...g,
         topics: g.topics.filter((t) => {
@@ -44,7 +55,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
         }),
       }))
       .filter((g) => g.topics.length > 0);
-  }, [query, diffs]);
+  }, [query, diffs, subject]);
 
   function toggleDiff(d: Difficulty) {
     setDiffs((prev) => {
@@ -71,6 +82,30 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
 
   return (
     <div className="flex h-full flex-col">
+      {/* subject switcher */}
+      <div className="px-3 pt-3">
+        <div className="flex gap-1.5 rounded-xl border p-1" style={{ borderColor: "var(--border)", background: "var(--bg)" }}>
+          {SUBJECT_LIST.map((s) => {
+            const active = s.id === subject;
+            return (
+              <button
+                key={s.id}
+                onClick={() => setSubject(s.id)}
+                title={s.blurb}
+                className="flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-lg px-2 py-1.5 text-xs font-semibold transition"
+                style={{
+                  background: active ? `color-mix(in srgb, ${s.accent} 18%, transparent)` : "transparent",
+                  color: active ? s.accent : "var(--text-muted)",
+                }}
+              >
+                <Lucide name={s.icon} size={14} color={active ? s.accent : "var(--text-muted)"} />
+                <span className="truncate">{s.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       {/* search */}
       <div className="px-3 pt-3">
         <div className="relative">

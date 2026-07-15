@@ -3,9 +3,10 @@ import { Link } from "react-router-dom";
 import { motion } from "motion/react";
 import * as Icons from "lucide-react";
 import { ArrowRight, Star, Target, CheckCircle2, Zap, RotateCcw, Trophy, Lock, Layers } from "lucide-react";
-import { TOPICS, TOTAL_TOPICS, TOTAL_QUESTIONS, groupedByCategory } from "../content/registry";
-import { CATEGORIES } from "../content/types";
+import { TOPICS, TOTAL_TOPICS, TOTAL_QUESTIONS, groupedBySubject, topicsForSubject } from "../content/registry";
+import { CATEGORIES, SUBJECTS, type SubjectId } from "../content/types";
 import { useProgress } from "../game/store";
+import { useSubject } from "../game/subject";
 import { BADGES } from "../game/badges";
 import { topicMastery, masteryColor, masteryLabel, MASTERY_TIERS, type MasteryTier } from "../lib/mastery";
 
@@ -24,12 +25,27 @@ function Lucide({ name, size, color }: { name: string; size: number; color?: str
 
 export function Dashboard() {
   const { state, level, reviewCount } = useProgress();
+  const { subject, setSubject } = useSubject();
+  const subjectInfo = SUBJECTS[subject];
 
   const completedCount = Object.keys(state.completedTopics).length;
   const accuracy = state.totalAnswered > 0 ? Math.round((state.totalCorrect / state.totalAnswered) * 100) : 0;
   const earned = new Set(state.badges);
-  const nextTopic = TOPICS.find((t) => !state.completedTopics[t.meta.id]) ?? TOPICS[0];
-  const groups = groupedByCategory();
+  const subjectTopics = useMemo(() => topicsForSubject(subject), [subject]);
+  const nextTopic =
+    subjectTopics.find((t) => !state.completedTopics[t.meta.id]) ?? subjectTopics[0] ?? TOPICS[0];
+  const groups = useMemo(
+    () => groupedBySubject().find((s) => s.id === subject)?.groups ?? [],
+    [subject],
+  );
+
+  /** completion % for a subject (share of its topics marked complete). */
+  const subjectPct = (id: SubjectId): number => {
+    const ts = topicsForSubject(id);
+    if (ts.length === 0) return 0;
+    const done = ts.filter((t) => state.completedTopics[t.meta.id]).length;
+    return Math.round((done / ts.length) * 100);
+  };
 
   const masteryCounts = useMemo(() => {
     const counts: Record<MasteryTier, number> = { "not-started": 0, learning: 0, proficient: 0, mastered: 0 };
@@ -55,7 +71,7 @@ export function Dashboard() {
               {level.rank}
             </p>
             <h1 className="mt-1 text-3xl font-extrabold tracking-tight sm:text-4xl">
-              Master Swift, level by level.
+              {subjectInfo.tagline}
             </h1>
             <p className="mt-2 max-w-md" style={{ color: "var(--text-muted)" }}>
               Bite-sized lessons, code-driven quizzes, and XP for everything you learn. Your interview-prep adventure starts here.
@@ -135,6 +151,51 @@ export function Dashboard() {
               <span className="ml-auto font-bold">{masteryCounts[tier]}</span>
             </div>
           ))}
+        </div>
+      </motion.section>
+
+      {/* subjects */}
+      <motion.section {...fadeUp(0.14)} className="mt-8">
+        <h2 className="mb-3 text-lg font-extrabold">Subjects</h2>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          {Object.values(SUBJECTS)
+            .sort((a, b) => a.order - b.order)
+            .map((s) => {
+              const active = s.id === subject;
+              const pct = subjectPct(s.id);
+              return (
+                <button
+                  key={s.id}
+                  onClick={() => setSubject(s.id)}
+                  className="group rounded-2xl border p-5 text-left transition duration-200 hover:-translate-y-0.5 hover:shadow-lg"
+                  style={{
+                    borderColor: active ? `color-mix(in srgb, ${s.accent} 55%, var(--border))` : "var(--border)",
+                    background: "var(--bg-elev)",
+                  }}
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="flex h-10 w-10 items-center justify-center rounded-xl" style={{ background: `color-mix(in srgb, ${s.accent} 16%, transparent)` }}>
+                      <Lucide name={s.icon} size={20} color={s.accent} />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-bold">{s.label}</p>
+                      <p className="truncate text-xs" style={{ color: "var(--text-muted)" }}>{s.blurb}</p>
+                    </div>
+                    {active && (
+                      <span className="shrink-0 rounded-full px-2 py-0.5 text-[0.65rem] font-bold" style={{ background: `color-mix(in srgb, ${s.accent} 20%, transparent)`, color: s.accent }}>
+                        Active
+                      </span>
+                    )}
+                  </div>
+                  <div className="mt-4 flex items-center gap-3">
+                    <div className="h-2 flex-1 overflow-hidden rounded-full" style={{ background: "var(--border)" }}>
+                      <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: s.accent }} />
+                    </div>
+                    <span className="text-xs font-semibold" style={{ color: "var(--text-muted)" }}>{pct}%</span>
+                  </div>
+                </button>
+              );
+            })}
         </div>
       </motion.section>
 

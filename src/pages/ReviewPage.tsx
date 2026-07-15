@@ -1,10 +1,11 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { RotateCcw, ArrowRight, Sparkles, CheckCircle2 } from "lucide-react";
-import { getTopic } from "../content/registry";
+import { getTopic, subjectOfTopic } from "../content/registry";
 import type { Question, Topic } from "../content/types";
 import { QuestionCard } from "../components/quiz/QuestionCard";
 import { useProgress } from "../game/store";
+import { useSubject } from "../game/subject";
 
 interface ReviewItem {
   topic: Topic;
@@ -13,6 +14,7 @@ interface ReviewItem {
 
 export function ReviewPage() {
   const { state, recordAnswer, recordFlashcard } = useProgress();
+  const { subject } = useSubject();
 
   // Snapshot the queue once per mount so items don't vanish mid-session as they're cleared.
   const [items] = useState<ReviewItem[]>(() => {
@@ -20,7 +22,7 @@ export function ReviewPage() {
     for (const { topicId, qId } of Object.values(state.wrongLog)) {
       const topic = getTopic(topicId);
       const question = topic?.quiz.find((q) => q.id === qId);
-      if (topic && question) list.push({ topic, question });
+      if (topic && question && subjectOfTopic(topic) === subject) list.push({ topic, question });
     }
     return list;
   });
