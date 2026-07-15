@@ -441,6 +441,49 @@ The app currently ships four category ids in `src/content/types.ts` (`language`,
 
 ---
 
+## 17. Modern additions (2026 batch)
+
+Eighteen topics added after the original backlog was fully built, covering newer language features and interview surfaces not in the first pass. All ✅ built. Slotted into existing categories via `order`.
+
+- **Swift Macros** — `swift-macros` · language · senior · ✅
+  Sections: The boilerplate problem · Freestanding vs attached · Macro roles · Where the implementation lives (two-module split) · Additive-only · Syntax not values
+- **Ownership & Noncopyable Types** — `ownership-noncopyable` · memory · senior · ✅
+  Sections: The copy problem · `~Copyable` · consuming/borrowing · Unique ownership · When to reach for it
+- **Regex & RegexBuilder** — `regex` · language · mid · ✅
+  Sections: Stringly-typed parsing pain · Regex literals · `RegexBuilder` DSL · Captures · `Regex` in the stdlib APIs
+- **Variadic Generics (Parameter Packs)** — `variadic-generics` · types · senior · ✅
+  Sections: The arity problem · Parameter packs · `repeat`/`each` · Real use cases · Limits
+- **Distributed Actors** — `distributed-actors` · concurrency · senior · ✅
+  Sections: Actors across a network · `distributed` keyword · Actor systems & transports · Location transparency · Errors & serialization
+- **Objective-C Interop** — `objc-interop` · language · senior · ✅
+  Sections: Mixed codebases · Bridging headers · `@objc`/`dynamic` · Bridged types · Nullability & lightweight generics
+- **Accessibility** — `accessibility` · ui · mid · ✅
+  Sections: Who it's for · VoiceOver & traits · Dynamic Type · SwiftUI accessibility modifiers · Auditing
+- **Localization** — `localization` · foundation · mid · ✅
+  Sections: Hardcoded strings problem · String catalogs · Pluralization · Formatters & locale · RTL & layout
+- **Security & Keychain** — `security` · foundation · senior · ✅
+  Sections: Where secrets go · Keychain basics · App Transport Security · Data Protection · Common mistakes
+- **WidgetKit** — `widgetkit` · ui · mid · ✅
+  Sections: What widgets are · Timeline provider · Snapshot vs timeline · Sizes & deep links · Limits
+- **App Intents** — `app-intents` · ui · mid · ✅
+  Sections: Exposing app actions · `AppIntent` · Parameters & Siri · Shortcuts · App Shortcuts vs intents
+- **StoreKit 2** — `storekit` · foundation · mid · ✅
+  Sections: In-app purchase model · Products & purchase · Transactions & entitlements · Verification · Subscriptions
+- **Deep Linking** — `deep-linking` · architecture · mid · ✅
+  Sections: The routing problem · URL schemes vs Universal Links · Parsing & routing · SwiftUI navigation · Testing
+- **Core Location** — `core-location` · foundation · mid · ✅
+  Sections: Location basics · Authorization · Accuracy & battery · Region monitoring · Background updates
+- **Local Notifications** — `local-notifications` · foundation · junior · ✅
+  Sections: What they are · Requesting permission · Scheduling triggers · Content & actions · Handling delivery
+- **GraphQL** — `graphql` · foundation · senior · ✅
+  Sections: Over/under-fetching · Query/mutation/subscription · Schema · Apollo & codegen · Caching · Errors · vs REST
+- **Dependency Managers** — `dependency-managers` · tooling · mid · ✅
+  Sections: Reusing code without copying · CocoaPods · Carthage · SPM · Versioning & lockfiles · Trade-offs
+- **Core Graphics & Custom Drawing** — `core-graphics` · ui · senior · ✅
+  Sections: When no view fits · The context · Paths · Fill/stroke · Flipped coordinates · Transforms & state · Image rendering · Performance · Canvas
+
+---
+
 ## Implementation checklist (for the generation session)
 
 1. Extend `CategoryId` and the `CATEGORIES` map in `src/content/types.ts` with the new categories used above (label, order, blurb, icon, accent). Keep accents within the sequential palette.
