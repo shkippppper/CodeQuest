@@ -484,6 +484,90 @@ Eighteen topics added after the original backlog was fully built, covering newer
 
 ---
 
+## 18. SQL & Databases
+
+The first curriculum of a second **subject** (see `docs/subjects-and-sql-plan.md`). Standard SQL with SQLite/PostgreSQL dialect notes and iOS tie-ins (SQLite/Core Data/SwiftData). 31 topics across 8 `sql-*` categories. All ✅ built.
+
+### SQL Foundations (`sql-foundations`)
+- **What a Relational Database Is** — `sql-what-is-rdb` · sql-foundations · junior · ✅
+  Sections: The same fact copied everywhere · A table is a spreadsheet with rules · Split the data, link by id · Why "relational" · Fixed schema · Where NoSQL fits
+- **Tables, Rows & Keys** — `sql-tables-keys` · sql-foundations · junior · ✅
+  Sections: Which row do you mean · Primary key · Foreign keys · Referential integrity · Composite keys
+- **The Shape of SQL** — `sql-language-shape` · sql-foundations · junior · ✅
+  Sections: Five jobs · DDL · DML · DQL · TCL · DCL · The whole map
+- **Data Types** — `sql-data-types` · sql-foundations · junior · ✅
+  Sections: A column must know what it holds · Whole numbers · Exact vs approximate · Text · Dates/booleans · Dialects
+- **NULL & Three-Valued Logic** — `sql-null` · sql-foundations · mid · ✅
+  Sections: We don't know yet · Not zero/blank · Comparisons give UNKNOWN · IS NULL · NULL in AND/OR · NULL in aggregates · COALESCE
+
+### Querying (`sql-querying`)
+- **SELECT & WHERE** — `sql-select-where` · sql-querying · junior · ✅
+  Sections: A table has more than you want · SELECT · WHERE · AND/OR · Missing values · iOS tie-in
+- **ORDER BY, LIMIT & DISTINCT** — `sql-order-limit` · sql-querying · junior · ✅
+  Sections: No promised order · ORDER BY · Tie-breakers · LIMIT · OFFSET paging · DISTINCT
+- **Operators: LIKE, IN, BETWEEN** — `sql-operators` · sql-querying · mid · ✅
+  Sections: WHERE needs more than equals · BETWEEN · IN · LIKE · Case & escaping · Combining
+- **CASE Expressions** — `sql-case` · sql-querying · mid · ✅
+  Sections: A value that depends on a condition · Searched CASE · ELSE/NULL · Simple CASE · CASE anywhere · Conditional counting
+
+### Aggregation & Grouping (`sql-aggregation`)
+- **GROUP BY & Aggregates** — `sql-group-by` · sql-aggregation · mid · ✅
+  Sections: Many rows into one · Aggregates over the table · GROUP BY · The SELECT-column rule · Multiple columns · NULL groups
+- **HAVING vs WHERE** — `sql-having` · sql-aggregation · mid · ✅
+  Sections: Filtering on a total · Two filters two moments · Execution order · Use both · HAVING without an aggregate
+- **Window Functions** — `sql-window-functions` · sql-aggregation · senior · ✅
+  Sections: A group total but keep every row · OVER · PARTITION BY · Running totals · Ranking · Where windows sit
+
+### Joins & Sets (`sql-joins`)
+- **INNER & OUTER Joins** — `sql-inner-outer-joins` · sql-joins · mid · ✅
+  Sections: The answer in two tables · INNER JOIN · LEFT JOIN · RIGHT/FULL OUTER · Anti-join · Row multiplication
+- **Self & Cross Joins** — `sql-self-cross-joins` · sql-joins · mid · ✅
+  Sections: Relationships inside one table · Self join & aliases · Cross join · Cartesian product · Accidental cross join
+- **UNION, INTERSECT & EXCEPT** — `sql-set-operations` · sql-joins · mid · ✅
+  Sections: Combining two result sets · UNION · UNION ALL · INTERSECT · EXCEPT · Set ops vs joins
+
+### Subqueries & CTEs (`sql-subqueries`)
+- **Subqueries** — `sql-subqueries` · sql-subqueries · mid · ✅
+  Sections: The filter is itself a query · Scalar · IN list · Derived tables · Independent vs correlated
+- **Correlated Subqueries** — `sql-correlated-subqueries` · sql-subqueries · senior · ✅
+  Sections: Compared to its own group · Spot the correlation · Independent vs correlated · EXISTS · NOT EXISTS
+- **Common Table Expressions** — `sql-ctes` · sql-subqueries · mid · ✅
+  Sections: Nested subqueries unreadable · WITH · Reuse · Chaining · CTE vs subquery
+- **Recursive CTEs** — `sql-recursive-ctes` · sql-subqueries · senior · ✅
+  Sections: How deep does it go · Anchor + recursive member · Level by level · Termination · Generating sequences
+
+### Schema Design (DDL) (`sql-ddl`)
+- **CREATE, ALTER & DROP** — `sql-create-alter-drop` · sql-ddl · junior · ✅
+  Sections: A place for data · CREATE TABLE · ALTER TABLE · DROP TABLE · DROP vs DELETE vs TRUNCATE · Auto-commit
+- **Constraints** — `sql-constraints` · sql-ddl · mid · ✅
+  Sections: Keeping bad data out · NOT NULL · DEFAULT · UNIQUE · CHECK · PK/FK · Table-level
+- **Normalization** — `sql-normalization` · sql-ddl · senior · ✅
+  Sections: Redundancy breeds contradictions · The three anomalies · 1NF · 2NF · 3NF · Denormalization
+- **ER Modeling & Relationships** — `sql-er-modeling` · sql-ddl · mid · ✅
+  Sections: From things to tables · Entities & relationships · One-to-many · One-to-one · Many-to-many · Reading into keys
+
+### DML & Transactions (`sql-dml-transactions`)
+- **INSERT, UPDATE & DELETE** — `sql-insert-update-delete` · sql-dml-transactions · junior · ✅
+  Sections: Reading isn't enough · INSERT · UPDATE · The dangerous omission · DELETE · Upsert
+- **Transactions & ACID** — `sql-acid` · sql-dml-transactions · mid · ✅
+  Sections: Two writes that must both happen · BEGIN/COMMIT/ROLLBACK · Atomicity · Consistency · Isolation · Durability · Auto-commit
+- **Isolation Levels** — `sql-isolation-levels` · sql-dml-transactions · senior · ✅
+  Sections: Isolation isn't free · Three anomalies · The four levels · The trade-off
+- **Locking & Deadlocks** — `sql-locking-deadlocks` · sql-dml-transactions · senior · ✅
+  Sections: Two writers one row · Shared vs exclusive · Waiting · Deadlock · Detection · Prevention
+
+### Indexing & Performance (`sql-indexing`)
+- **Indexes & B-Trees** — `sql-indexes` · sql-indexing · mid · ✅
+  Sections: Finding a needle · Sorted lookup structure · The B-tree · Primary keys pre-indexed · Indexing foreign keys
+- **EXPLAIN & Query Plans** — `sql-explain` · sql-indexing · senior · ✅
+  Sections: Is my query using the index · EXPLAIN · Seq vs Index Scan · The plan tree · EXPLAIN ANALYZE
+- **When Indexes Hurt** — `sql-index-tradeoffs` · sql-indexing · senior · ✅
+  Sections: Why not index every column · Write cost · Storage · Selectivity · What defeats an index · Composite column order
+- **SQL vs NoSQL** — `sql-vs-nosql` · sql-indexing · senior · ✅
+  Sections: Is relational always the answer · Relational strengths · NoSQL families · Scaling · CAP · Polyglot persistence
+
+---
+
 ## Implementation checklist (for the generation session)
 
 1. Extend `CategoryId` and the `CATEGORIES` map in `src/content/types.ts` with the new categories used above (label, order, blurb, icon, accent). Keep accents within the sequential palette.

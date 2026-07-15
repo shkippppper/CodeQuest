@@ -254,6 +254,6 @@ Combine → `AsyncSequence` migration · Embedded Swift / Swift-on-server overvi
 - [x] **P2** Dashboard hero/paths per subject + subject strip with completion %.
 - [x] **P2** Scope Challenge/Review to active subject; palette optional. Build green + smoke test.
 - [x] **P3** Pilot one SQL topic (`sql-select-where`), verify quality bar. (auditor OK, renders, no console errors)
-- [ ] **P3** Author remaining 30 SQL topics in waves; each passes checkslugs + tsc.
-- [ ] **P3** Add §18 SQL section to `CURRICULUM.md`.
-- [ ] **Final** `npx tsc -b && npm run build` green; commit.
+- [x] **P3** Author remaining 30 SQL topics in waves; each passes checkslugs + tsc. (all 31 built, 0 flagged)
+- [x] **P3** Add §18 SQL section to `CURRICULUM.md`.
+- [x] **Final** `npx tsc -b && npm run build` green; committed per category.
