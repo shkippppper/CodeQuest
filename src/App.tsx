@@ -4,6 +4,7 @@ import { Dashboard } from "./pages/Dashboard";
 import { TopicPage } from "./pages/TopicPage";
 import { ReviewPage } from "./pages/ReviewPage";
 import { ChallengePage } from "./pages/ChallengePage";
+import { SimulatorPage } from "./pages/SimulatorPage";
 import { BookmarksPage } from "./pages/BookmarksPage";
 import { SettingsPage } from "./pages/SettingsPage";
 import { NotFoundPage } from "./pages/NotFoundPage";
@@ -23,6 +24,7 @@ export default function App() {
               <Route path="/learn/:topicId" element={<TopicPage />} />
               <Route path="/review" element={<ReviewPage />} />
               <Route path="/challenge" element={<ChallengePage />} />
+              <Route path="/simulator" element={<SimulatorPage />} />
               <Route path="/bookmarks" element={<BookmarksPage />} />
               <Route path="/settings" element={<SettingsPage />} />
               <Route path="*" element={<NotFoundPage />} />

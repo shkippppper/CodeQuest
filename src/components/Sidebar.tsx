@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { NavLink } from "react-router-dom";
 import * as Icons from "lucide-react";
-import { Search, Bookmark, LayoutGrid, RotateCcw, Swords, X, Circle, CircleDashed, CircleDot, CheckCircle2, ChevronDown } from "lucide-react";
+import { Search, Bookmark, LayoutGrid, RotateCcw, Swords, ClipboardCheck, X, Circle, CircleDashed, CircleDot, CheckCircle2, ChevronDown } from "lucide-react";
 import { groupedBySubject } from "../content/registry";
 import { CATEGORIES, DIFFICULTY_META, SUBJECTS, type Difficulty } from "../content/types";
 import { useProgress } from "../game/store";
@@ -150,6 +150,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
       <nav className="mt-3 flex flex-col gap-0.5 px-3">
         <SideLink to="/" icon={<LayoutGrid size={16} />} label="Dashboard" onNavigate={onNavigate} end />
         <SideLink to="/challenge" icon={<Swords size={16} />} label="Challenge" onNavigate={onNavigate} />
+        <SideLink to="/simulator" icon={<ClipboardCheck size={16} />} label="Simulator" onNavigate={onNavigate} />
         <SideLink
           to="/review"
           icon={<RotateCcw size={16} />}

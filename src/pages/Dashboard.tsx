@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "motion/react";
 import * as Icons from "lucide-react";
-import { ArrowRight, Star, Target, CheckCircle2, Zap, RotateCcw, Trophy, Lock, Layers } from "lucide-react";
+import { ArrowRight, Star, Target, CheckCircle2, Zap, RotateCcw, Trophy, Lock, Layers, ClipboardCheck } from "lucide-react";
 import { TOPICS, TOTAL_TOPICS, TOTAL_QUESTIONS, groupedBySubject, topicsForSubject } from "../content/registry";
 import { CATEGORIES, SUBJECTS, type SubjectId } from "../content/types";
 import { useProgress } from "../game/store";
@@ -84,6 +84,13 @@ export function Dashboard() {
                 className="inline-flex items-center gap-2 rounded-xl bg-brand-500 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-brand-600"
               >
                 {completedCount > 0 ? "Continue learning" : "Start your quest"} <ArrowRight size={16} />
+              </Link>
+              <Link
+                to="/simulator"
+                className="inline-flex items-center gap-2 rounded-xl border px-5 py-2.5 text-sm font-semibold transition hover:border-brand-400"
+                style={{ borderColor: "var(--border)" }}
+              >
+                <ClipboardCheck size={16} /> Mock interview
               </Link>
               {reviewCount > 0 && (
                 <Link

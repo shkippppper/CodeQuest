@@ -1,5 +1,5 @@
-import { useMemo, useState } from "react";
-import { Check, X, Eye, Lightbulb, HelpCircle, Brain, Terminal, ListChecks } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Check, X, Eye, Lightbulb, HelpCircle, Brain, Terminal, ListChecks, RotateCw } from "lucide-react";
 import type { Question } from "../../content/types";
 import { CodeBlock } from "../CodeBlock";
 import { InlineMarkdown, Markdown } from "../Markdown";
@@ -9,6 +9,8 @@ interface Props {
   question: Question;
   /** called exactly once, when the user grades/answers the question. `score` is the 0..1 fraction for partial-credit types; omit for pass/fail. */
   onGraded: (correct: boolean, score?: number) => void;
+  /** when set, the card runs a per-question countdown; on expiry it auto-grades the question incorrect and reveals the answer. Omit for untimed use. */
+  timeLimitSec?: number;
 }
 
 const TYPE_LABEL: Record<Question["type"], { label: string; icon: typeof HelpCircle }> = {
@@ -21,6 +23,10 @@ const TYPE_LABEL: Record<Question["type"], { label: string; icon: typeof HelpCir
 
 function normalize(s: string): string {
   return s.trim().toLowerCase().replace(/\s+/g, " ").replace(/;$/, "");
+}
+
+function prefersReducedMotion(): boolean {
+  return typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
 }
 
 // Deterministic per-question display order so the correct option isn't always in
@@ -47,15 +53,23 @@ function seededOrder(id: string, n: number): number[] {
   return order;
 }
 
-export function QuestionCard({ question, onGraded }: Props) {
+export function QuestionCard({ question, onGraded, timeLimitSec }: Props) {
   const [graded, setGraded] = useState(false);
   const [correct, setCorrect] = useState(false);
   const [selected, setSelected] = useState<number | null>(null);
   const [fillValue, setFillValue] = useState("");
   const [revealed, setRevealed] = useState(false);
+  const [flipDeg, setFlipDeg] = useState(0);
   const [showHint, setShowHint] = useState(false);
   const [multiSel, setMultiSel] = useState<Set<number>>(new Set());
   const [multiResult, setMultiResult] = useState<{ correctPicked: number; total: number } | null>(null);
+  const [remaining, setRemaining] = useState<number | null>(timeLimitSec ?? null);
+
+  // Keep the latest onGraded without retriggering the countdown effect each parent render.
+  const onGradedRef = useRef(onGraded);
+  onGradedRef.current = onGraded;
+  // Guard so a near-simultaneous manual submit + timer expiry can't grade twice.
+  const didGradeRef = useRef(false);
 
   const meta = TYPE_LABEL[question.type];
   const TypeIcon = meta.icon;
@@ -64,10 +78,32 @@ export function QuestionCard({ question, onGraded }: Props) {
   const order = useMemo(() => seededOrder(question.id, optionCount), [question.id, optionCount]);
 
   function grade(isCorrect: boolean, score?: number) {
+    if (didGradeRef.current) return;
+    didGradeRef.current = true;
     setCorrect(isCorrect);
     setGraded(true);
     onGraded(isCorrect, score);
   }
+
+  // Per-question countdown (only when timeLimitSec is provided).
+  useEffect(() => {
+    if (timeLimitSec == null || graded || remaining == null) return;
+    if (remaining <= 0) {
+      // Time's up — auto-grade incorrect and reveal.
+      if (didGradeRef.current) return;
+      if (question.type === "flashcard") {
+        setRevealed(true);
+        setFlipDeg(0);
+      }
+      didGradeRef.current = true;
+      setCorrect(false);
+      setGraded(true);
+      onGradedRef.current(false, 0);
+      return;
+    }
+    const t = setTimeout(() => setRemaining((r) => (r == null ? r : r - 1)), 1000);
+    return () => clearTimeout(t);
+  }, [remaining, graded, timeLimitSec, question.type]);
 
   function gradeMulti() {
     if (question.type !== "multi") return;
@@ -85,11 +121,43 @@ export function QuestionCard({ question, onGraded }: Props) {
     grade(score === 1, score);
   }
 
+  // Flip the flashcard: rotate to edge-on, swap to the back face, rotate back.
+  function revealFlashcard() {
+    if (prefersReducedMotion()) {
+      setRevealed(true);
+      return;
+    }
+    setFlipDeg(90);
+    setTimeout(() => {
+      setRevealed(true);
+      setFlipDeg(0);
+    }, 190);
+  }
+
+  const timerActive = timeLimitSec != null && !graded && remaining != null;
+  const timerFrac = timeLimitSec ? Math.max(0, (remaining ?? 0) / timeLimitSec) : 0;
+  const timerColor = timerFrac > 0.5 ? "var(--ok)" : timerFrac > 0.2 ? "var(--color-quest-500)" : "var(--bad)";
+
   return (
     <div
-      className="rounded-2xl border p-5 sm:p-6"
+      className="overflow-hidden rounded-2xl border p-5 sm:p-6"
       style={{ borderColor: "var(--border)", background: "var(--bg-elev)" }}
     >
+      {timeLimitSec != null && (
+        <div className="mb-3 -mx-5 -mt-5 sm:-mx-6 sm:-mt-6">
+          <div className="h-1.5 w-full" style={{ background: "var(--border)" }}>
+            <div
+              className="h-full"
+              style={{
+                width: `${timerFrac * 100}%`,
+                background: timerColor,
+                transition: "width 1s linear, background 0.4s ease",
+              }}
+            />
+          </div>
+        </div>
+      )}
+
       <div className="mb-3 flex items-center gap-2">
         <span
           className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[0.7rem] font-semibold uppercase tracking-wide"
@@ -97,6 +165,14 @@ export function QuestionCard({ question, onGraded }: Props) {
         >
           <TypeIcon size={13} /> {meta.label}
         </span>
+        {timerActive && (
+          <span
+            className="ml-auto inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-bold tabular-nums"
+            style={{ background: `color-mix(in srgb, ${timerColor} 14%, transparent)`, color: timerColor }}
+          >
+            {remaining}s
+          </span>
+        )}
       </div>
 
       <div className="text-[1.02rem] font-medium leading-relaxed">
@@ -272,23 +348,37 @@ export function QuestionCard({ question, onGraded }: Props) {
         </div>
       )}
 
-      {/* ---- FLASHCARD ---- */}
+      {/* ---- FLASHCARD (with 3D flip) ---- */}
       {question.type === "flashcard" && (
-        <div className="mt-4">
-          {!revealed ? (
-            <button
-              onClick={() => setRevealed(true)}
-              className="flex cursor-pointer items-center gap-2 rounded-lg border px-5 py-2.5 text-sm font-semibold transition hover:border-brand-400"
-              style={{ borderColor: "var(--border)", background: "var(--bg)" }}
-            >
-              <Eye size={16} /> Reveal answer
-            </button>
-          ) : (
-            <div>
+        <div className="mt-4" style={{ perspective: "1400px" }}>
+          <div
+            style={{
+              transform: `rotateY(${flipDeg}deg)`,
+              transition: prefersReducedMotion() ? undefined : "transform 0.19s ease-in",
+              transformStyle: "preserve-3d",
+            }}
+          >
+            {!revealed ? (
               <div
-                className="rounded-xl border p-4"
+                className="flex flex-col items-start gap-3 rounded-xl border border-dashed p-5"
                 style={{ borderColor: "var(--border)", background: "var(--bg)" }}
               >
+                <div className="flex items-center gap-2 text-sm font-medium" style={{ color: "var(--text-muted)" }}>
+                  <Brain size={16} color="var(--color-quest-500)" /> Recall the answer out loud, then flip the card.
+                </div>
+                <button
+                  onClick={revealFlashcard}
+                  className="flex cursor-pointer items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-semibold text-white transition"
+                  style={{ background: "var(--color-quest-600)" }}
+                >
+                  <RotateCw size={16} /> Flip to reveal
+                </button>
+              </div>
+            ) : (
+              <div className="rounded-xl border p-4" style={{ borderColor: "var(--border)", background: "var(--bg)" }}>
+                <div className="mb-2 flex items-center gap-1.5 text-[0.7rem] font-semibold uppercase tracking-wide" style={{ color: "var(--color-quest-600)" }}>
+                  <Eye size={13} /> Model answer
+                </div>
                 <Markdown>{question.modelAnswer}</Markdown>
                 {question.keyPoints && question.keyPoints.length > 0 && (
                   <div className="mt-3 border-t pt-3" style={{ borderColor: "var(--border)" }}>
@@ -308,24 +398,24 @@ export function QuestionCard({ question, onGraded }: Props) {
                   </div>
                 )}
               </div>
-              {!graded && (
-                <div className="mt-3 flex gap-2">
-                  <button
-                    onClick={() => grade(false)}
-                    className="flex-1 cursor-pointer rounded-lg border px-4 py-2.5 text-sm font-semibold transition"
-                    style={{ borderColor: "var(--border)" }}
-                  >
-                    Need more review
-                  </button>
-                  <button
-                    onClick={() => grade(true)}
-                    className="flex-1 cursor-pointer rounded-lg px-4 py-2.5 text-sm font-semibold text-white transition"
-                    style={{ background: "var(--ok)" }}
-                  >
-                    I knew it
-                  </button>
-                </div>
-              )}
+            )}
+          </div>
+          {revealed && !graded && (
+            <div className="mt-3 flex gap-2">
+              <button
+                onClick={() => grade(false)}
+                className="flex-1 cursor-pointer rounded-lg border px-4 py-2.5 text-sm font-semibold transition"
+                style={{ borderColor: "var(--border)" }}
+              >
+                Need more review
+              </button>
+              <button
+                onClick={() => grade(true)}
+                className="flex-1 cursor-pointer rounded-lg px-4 py-2.5 text-sm font-semibold text-white transition"
+                style={{ background: "var(--ok)" }}
+              >
+                I knew it
+              </button>
             </div>
           )}
         </div>
